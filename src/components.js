@@ -22,12 +22,8 @@ Crafty.c('Player', {
 			.attr({ w:16, h:16, z:1 })
 			.fourway(50)
 			.bind('Move', function(from) {
-				var hitDatas, hitData;
-				if ((hitDatas = this.hit('Solid'))) {
-					this.x = from._x;
-					this.y = from._y;
-
-					console.trace();
+				if (this.hit('Solid')) {
+					this.attr({ x:from._x, y:from._y });
 				}
 			})
 			.onHit('Resource', this.collectResource)
