@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title></title>
+	<script type="text/javascript" src="https://rawgithub.com/craftyjs/Crafty/release/dist/crafty-min.js"></script>
+</head>
+<body>
+	<script>
+		Crafty.init(1420, 600);
+		Crafty.background('black');
+
+		Crafty.e('2D, Canvas, Color, Tween')
+			.attr({x: 0, y: 0, w: 20, h:20})
+			.color('white')
+			.tween({x: 500, y: 0}, 10000)
+	</script>
+</body>
+</html>

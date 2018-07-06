@@ -17,8 +17,8 @@ Crafty.scene('Game', function() {
 
 	// Add robot
 	this.robot = Crafty.e('Robot').at(1,1)
-	this.robot.trigger('')
-
+	this.robot.delay(this.robot.randomMove, 1500, -1);
+	
 	// Add obstacles
 	for (var x = 0; x < Game.w(); x++){
 		for (var y = 0; y < Game.h(); y++){
@@ -27,7 +27,7 @@ Crafty.scene('Game', function() {
 			if (at_edge) {
 				Crafty.e('Tree').at(x,y);
 				this.occupied[x][y] = true;
-			} else if (Math.random() < 0.10 && !this.occupied[x][y]) {
+			} else if (Math.random() < 0.01 && !this.occupied[x][y]) {
 				Crafty.e('Bush').at(x,y);
 				this.occupied[x][y] = true;
 			}
@@ -37,19 +37,20 @@ Crafty.scene('Game', function() {
 	// Add resources
 	for (var x = 0; x < Game.w(); x++) {
 		for (var y = 0; y < Game.h(); y++) {
-			if (Math.random() < 0.05 && !this.occupied[x][y]) {
+			if (Math.random() < 0.01 && !this.occupied[x][y]) {
 				Crafty.e('SmallResource').at(x,y);
 				this.occupied[x][y] = true;
-			} else if (Math.random() < 0.03 && !this.occupied[x][y]) {
+			} else if (Math.random() < 0.01 && !this.occupied[x][y]) {
 				Crafty.e('MedResource').at(x,y);
 				this.occupied[x][y] = true;
-			} else if (Math.random() < 0.01 && !this.occupied[x][y]) {
+			} else if (Math.random() < 0.005 && !this.occupied[x][y]) {
 				Crafty.e('BigResource').at(x,y);
 				this.occupied[x][y] = true;
 			}
 		}
 	}
 });
+
 
 // Loading
 Crafty.scene('Loading', function() {

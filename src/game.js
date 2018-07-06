@@ -2,11 +2,11 @@ window.onload = function() {
 	// Define game
 	Game = {
 		map_grid: {
-			w: 48,
-			h: 32,
+			w: 54,
+			h: 30,
 			tile: {
-				w: 16,
-				h: 16
+				w: 24,
+				h: 24
 			}
 		},
 		w: function() {
@@ -32,6 +32,7 @@ window.onload = function() {
 	// Start game
 	var game = Game;
 	game.start();
+
 }
 
 $text_css = { 'font-size': '24px', 'font-family': 'Arial', 'color': 'white', 'text-align': 'center' }
