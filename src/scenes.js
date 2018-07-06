@@ -21,6 +21,10 @@ Crafty.scene('Game', function() {
 	this.robot.delay(this.robot.randomMove, 1500, -1);
 	// lose 10% of power every 10 seconds
 	this.robot.delay(this.robot.losePower, 10000, -1);
+
+	// Add score
+	this.score = Crafty.e('Score')
+	this.score = Crafty.e('Power')
 	
 	// Add obstacles
 	for (var x = 0; x < Game.w(); x++){

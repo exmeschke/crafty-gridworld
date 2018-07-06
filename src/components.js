@@ -1,23 +1,31 @@
-var tile_sz = 24
-var player_movement = []
-var robot_speed = 1500
-var robot_movement = []
-var robot_power = 100
+// Game variables
+gv = {
+	tile_sz: 24,
+	player: {
+		movement: []
+	}, 
+	robot: {
+		movement: [],
+		power: 100,
+		speed: 1500
+	},
+	score: 0
+}
 
 // Grid
 Crafty.c('Grid', {
 	init: function() {
-		this.attr({ w:tile_sz, h:tile_sz })
+		this.attr({ w: gv.tile_sz, h: gv.tile_sz })
 	},
 	at: function(x, y) {
-		this.attr({ x:x*tile_sz, y:y*tile_sz })
+		this.attr({ x: x*gv.tile_sz, y: y*gv.tile_sz })
 		return this;
 	},
 	atX: function() {
-		return this.x/tile_sz;
+		return this.x/gv.tile_sz;
 	}, 
 	atY: function() {
-		return this.y/tile_sz;
+		return this.y/gv.tile_sz;
 	}
 });
 
@@ -25,7 +33,7 @@ Crafty.c('Grid', {
 Crafty.c('Player', {
 	init: function() {
 		this.requires('2D, Canvas, Grid, Fourway, Keyboard, Collision, Delay, spr_player, SpriteAnimation')
-			.attr({ w:tile_sz, h:tile_sz, z:1 })
+			.attr({ w:gv.tile_sz, h:gv.tile_sz, z:1 })
 			.fourway(50)
 			.onHit('Solid', this.stopMovement)
 			.onHit('Resource', this.collectResource)
@@ -45,21 +53,21 @@ Crafty.c('Player', {
 				var animation_speed = 8;
 				if (data.x > 0) {
 					this.animate('PlayerMovingRight', animation_speed, -1);
-					player_movement.push('right');
+					gv.player.movement.push('right');
 				} else if (data.x < 0) {
 					this.animate('PlayerMovingLeft', animation_speed, -1);
-					player_movement.push('left');
+					gv.player.movement.push('left');
 				} else if (data.y > 0) {
 					this.animate('PlayerMovingDown', animation_speed, -1);
-					player_movement.push('down');
+					gv.player.movement.push('down');
 				} else if (data.y < 0) {
 					this.animate('PlayerMovingUp', animation_speed, -1);
-					player_movement.push('up');
+					gv.player.movement.push('up');
 				} else {
 					this.pauseAnimation();
 				}
-				if (player_movement.length > 5) {
-					player_movement.shift();
+				if (gv.player.movement.length > 5) {
+					gv.player.movement.shift();
 				}
 			})
 			.bind('KeyDown', function(e) {
@@ -76,11 +84,11 @@ Crafty.c('Player', {
 		}
 	},
 	stopMovement: function() {
-		if (player_movement.slice(-1) == 'up') {
+		if (gv.player.movement.slice(-1) == 'up') {
 			this.attr({ x:this.x, y:this.y+1 });
-		} else if (player_movement.slice(-1) == 'down') {
+		} else if (gv.player.movement.slice(-1) == 'down') {
 			this.attr({ x:this.x, y:this.y-1 });
-		} else if (player_movement.slice(-1) == 'right') {
+		} else if (gv.player.movement.slice(-1) == 'right') {
 			this.attr({ x:this.x-1, y:this.y });
 		} else {
 			this.attr({ x:this.x+1, y:this.y });
@@ -92,12 +100,12 @@ Crafty.c('Player', {
 Crafty.c('Robot', {
 	init: function() {
 		this.requires('2D, Canvas, Grid, Fourway, Collision, spr_bot, Tween, Delay')
-			.attr({ w:tile_sz, h:tile_sz, z:1 })
+			.attr({ w: gv.tile_sz, h: gv.tile_sz, z:1 })
 			.onHit('Resource', this.collectResource)
 			.onHit('Solid', this.turnAround)
 	},
 	randomMove: function() {
-		if (robot_power > 0) {
+		if (gv.robot.power > 0) {
 			var ra = Math.random()
 			if (ra < 0.25) {
 				this.moveUp();
@@ -111,12 +119,12 @@ Crafty.c('Robot', {
 		}
 	},
 	turnAround: function() {
-		if (robot_power > 0) {
-			if (robot_movement.slice(-1) == 'up') {
+		if (gv.robot.power > 0) {
+			if (gv.robot.movement.slice(-1) == 'up') {
 				this.moveDown();
-			} else if (robot_movement.slice(-1) == 'down') {
+			} else if (gv.robot.movement.slice(-1) == 'down') {
 				this.moveUp();
-			} else if (robot_movement.slice(-1) == 'right') {
+			} else if (gv.robot.movement.slice(-1) == 'right') {
 				this.moveLeft();
 			} else {
 				this.moveRight()
@@ -124,31 +132,31 @@ Crafty.c('Robot', {
 		}
 	},
 	moveUp: function() {
-		this.tween({ x:this.x, y:this.y-tile_sz }, robot_speed)
-		robot_movement.push('up');
-		if (robot_movement.length > 5) {
-			robot_movement.shift();
+		this.tween({ x: this.x, y: this.y-gv.tile_sz }, gv.robot.speed)
+		gv.robot.movement.push('up');
+		if (gv.robot.movement.length > 5) {
+			gv.robot.movement.shift();
 		}
 	},
 	moveDown: function() {
-		this.tween({ x:this.x, y:this.y+tile_sz }, robot_speed)
-		robot_movement.push('down');
-		if (robot_movement.length > 5) {
-			robot_movement.shift();
+		this.tween({ x: this.x, y: this.y+gv.tile_sz }, gv.robot.speed)
+		gv.robot.movement.push('down');
+		if (gv.robot.movement.length > 5) {
+			gv.robot.movement.shift();
 		}
 	},
 	moveLeft: function() {
-		this.tween({ x:this.x-tile_sz, y:this.y }, robot_speed)
-		robot_movement.push('left');
-		if (robot_movement.length > 5) {
-			robot_movement.shift();
+		this.tween({ x: this.x-gv.tile_sz, y: this.y }, gv.robot.speed)
+		gv.robot.movement.push('left');
+		if (gv.robot.movement.length > 5) {
+			gv.robot.movement.shift();
 		}
 	}, 
 	moveRight: function() {
-		this.tween({ x:this.x+tile_sz, y:this.y }, robot_speed)
-		robot_movement.push('right');
-		if (robot_movement.length > 5) {
-			robot_movement.shift();
+		this.tween({ x: this.x+gv.tile_sz, y: this.y }, gv.robot.speed)
+		gv.robot.movement.push('right');
+		if (gv.robot.movement.length > 5) {
+			gv.robot.movement.shift();
 		}
 	},
 	collectResource: function() {
@@ -159,12 +167,36 @@ Crafty.c('Robot', {
 		}
 	},
 	losePower: function() {
-		robot_power -= 10
+		gv.robot.power -= 10
 	},
 	recharge: function() {
-		robot_power += 10
+		gv.robot.power += 10
 	}
-})
+});
+
+// Information
+Crafty.c('Score', {
+	init: function() {
+		this.requires('HTML')
+			.attr({ x:20, y: 380, w:100, h:10 })
+			.append('Score: 0')
+			.bind('UpdateFrame', this.updateScore)
+	},
+	updateScore: function() {
+		this.replace('Score: '+String(gv.score))
+	}
+});
+Crafty.c('Power', {
+	init: function() {
+		this.requires('HTML')
+			.attr({ x:20, y: 400, w:100, h:10 })
+			.append('Robot Power: 100')
+			.bind('UpdateFrame', this.updatePower)
+	},
+	updatePower: function() {
+		this.replace('Robot Power: '+String(gv.robot.power))
+	}
+});
 
 // Resources
 Crafty.c('Resource', {
@@ -173,7 +205,7 @@ Crafty.c('Resource', {
 	},
 	collect: function() {
 		this.destroy();
-		Crafty.trigger('ResourceCollected', this);
+		gv.score = gv.score + this.r;
 	}
 });
 Crafty.c('SmallResource', {
@@ -203,7 +235,7 @@ Crafty.c('BigResource', {
 Crafty.c('Obstacle', {
 	init: function() {
 		this.requires('2D, Canvas, Grid, Collision')
-			.attr({ w:tile_sz, h:tile_sz})
+			.attr({ w:gv.tile_sz, h:gv.tile_sz})
 	}
 });
 Crafty.c('Tree', {
