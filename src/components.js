@@ -1,6 +1,8 @@
 var tile_sz = 24
+var player_movement = []
 var robot_speed = 1500
 var robot_movement = []
+var robot_power = 100
 
 // Grid
 Crafty.c('Grid', {
@@ -22,16 +24,11 @@ Crafty.c('Grid', {
 // Player character
 Crafty.c('Player', {
 	init: function() {
-		this.requires('2D, Canvas, Grid, Fourway, Collision, spr_player, SpriteAnimation')
+		this.requires('2D, Canvas, Grid, Fourway, Keyboard, Collision, Delay, spr_player, SpriteAnimation')
 			.attr({ w:tile_sz, h:tile_sz, z:1 })
 			.fourway(50)
-			.bind('Move', function(from) {
-				if (this.hit('Solid')) {
-					this.attr({ x:from._x, y:from._y });
-				}
-			})
+			.onHit('Solid', this.stopMovement)
 			.onHit('Resource', this.collectResource)
-
 			.reel('PlayerMovingUp', 1000, [
 				[0,0], [1,0], [2,0]
 			])
@@ -48,14 +45,26 @@ Crafty.c('Player', {
 				var animation_speed = 8;
 				if (data.x > 0) {
 					this.animate('PlayerMovingRight', animation_speed, -1);
+					player_movement.push('right');
 				} else if (data.x < 0) {
 					this.animate('PlayerMovingLeft', animation_speed, -1);
+					player_movement.push('left');
 				} else if (data.y > 0) {
 					this.animate('PlayerMovingDown', animation_speed, -1);
+					player_movement.push('down');
 				} else if (data.y < 0) {
 					this.animate('PlayerMovingUp', animation_speed, -1);
+					player_movement.push('up');
 				} else {
 					this.pauseAnimation();
+				}
+				if (player_movement.length > 5) {
+					player_movement.shift();
+				}
+			})
+			.bind('KeyDown', function(e) {
+				if (e.key == Crafty.keys.X) {
+				   console.log('hit');
 				}
 			})
 	},
@@ -64,6 +73,17 @@ Crafty.c('Player', {
 		if ((hitDatas = this.hit('Resource'))) {
 			hitData = hitDatas[0];
 			hitData.obj.collect();
+		}
+	},
+	stopMovement: function() {
+		if (player_movement.slice(-1) == 'up') {
+			this.attr({ x:this.x, y:this.y+1 });
+		} else if (player_movement.slice(-1) == 'down') {
+			this.attr({ x:this.x, y:this.y-1 });
+		} else if (player_movement.slice(-1) == 'right') {
+			this.attr({ x:this.x-1, y:this.y });
+		} else {
+			this.attr({ x:this.x+1, y:this.y });
 		}
 	}
 });
@@ -77,27 +97,30 @@ Crafty.c('Robot', {
 			.onHit('Solid', this.turnAround)
 	},
 	randomMove: function() {
-		var ra = Math.random()
-		if (ra < 0.25) {
-			this.moveUp();
-		} else if (ra < 0.50) {
-			this.moveDown();
-		} else if (ra < 0.75) {
-			this.moveLeft();
-		} else {
-			this.moveRight();
+		if (robot_power > 0) {
+			var ra = Math.random()
+			if (ra < 0.25) {
+				this.moveUp();
+			} else if (ra < 0.50) {
+				this.moveDown();
+			} else if (ra < 0.75) {
+				this.moveLeft();
+			} else {
+				this.moveRight();
+			}
 		}
 	},
 	turnAround: function() {
-		console.log(robot_movement.slice(-1))
-		if (robot_movement.slice(-1) == 'up') {
-			this.moveDown();
-		} else if (robot_movement.slice(-1) == 'down') {
-			this.moveUp();
-		} else if (robot_movement.slice(-1) == 'right') {
-			this.moveLeft();
-		} else {
-			this.moveRight()
+		if (robot_power > 0) {
+			if (robot_movement.slice(-1) == 'up') {
+				this.moveDown();
+			} else if (robot_movement.slice(-1) == 'down') {
+				this.moveUp();
+			} else if (robot_movement.slice(-1) == 'right') {
+				this.moveLeft();
+			} else {
+				this.moveRight()
+			}
 		}
 	},
 	moveUp: function() {
@@ -134,10 +157,16 @@ Crafty.c('Robot', {
 			hitData = hitDatas[0];
 			hitData.obj.collect();
 		}
+	},
+	losePower: function() {
+		robot_power -= 10
+	},
+	recharge: function() {
+		robot_power += 10
 	}
 })
 
-// Resource
+// Resources
 Crafty.c('Resource', {
 	init: function() {
 		this.requires('2D, Canvas, Grid')
@@ -168,6 +197,7 @@ Crafty.c('BigResource', {
 			.color('purple')
 	}
 });
+
 
 // Obstacles
 Crafty.c('Obstacle', {

@@ -12,12 +12,15 @@ Crafty.scene('Game', function() {
 		}
 	}
 	// Add player
-	this.player = Crafty.e('Player').at(24, 16).ignoreHits('Solid')
+	this.player = Crafty.e('Player').at(24, 16).ignoreHits('Solid');
 	this.occupied[this.player.atX()][this.player.atY()] = true;
 
 	// Add robot
-	this.robot = Crafty.e('Robot').at(1,1)
+	this.robot = Crafty.e('Robot').at(1,1);
+	// move every 1.5 seconds
 	this.robot.delay(this.robot.randomMove, 1500, -1);
+	// lose 10% of power every 10 seconds
+	this.robot.delay(this.robot.losePower, 10000, -1);
 	
 	// Add obstacles
 	for (var x = 0; x < Game.w(); x++){
