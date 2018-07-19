@@ -16,6 +16,9 @@ gv = {
 		},
 		cow: {
 			movement: []
+		},
+		chicken: {
+			movement: []
 		}
 	},
 	score: 0
@@ -105,52 +108,33 @@ Crafty.c('Player', {
 	}
 });
 
-// Characters
-Crafty.c('Character', {
-	init: function() {
-		this.requires('2D, Canvas, Grid, Collision, Tween, Delay')
-			.onHit('Solid', this.turnAround)
-	}, 
-	turnAround: function() {
-		var char = this.char(); 
-		if (char == 'robot') {
-			if (gv.robot.power <= 0) {
-				return; 
-			}
-		} else {
-			var movement;
-			if (char == 'sheep') {
-				movement = gv.animal.sheep.movement.slice(-1);
-			} else if (char == 'cow') {
-
-			} else if (char == 'chicken') {
-
-			}
-		}
-
-		if (gv.robot.movement.slice(-1) == 'up') {
-			this.moveDown();
-		} else if (gv.robot.movement.slice(-1) == 'down') {
-			this.moveUp();
-		} else if (gv.robot.movement.slice(-1) == 'right') {
-			this.moveLeft();
-		} else {
-			this.moveRight()
-		}
-	}
-});
-
 // Robot character
 Crafty.c('Robot', {
 	init: function() {
-		// this.requires('2D, Canvas, Grid, Fourway, Collision, spr_bot, Tween, Delay')
-		this.requires('Character, spr_bot')
+		this.requires('2D, Canvas, Grid, Collision, spr_bot, Tween, Delay')
 			.attr({ w: gv.tile_sz, h: gv.tile_sz, z:1 })
 			.onHit('Resource', this.collectResource)
 			.onHit('Solid', this.turnAround)
 	},
 	char: function() {
 		return 'robot';
+	},
+	lastMovement: function() {
+		return gv.robot.movement.slice(-1);
+	}, 
+	turnAround: function() {
+		if (this.char() == 'robot') {
+			var movement = this.lastMovement();
+			if (movement == 'up') {
+				this.moveDown();
+			} else if (movement == 'down') {
+				this.moveUp();
+			} else if (movement == 'right') {
+				this.moveLeft();
+			} else {
+				this.moveRight()
+			}
+		}
 	},
 	randomMove: function() {
 		if (gv.robot.power > 0) {
@@ -166,19 +150,6 @@ Crafty.c('Robot', {
 			}
 		}
 	},
-	// turnAround: function() {
-	// 	if (gv.robot.power > 0) {
-	// 		if (gv.robot.movement.slice(-1) == 'up') {
-	// 			this.moveDown();
-	// 		} else if (gv.robot.movement.slice(-1) == 'down') {
-	// 			this.moveUp();
-	// 		} else if (gv.robot.movement.slice(-1) == 'right') {
-	// 			this.moveLeft();
-	// 		} else {
-	// 			this.moveRight()
-	// 		}
-	// 	}
-	// },
 	moveUp: function() {
 		this.tween({ x: this.x, y: this.y-gv.tile_sz }, gv.robot.speed)
 		gv.robot.movement.push('up');
@@ -231,7 +202,7 @@ Crafty.c('Robot', {
 // Animals
 Crafty.c('Animal', {
 	init: function() {
-		this.requires('2D, Canvas, Grid, Collision, Tween, Delay, SpriteAnimation')
+		this.requires('2D, Canvas, Grid, Collision, Solid, Tween, Delay, WiredHitBox, SpriteAnimation')
 			.reel('AnimalMovingUp', 1000, [
 				[0,0], [1,0], [2,0], [3,0]
 			])
@@ -245,37 +216,34 @@ Crafty.c('Animal', {
 				[0,3], [1,3], [2,3], [3,3]
 			])
 			.reel('AnimalEatingUp', 1000, [
-				[0,4], [1,4], [2,4], [3,4]
+				[0,4], [1,4], [2,4], [3,4], [0,4]
 			])
 			.reel('AnimalEatingLeft', 1000, [
-				[0,5], [1,5], [2,5], [3,5]
+				[0,5], [1,5], [2,5], [3,5], [0,5]
 			])
 			.reel('AnimalEatingDown', 1000, [
-				[0,6], [1,6], [2,6], [3,6]
+				[0,6], [1,6], [2,6], [3,6], [0,6]
 			])
 			.reel('AnimalEatingRight', 1000, [
-				[0,7], [1,7], [2,7], [3,7]
+				[0,7], [1,7], [2,7], [3,7], [0,7]
 			])
-	}
-});
-Crafty.c('Sheep', {
-	init: function() {
-		this.requires('Animal, spr_sheep5')
-			.crop(35, 35, 55, 50)
-			.attr({ w:32, h:32, z:1 })
-			.onHit('Solid', this.turnAround)
+			.debugStroke('black')
 	},
-	// turnAround: function() {
-	// 	if (gv.animal.sheep.movement.slice(-1) == 'up') {
-	// 		this.moveDown();
-	// 	} else if (gv.animal.sheep.movement.slice(-1) == 'down') {
-	// 		this.moveUp();
-	// 	} else if (gv.animal.sheep.movement.slice(-1) == 'right') {
-	// 		this.moveLeft();
-	// 	} else {
-	// 		this.moveRight()
-	// 	}
-	// },
+	char: function() {
+		return 'animal';
+	}, 
+	turnAround: function() {
+		var movement = this.lastMovement();
+		if (movement == 'up') {
+			this.moveDown();
+		} else if (movement == 'down') {
+			this.moveUp();
+		} else if (movement == 'right') {
+			this.moveLeft();
+		} else {
+			this.moveRight()
+		}
+	},
 	randomMove: function() {
 		var ra = Math.random()
 		var animation_speed = 8;
@@ -292,11 +260,12 @@ Crafty.c('Sheep', {
 		}
 	},
 	eat: function() {
-		if (gv.animal.sheep.movement.slice(-1) == 'up') {
+		var movement = this.lastMovement();
+		if (movement == 'up') {
 			this.animate('AnimalEatingUp', 2, -1);
-		} else if (gv.animal.sheep.movement.slice(-1) == 'down') {
+		} else if (movement == 'down') {
 			this.animate('AnimalEatingDown', 2, -1);
-		} else if (gv.animal.sheep.movement.slice(-1) == 'right') {
+		} else if (movement == 'right') {
 			this.animate('AnimalEatingRight', 2, -1);
 		} else {
 			this.animate('AnimalEatingLeft', 2, -1);
@@ -305,34 +274,61 @@ Crafty.c('Sheep', {
 	moveUp: function() {
 		this.tween({ x: this.x, y: this.y-gv.tile_sz }, gv.animal.speed);
 		this.animate('AnimalMovingUp', 8, -1);
-		gv.animal.sheep.movement.push('up');
-		if (gv.animal.sheep.movement.length > 5) {
-			gv.animal.sheep.movement.shift();
-		}
+		var dir = 'up';
+		this.pushMovement(dir);
 	},
 	moveDown: function() {
 		this.tween({ x: this.x, y: this.y+gv.tile_sz }, gv.animal.speed);
 		this.animate('AnimalMovingDown', 8, -1);
-		gv.animal.sheep.movement.push('down');
-		if (gv.animal.sheep.movement.length > 5) {
-			gv.animal.sheep.movement.shift();
-		}
+		var dir = 'down';
+		this.pushMovement(dir);
 	},
 	moveLeft: function() {
 		this.tween({ x: this.x-gv.tile_sz, y: this.y }, gv.animal.speed);
 		this.animate('AnimalMovingLeft', 8, -1);
-		gv.animal.sheep.movement.push('left');
-		if (gv.animal.sheep.movement.length > 5) {
-			gv.animal.sheep.movement.shift();
-		}
+		var dir = 'left';
+		this.pushMovement(dir);
 	}, 
 	moveRight: function() {
 		this.tween({ x: this.x+gv.tile_sz, y: this.y }, gv.animal.speed);
 		this.animate('AnimalMovingRight', 8, -1);
-		gv.animal.sheep.movement.push('right');
+		var dir = 'right';
+		this.pushMovement(dir);
+	}
+});
+Crafty.c('Sheep', {
+	init: function() {
+		this.requires('Animal, spr_sheep5')
+			.crop(35, 38, 55, 50)
+			.collision(0, 0, 64, 0, 64, 48, 0, 60)
+			.attr({ w:32, h:32, z:1 })
+			.onHit('Solid', this.turnAround)
+	},
+	pushMovement: function(dir) {
+		gv.animal.sheep.movement.push(dir);
 		if (gv.animal.sheep.movement.length > 5) {
 			gv.animal.sheep.movement.shift();
 		}
+	},
+	lastMovement: function() {
+		return gv.animal.sheep.movement.slice(-1);
+	}
+});
+Crafty.c('Cow', {
+	init: function() {
+		this.requires('Animal, spr_cow13')
+			// .collision(0, 0, 5, 0, 5, 5, 0, 5)
+			.attr({ w:60, h:60, z:1 })
+			.onHit('Solid', this.turnAround)
+	},
+	pushMovement: function(dir) {
+		gv.animal.cow.movement.push(dir);
+		if (gv.animal.cow.movement.length > 5) {
+			gv.animal.cow.movement.shift();
+		}
+	},
+	lastMovement: function() {
+		return gv.animal.cow.movement.slice(-1);
 	}
 });
 
