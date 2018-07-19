@@ -119,17 +119,22 @@ Crafty.scene('Game', function() {
 	// Add machinery
 	this.well = Crafty.e('Well').at(1,Game.h()-7.8);
 
+
+
 	// Add score information
 	this.bucket = Crafty.e('Bucket').at(20,Game.h()-3);
 	this.egg = Crafty.e('Egg').at(23,Game.h()-3).attr({ w:48, h:48 });
 
-	Crafty.addEvent(this.bucket, Crafty.stage.elem, this.player.KeyDown, this.bucket.fill);
+	// Crafty.addEvent(this.bucket, Crafty.stage.elem, this.player.KeyDown, this.bucket.fill);
 
-
+	// Crafty.trigger('FillBucket');
 	// Add score
 	// this.score = Crafty.e('Score')
 	// this.power = Crafty.e('Power')
 
+
+	// var obj = Crafty.map.boundaries();
+	// Crafty.log(obj);
 
 });
 
@@ -264,21 +269,12 @@ Crafty.scene('Loading', function() {
 					spr_bucket: [0,0]
 				}
 			},
-			'assets/bucket-empty.png': {
-				tile: 105,
+			'assets/buckets.png': {
+				tile: 105, 
 				tileh: 120,
 				map: {
-					spr_bucket_empty: [0,0]
-				}
-			},
-			'assets/farm/tilesets/wheat.png': {
-				tile: 32,
-				tileh: 32,
-				map: {
-					spr_wheat1: [0,5],
-					spr_wheat2: [1,5],
-					spr_wheat3: [2,5],
-					spr_wheat4: [2,0]
+					spr_bucket_empty: [0,0],
+					spr_bucket_full: [1,0]
 				}
 			}
 		}

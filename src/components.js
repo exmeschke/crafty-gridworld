@@ -47,9 +47,10 @@ Crafty.c('Player', {
 		this.requires('2D, Canvas, Grid, Fourway, Keyboard, Collision, Delay, spr_player, SpriteAnimation')
 			.attr({ w:gv.tile_sz, h:gv.tile_sz, z:1 })
 			.fourway(50)
-			.onHit('Solid', this.stopMovement)
+			.onHit('Obstacle', this.stopMovement)
 			.onHit('Resource', this.collectResource)
 			.onHit('Well', this.fillBucket)
+			.onHit('Robot', this.pushRobot)
 			.reel('PlayerMovingUp', 1000, [
 				[0,0], [1,0], [2,0]
 			])
@@ -100,7 +101,7 @@ Crafty.c('Player', {
 		var hitDatas, hitData;
 		if ((hitDatas = this.hit('Well'))) {
 			Crafty.log('fill');
-			this.trigger('FillBucket');
+			Crafty.trigger('FillBucket');
 		}
 	},
 	stopMovement: function() {
@@ -112,6 +113,11 @@ Crafty.c('Player', {
 			this.attr({ x:this.x-1, y:this.y });
 		} else {
 			this.attr({ x:this.x+1, y:this.y });
+		}
+	}, 
+	pushRobot: function() {
+		if (gv.player.movement.slice(-1) == 'up') {
+			Crafty.trigger('moveUp');
 		}
 	}
 });
@@ -473,8 +479,9 @@ Crafty.c('Wheat4', {
 
 Crafty.c('Well', {
 	init: function() {
-		this.requires('2D, Canvas, Grid, Solid, spr_well, Collision')
+		this.requires('2D, Canvas, Grid, spr_well')
 			.attr({ w:40, h:40 })
+			// .collision(50, 0,  20, 20,  0, 20)
 			// .debugStroke('black')
 	}
 });
@@ -485,17 +492,11 @@ Crafty.c('Bucket', {
 			.bind('FillBucket', this.fill)
 	},
 	fill: function() {
-		this.sprite('spr_bucket');
+		Crafty.log('fill');
+		this.sprite('spr_bucket_full');
 	}
 });
-// Crafty.c('Bucket-Empty', {
-// 	init: function() {
-// 		this.requires('2D, Canvas, Grid, Solid, spr_bucket_empty, Collision')
-// 			// .crop(0,0,110,120)
-// 			// .collision(0,0,100,0,100,50,0,50)
-// 			.attr({ w:gv.tile_sz*2, h:gv.tile_sz*2 })
-// 	}
-// });
+
 
 
 // Scenery
