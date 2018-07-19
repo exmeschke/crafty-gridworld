@@ -119,8 +119,6 @@ Crafty.scene('Game', function() {
 	// Add machinery
 	this.well = Crafty.e('Well').at(1,Game.h()-7.8);
 
-
-
 	// Add score information
 	this.bucket = Crafty.e('Bucket').at(20,Game.h()-3);
 	this.egg = Crafty.e('Egg').at(23,Game.h()-3).attr({ w:48, h:48 });
@@ -262,11 +260,14 @@ Crafty.scene('Loading', function() {
 					spr_well: [0,0]
 				}
 			},
-			'assets/bucket.png': {
-				tile: 105,
-				tileh: 120,
+			'assets/farm/tilesets/wheat.png': {
+				tile: 32,
+				tileh: 32,
 				map: {
-					spr_bucket: [0,0]
+					spr_wheat1: [0,5],
+					spr_wheat2: [1,5],
+					spr_wheat3: [2,5],
+					spr_wheat4: [2,0]
 				}
 			},
 			'assets/buckets.png': {
@@ -275,6 +276,15 @@ Crafty.scene('Loading', function() {
 				map: {
 					spr_bucket_empty: [0,0],
 					spr_bucket_full: [1,0]
+				}
+			},
+			'assets/farm-tools.png': {
+				tile: 64,
+				tileh: 64,
+				map: {
+					spr_bag: [0,0],
+					spr_shovel: [0,1],
+					spr_scythe: [1,1]
 				}
 			}
 		}

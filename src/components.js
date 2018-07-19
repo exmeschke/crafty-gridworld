@@ -100,7 +100,6 @@ Crafty.c('Player', {
 	fillBucket: function() {
 		var hitDatas, hitData;
 		if ((hitDatas = this.hit('Well'))) {
-			Crafty.log('fill');
 			Crafty.trigger('FillBucket');
 		}
 	},
@@ -117,7 +116,17 @@ Crafty.c('Player', {
 	}, 
 	pushRobot: function() {
 		if (gv.player.movement.slice(-1) == 'up') {
-			Crafty.trigger('moveUp');
+			this.attr({ x:this.x, y:this.y+1 });
+			Crafty.trigger('RobotUp');
+		} else if (gv.player.movement.slice(-1) == 'down') {
+			this.attr({ x:this.x, y:this.y-1 });
+			Crafty.trigger('RobotDown');
+		} else if (gv.player.movement.slice(-1) == 'right') {
+			this.attr({ x:this.x-1, y:this.y });
+			Crafty.trigger('RobotRight');
+		} else {
+			this.attr({ x:this.x+1, y:this.y });
+			Crafty.trigger('RobotLeft');
 		}
 	}
 });
@@ -129,7 +138,10 @@ Crafty.c('Robot', {
 			.attr({ w: gv.tile_sz, h: gv.tile_sz, z:1 })
 			.onHit('Resource', this.collectResource)
 			.onHit('Solid', this.turnAround)
-			// .bind('randomMove', this.plant)
+			.bind('RobotUp', this.moveUp)
+			.bind('RobotDown', this.moveDown)
+			.bind('RobotLeft', this.moveLeft)
+			.bind('RobotRight', this.moveRight)
 	},
 	char: function() {
 		return 'robot';
