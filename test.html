@@ -6,7 +6,7 @@
 </head>
 <body>
 	<script>
-		Crafty.init(1420, 600);
+		Crafty.init(1400, 600);
 		Crafty.background('black');
 
 		Crafty.e('2D, Canvas, Color, Tween')
@@ -32,6 +32,33 @@
 		Crafty.e("HTML")
 		   .attr({x:20, y:20, w:100, h:100})
 		   .prepend("<a href='index.html'>Index</a>");
+
+		  // else if (Math.random() < 0.01 && !this.occupied[x][y]) {
+			// 	Crafty.e('Bush').at(x,y);
+			// 	this.occupied[x][y] = true;
+			// }
+
+			// Add resources
+	// for (var x = 0; x < Game.w(); x++) {
+	// 	for (var y = 0; y < Game.h(); y++) {
+	// 		if (Math.random() < 0.01 && !this.occupied[x][y]) {
+	// 			Crafty.e('SmallResource').at(x,y);
+	// 			this.occupied[x][y] = true;
+	// 		} else if (Math.random() < 0.01 && !this.occupied[x][y]) {
+	// 			Crafty.e('MedResource').at(x,y);
+	// 			this.occupied[x][y] = true;
+	// 		} else if (Math.random() < 0.005 && !this.occupied[x][y]) {
+	// 			Crafty.e('BigResource').at(x,y);
+	// 			this.occupied[x][y] = true;
+	// 		}
+	// 	}
+	// }
+// 	Crafty.c('Bush', {
+// 	init: function() {
+// 		this.requires('Obstacle, spr_bush')
+// 			.color('rgb(87, 109, 20)')
+// 	}
+// });
 	</script>
 </body>
 </html>

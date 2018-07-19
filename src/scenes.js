@@ -1,7 +1,7 @@
 // Game
 Crafty.scene('Game', function() {
 	// background
-	Crafty.background('rgb(87, 109, 20)');
+	Crafty.background('rgb(47, 130, 52)');
 
 	// A 2D array of occupied tiles
 	this.occupied = new Array(Game.w());
@@ -16,48 +16,99 @@ Crafty.scene('Game', function() {
 	this.occupied[this.player.atX()][this.player.atY()] = true;
 
 	// Add robot
-	this.robot = Crafty.e('Robot').at(1,1);
+	this.robot = Crafty.e('Robot').at(5,10);
 	// move every 1.5 seconds
 	this.robot.delay(this.robot.randomMove, 1500, -1);
 	// lose 10% of power every 10 seconds
 	this.robot.delay(this.robot.losePower, 10000, -1);
 
+	// Add animals
+	this.sheep = Crafty.e('Sheep').at(21,3);
+	this.sheep.delay(this.sheep.randomMove, 6000, -1);
+	// this.sheep.delay(this.sheep.eat, 3000, -1);
+
 	// Add score
-	this.score = Crafty.e('Score')
-	this.score = Crafty.e('Power')
+	// this.score = Crafty.e('Score')
+	// this.power = Crafty.e('Power')
 	
-	// Add obstacles
+	// Add scenery
 	for (var x = 0; x < Game.w(); x++){
 		for (var y = 0; y < Game.h(); y++){
-			var at_edge = (x == 0 || x == Game.w() - 1 || y == 0 || y == Game.h() - 1);
+			var at_edge = ((x == 0 && y < Game.h()-6) || (x == Game.w() - 1 && y < Game.h()-6) || y == 0 || y == Game.h() - 6);
+			var field_s = Game.w()/3
 
+			// trees at edge
 			if (at_edge) {
 				Crafty.e('Tree').at(x,y);
 				this.occupied[x][y] = true;
-			} else if (Math.random() < 0.01 && !this.occupied[x][y]) {
-				Crafty.e('Bush').at(x,y);
-				this.occupied[x][y] = true;
-			}
-		}
-	}
+			// growing field
+			} else if (x < field_s && y <= field_s) {
+				if (x == 1) {
+					if (y == 1){
+						Crafty.e('Soil1').at(x,y);
+					} else if (y == field_s){
+						Crafty.e('Soil7').at(x,y);
+					} else {
+						Crafty.e('Soil4').at(x,y);
+					}
+				} else if (x == field_s-1) {
+					if (y == 1){
+						Crafty.e('Soil3').at(x,y);
+					} else if (y == field_s) {
+						Crafty.e('Soil9').at(x,y);
+					} else {
+						Crafty.e('Soil6').at(x,y);
+					}
+				} else if (y == 1) { 
+					Crafty.e('Soil2').at(x,y);
+				} else if (y == field_s) {
+					Crafty.e('Soil8').at(x,y);
+				} else {
+					Crafty.e('Soil5').at(x,y);
+				}
+			// cow pen
+			} else if (y == Game.h()/5) {
+				if (x == field_s+8) {
+					Crafty.e('Fence12').at(x,y);
+				} else if (x == field_s) {
+					Crafty.e('Fence10').at(x,y);
+				} else if (x > field_s && x < field_s+8) {
+					Crafty.e('Fence2').at(x,y);
+				}
+			} else if (y == 1) {
+				if (x == field_s+8) {
+					Crafty.e('Fence9').at(x,y);
+				} else if (x == field_s) {
+					Crafty.e('Fence7').at(x,y);
+				} else if (x > field_s && x < field_s+8) {
+					Crafty.e('Fence2').at(x,y);
+				}
+			} else if (x == field_s || x == field_s+8) {
+				if (y > 1 && y < Game.h()/5) {
+					Crafty.e('Fence4').at(x,y);
+				}
+			// sheep pen
+			// } else if (){
 
-	// Add resources
-	for (var x = 0; x < Game.w(); x++) {
-		for (var y = 0; y < Game.h(); y++) {
-			if (Math.random() < 0.01 && !this.occupied[x][y]) {
-				Crafty.e('SmallResource').at(x,y);
-				this.occupied[x][y] = true;
+			// grass
+			} else if (Math.random() < 0.05 && !this.occupied[x][y]) {
+				Crafty.e('Grass').at(x,y);
+			// eggs
 			} else if (Math.random() < 0.01 && !this.occupied[x][y]) {
-				Crafty.e('MedResource').at(x,y);
-				this.occupied[x][y] = true;
-			} else if (Math.random() < 0.005 && !this.occupied[x][y]) {
-				Crafty.e('BigResource').at(x,y);
-				this.occupied[x][y] = true;
+				Crafty.e('Egg').at(x,y);
+			} 
+
+			// blank space at bottom
+			if (y > Game.h()-6) {
+				Crafty.e('Blank').at(x,y);
 			}
 		}
 	}
 });
 
+// else if (x < Game.w()/2) {
+// 				Crafty.e('Soil').at(x,y);
+// 			}
 
 // Loading
 Crafty.scene('Loading', function() {
@@ -95,8 +146,74 @@ Crafty.scene('Loading', function() {
 				map: {
 					spr_bot: [0,0]
 				}
+			},
+			'assets/health-bar.png': {
+				tile: 202,
+				tileh: 30,
+				map: {
+					spr_full: [0,0],
+					spr_75: [0,1],
+					spr_50: [0,2],
+					spr_25: [0,3],
+					spr_none: [0,4]
+				}
+			},
+			'assets/farm/plowed_soil.png': {
+				tile: 32,
+				tileh: 32,
+				map: {
+					spr_soil1: [0,2],
+					spr_soil2: [1,2],
+					spr_soil3: [2,2],
+					spr_soil4: [0,3],
+					spr_soil5: [1,3],
+					spr_soil6: [2,3],
+					spr_soil7: [0,4],
+					spr_soil8: [1,4],
+					spr_soil9: [2,4]
+				}
+			},
+			'assets/farm/grass1.png': {
+				tile: 32,
+				tileh: 32,
+				map: {
+					spr_grass: [0,0]
+				}
+			},
+			'assets/farm/egg.png': {
+				tile: 32, 
+				tileh: 32,
+				map: {
+					spr_egg: [0,0]
+				}
+			},
+			'assets/farm/fence.png': {
+				tile: 32, 
+				tileh: 32,
+				map: {
+					spr_fence1: [0,0],
+					spr_fence2: [1,0],
+					spr_fence3: [2,0],
+					spr_fence4: [0,1],
+					spr_fence5: [1,1],
+					spr_fence6: [2,1],
+					spr_fence7: [0,2],
+					spr_fence8: [1,2],
+					spr_fence9: [2,2],
+					spr_fence10: [0,4],
+					spr_fence11: [1,4],
+					spr_fence12: [2,4]
+				}
+			},
+			'assets/farm/animals/sheep_all.png': {
+				tile: 129,
+				tileh: 128,
+				map: {
+					spr_sheep5: [0,1]
+				}
 			}
 		}
+
 	};
 	Crafty.load(assetsObj);
 
