@@ -49,6 +49,7 @@ Crafty.c('Player', {
 			.fourway(50)
 			.onHit('Solid', this.stopMovement)
 			.onHit('Resource', this.collectResource)
+			.onHit('Well', this.fillBucket)
 			.reel('PlayerMovingUp', 1000, [
 				[0,0], [1,0], [2,0]
 			])
@@ -84,7 +85,7 @@ Crafty.c('Player', {
 			})
 			.bind('KeyDown', function(e) {
 				if (e.key == Crafty.keys.X) {
-				   console.log('hit');
+					this.fillBucket();
 				}
 			})
 	},
@@ -93,6 +94,13 @@ Crafty.c('Player', {
 		if ((hitDatas = this.hit('Resource'))) {
 			hitData = hitDatas[0];
 			hitData.obj.collect();
+		}
+	},
+	fillBucket: function() {
+		var hitDatas, hitData;
+		if ((hitDatas = this.hit('Well'))) {
+			Crafty.log('fill');
+			this.trigger('FillBucket');
 		}
 	},
 	stopMovement: function() {
@@ -111,10 +119,11 @@ Crafty.c('Player', {
 // Robot character
 Crafty.c('Robot', {
 	init: function() {
-		this.requires('2D, Canvas, Grid, Collision, spr_bot, Tween, Delay')
+		this.requires('2D, Canvas, Grid, Collision, spr_bot, Tween, Delay, Text')
 			.attr({ w: gv.tile_sz, h: gv.tile_sz, z:1 })
 			.onHit('Resource', this.collectResource)
 			.onHit('Solid', this.turnAround)
+			// .bind('randomMove', this.plant)
 	},
 	char: function() {
 		return 'robot';
@@ -137,6 +146,10 @@ Crafty.c('Robot', {
 		}
 	},
 	randomMove: function() {
+		if (this.x/gv.tile_sz < 18 && this.y/gv.tile_sz < 18) {
+			this.plant();
+		}
+		
 		if (gv.robot.power > 0) {
 			var ra = Math.random()
 			if (ra < 0.25) {
@@ -196,13 +209,37 @@ Crafty.c('Robot', {
 	},
 	recharge: function() {
 		gv.robot.power += 10
+	}, 
+	plant: function() {
+		var x = this.x/gv.tile_sz;
+		var y = this.y/gv.tile_sz;
+		Crafty.e('Wheat1').at(x, y);
+	},
+	water: function() {
+		var x = this.x/gv.tile_sz;
+		var y = this.y/gv.tile_sz;
+		Crafty.e('Wheat2').at(x, y);
+	// }, 
+	// pick: function() {
+	// 	var x = this.x/gv.tile_sz;
+	// 	var y = this.y/gv.tile_sz;
+	// 	Crafty.e('Egg').at(x, y);
+	}
+});
+Crafty.c('RobotRequest', {
+	init: function() {
+		this.requires('2D, Canvas, Grid, Color, Text')
+			.attr({ z:1 })
+			.color('white')
+			.text('Look at me!')
+			.dynamicTextGeneration(true)
 	}
 });
 
 // Animals
 Crafty.c('Animal', {
 	init: function() {
-		this.requires('2D, Canvas, Grid, Collision, Solid, Tween, Delay, WiredHitBox, SpriteAnimation')
+		this.requires('2D, Canvas, Grid, Collision, Solid, Tween, Delay, SpriteAnimation') //WiredHitBox
 			.reel('AnimalMovingUp', 1000, [
 				[0,0], [1,0], [2,0], [3,0]
 			])
@@ -227,7 +264,7 @@ Crafty.c('Animal', {
 			.reel('AnimalEatingRight', 1000, [
 				[0,7], [1,7], [2,7], [3,7], [0,7]
 			])
-			.debugStroke('black')
+			// .debugStroke('black')
 	},
 	char: function() {
 		return 'animal';
@@ -294,6 +331,12 @@ Crafty.c('Animal', {
 		this.animate('AnimalMovingRight', 8, -1);
 		var dir = 'right';
 		this.pushMovement(dir);
+	},
+	collectResource: function() {
+		var hitDatas, hitData;
+		if ((hitDatas = this.hit('Resource'))) {
+			hitData.obj.collect();
+		}
 	}
 });
 Crafty.c('Sheep', {
@@ -317,7 +360,6 @@ Crafty.c('Sheep', {
 Crafty.c('Cow', {
 	init: function() {
 		this.requires('Animal, spr_cow13')
-			// .collision(0, 0, 5, 0, 5, 5, 0, 5)
 			.attr({ w:60, h:60, z:1 })
 			.onHit('Solid', this.turnAround)
 	},
@@ -329,6 +371,28 @@ Crafty.c('Cow', {
 	},
 	lastMovement: function() {
 		return gv.animal.cow.movement.slice(-1);
+	}
+});
+Crafty.c('Chicken', {
+	init: function() {
+		this.requires('Animal, spr_chicken9')
+			// .collision(0, 0, 5, 0, 5, 5, 0, 5)
+			.attr({ w:24, h:24, z:1 })
+			.onHit('Solid', this.turnAround)
+	},
+	pushMovement: function(dir) {
+		gv.animal.chicken.movement.push(dir);
+		if (gv.animal.chicken.movement.length > 5) {
+			gv.animal.chicken.movement.shift();
+		}
+	},
+	lastMovement: function() {
+		return gv.animal.chicken.movement.slice(-1);
+	}, 
+	layEgg: function() {
+		var x = this.x/gv.tile_sz;
+		var y = this.y/gv.tile_sz;
+		Crafty.e('Egg').at(x, y);
 	}
 });
 
@@ -385,6 +449,53 @@ Crafty.c('Egg', {
 	}
 });
 
+Crafty.c('Wheat1', {
+	init: function() {
+		this.requires('2D, Canvas, Grid, spr_wheat1')
+	}
+});
+Crafty.c('Wheat2', {
+	init: function() {
+		this.requires('2D, Canvas, Grid, spr_wheat2')
+	}
+});
+Crafty.c('Wheat3', {
+	init: function() {
+		this.requires('2D, Canvas, Grid, spr_wheat3')
+	}
+});
+Crafty.c('Wheat4', {
+	init: function() {
+		this.requires('2D, Canvas, Grid, spr_wheat4')
+	}
+});
+
+
+Crafty.c('Well', {
+	init: function() {
+		this.requires('2D, Canvas, Grid, Solid, spr_well, Collision')
+			.attr({ w:40, h:40 })
+			// .debugStroke('black')
+	}
+});
+Crafty.c('Bucket', {
+	init: function() {
+		this.requires('2D, Canvas, Grid, Solid, spr_bucket_empty, Collision')
+			.attr({ w:gv.tile_sz*2, h:gv.tile_sz*2 })
+			.bind('FillBucket', this.fill)
+	},
+	fill: function() {
+		this.sprite('spr_bucket');
+	}
+});
+// Crafty.c('Bucket-Empty', {
+// 	init: function() {
+// 		this.requires('2D, Canvas, Grid, Solid, spr_bucket_empty, Collision')
+// 			// .crop(0,0,110,120)
+// 			// .collision(0,0,100,0,100,50,0,50)
+// 			.attr({ w:gv.tile_sz*2, h:gv.tile_sz*2 })
+// 	}
+// });
 
 
 // Scenery

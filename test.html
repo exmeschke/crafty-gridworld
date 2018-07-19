@@ -33,6 +33,18 @@
 		   .attr({x:20, y:20, w:100, h:100})
 		   .prepend("<a href='index.html'>Index</a>");
 
+		Crafty.bind('KeyDown', function(e) {
+		    if (e.key === Crafty.keys.LEFT_ARROW) {
+		        Crafty.viewport.x++;
+		    } else if (e.key === Crafty.keys.RIGHT_ARROW) {
+		        Crafty.viewport.x--;
+		    } else if (e.key === Crafty.keys.UP_ARROW) {
+		        Crafty.viewport.y++;
+		    } else if (e.key === Crafty.keys.DOWN_ARROW) {
+		        Crafty.viewport.y--;
+		    }
+		});
+
 		  // else if (Math.random() < 0.01 && !this.occupied[x][y]) {
 			// 	Crafty.e('Bush').at(x,y);
 			// 	this.occupied[x][y] = true;
