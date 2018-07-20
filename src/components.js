@@ -30,7 +30,9 @@ gv = {
 		bucket: 0,
 		eggs: 0,
 		wool: 0,
-		milk: 0
+		milk: 0,
+		bread: 0,
+		thread: 0
 	}
 }
 
@@ -538,6 +540,24 @@ Crafty.c('Milk', {
 		return 'milk';
 	}
 });
+Crafty.c('Bread', {
+	init: function() {
+		this.requires('Resource, spr_bread')
+			.attr({ w:16, h:16, r:2 })
+	},
+	type: function() {
+		return 'bread';
+	}
+});
+Crafty.c('Thread', {
+	init: function() {
+		this.requires('Resource, spr_thread')
+			.attr({ w:16, h:16, r:2 })
+	},
+	type: function() {
+		return 'thread';
+	}
+});
 
 
 Crafty.c('ResourceLabel', {
@@ -578,7 +598,26 @@ Crafty.c('MilkLabel', {
 		this.text(gv.resources.milk);
 	}
 });
-
+Crafty.c('BreadLabel', {
+	init: function(){
+		this.requires('ResourceLabel')
+			.bind('BreadCount', this.breadCount)
+	},
+	breadCount: function() {
+		gv.resources.bread = gv.resources.bread+1;
+		this.text(gv.resources.bread);
+	}
+});
+Crafty.c('ThreadLabel', {
+	init: function(){
+		this.requires('ResourceLabel')
+			.bind('ThreadCount', this.threadCount)
+	},
+	threadCount: function() {
+		gv.resources.thread = gv.resources.thread+1;
+		this.text(gv.resources.thread);
+	}
+});
 
 // Objects to interact with
 Crafty.c('Well', {

@@ -134,22 +134,27 @@ Crafty.scene('Game', function() {
 	this.score = Crafty.e('Score').at(4,box_b+1).text('$    0');
 	// this.power = Crafty.e('RobotPower').at(8,box_b+1.2);
 
-	for (var x = 0; x < 3; x++) {
+	for (var x = 0; x < 4; x++) {
 		Crafty.e('SqrBlock').at(19+(x*5),Game.h()-5);
 	}
-	this.box = Crafty.e('Box').at(34,Game.h()-5);
+	this.box = Crafty.e('Box').at(39,Game.h()-5).attr({ w:360 });
 
-	this.bucket = Crafty.e('Bucket').at(20.2,box_b);
-	this.seed_bag = Crafty.e('SeedBag').at(25.2,box_b);
-	this.tools = Crafty.e('Tools').at(30.2,box_b);
+	var st = 20.2;
+	this.bucket = Crafty.e('Bucket').at(st,box_b);
+	this.seed_bag = Crafty.e('SeedBag').at(st+5,box_b);
+	this.tools = Crafty.e('Tools').at(st+10,box_b);
 
-	this.egg = Crafty.e('Egg').at(35,box_b-.5).attr({ w:30, h:30 });
-	Crafty.e('EggLabel').at(36.5,box_b).text(0);
-	this.wool = Crafty.e('Wool').at(35,box_b+1.5).attr({ w:30, h:30 });
-	Crafty.e('WoolLabel').at(36.5,box_b+2).text(0);
-	this.milk = Crafty.e('Milk').at(38,box_b-.5).attr({ w:20, h:40 });
-	Crafty.e('MilkLabel').at(39.5,box_b).text(0);
-
+	var st2 = 40;
+	this.egg = Crafty.e('Egg').at(st2,box_b-.5).attr({ w:30, h:30 });
+	Crafty.e('EggLabel').at(st2+1.5,box_b).text(0);
+	this.wool = Crafty.e('Wool').at(st2+3,box_b-.3).attr({ w:30, h:25 });
+	Crafty.e('WoolLabel').at(st2+4.5,box_b).text(0);
+	this.milk = Crafty.e('Milk').at(st2+3.2,box_b+1.5).attr({ w:20, h:40 });
+	Crafty.e('MilkLabel').at(st2+4.5,box_b+2).text(0);
+	this.bread = Crafty.e('Bread').at(st2+6,box_b-.4).attr({ w:40, h:30 });
+	Crafty.e('BreadLabel').at(st2+8,box_b).text(0);
+	this.thread = Crafty.e('Thread').at(st2+6,box_b+1.4).attr({ w:40, h:40 });
+	Crafty.e('ThreadLabel').at(st2+8,box_b+2).text(0);
 	
 
 });
@@ -405,6 +410,21 @@ Crafty.scene('Loading', function() {
 				tileh: 323,
 				map: {
 					spr_milk: [0,0]
+				}
+			},
+			'assets/breads.png': {
+				tile: 125,
+				tileh: 93,
+				map: {
+					spr_bread: [0,0],
+					spr_ashes: [1,0]
+				}
+			},
+			'assets/thread.png': {
+				tile: 32,
+				tileh: 32,
+				map: {
+					spr_thread: [0,0]
 				}
 			},
 			'assets/charging-station.png': {
