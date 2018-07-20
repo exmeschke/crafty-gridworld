@@ -117,11 +117,29 @@ Crafty.scene('Game', function() {
 	}
 
 	// Add machinery
-	this.well = Crafty.e('Well').at(1,Game.h()-7.8);
+	var scene_b = Game.h()-7.8;
+	this.well = Crafty.e('Well').at(1,scene_b);
+	this.bag = Crafty.e('Barrel').at(3,scene_b+.1);
 
 	// Add score information
-	this.bucket = Crafty.e('Bucket').at(20,Game.h()-3);
-	this.egg = Crafty.e('Egg').at(23,Game.h()-3).attr({ w:48, h:48 });
+	var box_b = Game.h()-3.8;
+	this.scroll = Crafty.e('Scroll').at(0,Game.h()-5);
+	this.score = Crafty.e('Score').at(4,box_b+1).text('$    0');
+	// this.power = Crafty.e('RobotPower').at(8,box_b+1.2);
+
+	for (var x = 0; x < 7; x++) {
+		Crafty.e('SqrBlock').at(19+(x*5),Game.h()-5);
+	}
+	this.bucket = Crafty.e('Bucket').at(20.2,box_b);
+	this.seed_bag = Crafty.e('SeedBag').at(25.2,box_b);
+	this.egg = Crafty.e('Egg').at(35.2,box_b).attr({ w:60, h:60 });
+	Crafty.e('ResourceLabel').at(36.1,box_b+1).text(0);
+
+	// Crafty.e('ResourceLabel').attr({ x:26*24, y:box_b*24}).text(0);
+	
+
+
+
 
 	// Crafty.addEvent(this.bucket, Crafty.stage.elem, this.player.KeyDown, this.bucket.fill);
 
@@ -131,8 +149,6 @@ Crafty.scene('Game', function() {
 	// this.power = Crafty.e('Power')
 
 
-	// var obj = Crafty.map.boundaries();
-	// Crafty.log(obj);
 
 });
 
@@ -178,11 +194,11 @@ Crafty.scene('Loading', function() {
 				tile: 202,
 				tileh: 30,
 				map: {
-					spr_full: [0,0],
-					spr_75: [0,1],
-					spr_50: [0,2],
-					spr_25: [0,3],
-					spr_none: [0,4]
+					spr_health1: [0,0],
+					spr_health2: [1,0],
+					spr_health3: [2,0],
+					spr_health4: [3,0],
+					spr_health5: [4,0]
 				}
 			},
 			'assets/farm/plowed_soil.png': {
@@ -278,13 +294,64 @@ Crafty.scene('Loading', function() {
 					spr_bucket_full: [1,0]
 				}
 			},
-			'assets/farm-tools.png': {
+			'assets/farm/farm-tools.png': {
 				tile: 64,
 				tileh: 64,
 				map: {
 					spr_bag: [0,0],
 					spr_shovel: [0,1],
 					spr_scythe: [1,1]
+				}
+			},
+			'assets/farm/ui/box.png': {
+				tile: 1000,
+				tileh: 323,
+				map: {
+					spr_box: [0,0]
+				}
+			},
+			'assets/farm/ui/scroll.png': {
+				tile: 1000,
+				tileh: 274,
+				map: {
+					spr_scroll: [0,0]
+				}
+			},
+			'assets/farm/ui/block.png': {
+				tile: 96,
+				tileh: 96,
+				map: {
+					spr_block: [0,0]
+				}
+			},
+			'assets/farm/tools.png': {
+				tile: 32,
+				tileh: 32,
+				map: {
+					spr_tools: [0,0]
+				}
+			},
+			'assets/seed_bags.png': {
+				tile: 105,
+				tileh: 97,
+				map: {
+					spr_seed_bag_empty: [0,0],
+					spr_seed_bag_full: [1,0]
+				}
+			},
+			'assets/farm/barrels.png': {
+				tile: 64,
+				tileh: 64,
+				map: {
+					spr_barrels: [1,0]
+				}
+			},
+			'assets/chests.png': {
+				tile: 32,
+				tileh: 32,
+				map: {
+					spr_chest_closed: [0,0],
+					spr_chest_open: [0,1]
 				}
 			}
 		}

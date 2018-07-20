@@ -21,7 +21,10 @@ gv = {
 			movement: []
 		}
 	},
-	score: 0
+	score: 0,
+	resources: {
+		eggs: 0
+	}
 }
 
 // Grid
@@ -45,11 +48,10 @@ Crafty.c('Grid', {
 Crafty.c('Player', {
 	init: function() {
 		this.requires('2D, Canvas, Grid, Fourway, Keyboard, Collision, Delay, spr_player, SpriteAnimation')
-			.attr({ w:gv.tile_sz, h:gv.tile_sz, z:1 })
+			.attr({ w:gv.tile_sz, h:gv.tile_sz, z:2 })
 			.fourway(50)
 			.onHit('Obstacle', this.stopMovement)
 			.onHit('Resource', this.collectResource)
-			.onHit('Well', this.fillBucket)
 			.onHit('Robot', this.pushRobot)
 			.reel('PlayerMovingUp', 1000, [
 				[0,0], [1,0], [2,0]
@@ -86,7 +88,10 @@ Crafty.c('Player', {
 			})
 			.bind('KeyDown', function(e) {
 				if (e.key == Crafty.keys.X) {
-					this.fillBucket();
+					this.fill();
+					this.getTools();
+				} else if (e.key == Crafty.keys.V) {
+					this.emptyBucket();
 				}
 			})
 	},
@@ -97,10 +102,21 @@ Crafty.c('Player', {
 			hitData.obj.collect();
 		}
 	},
-	fillBucket: function() {
+	fill: function() {
 		var hitDatas, hitData;
 		if ((hitDatas = this.hit('Well'))) {
 			Crafty.trigger('FillBucket');
+		} else if ((hitDatas = this.hit('Barrel'))) {
+			Crafty.trigger('FillSeedBag');
+		}
+	},
+	emptyBucket: function() {
+		Crafty.trigger('EmptyBucket');
+	},
+	getTools: function() {
+		var hitDatas, hitData;
+		if ((hitDatas = this.hit('Bag'))) {
+			Crafty.trigger('GetTools');
 		}
 	},
 	stopMovement: function() {
@@ -164,7 +180,7 @@ Crafty.c('Robot', {
 		}
 	},
 	randomMove: function() {
-		if (this.x/gv.tile_sz < 18 && this.y/gv.tile_sz < 18) {
+		if (this.x/gv.tile_sz < 18 && this.y/gv.tile_sz < 18 && this.x/gv.tile_sz > 1 && this.y/gv.tile_sz > 1) {
 			this.plant();
 		}
 		
@@ -420,33 +436,41 @@ Crafty.c('Blank', {
 	init: function() {
 		this.requires('2D, Canvas, Grid, Color')
 			.color('white')
+			// .attr({ z:-1 })
 	}
 });
 Crafty.c('Score', {
 	init: function() {
-		this.requires('HTML')
-			.attr({ x:500, y:700, w:100, h:40 })
-			.append('Score: 0')
+		this.requires('2D, Canvas, Grid, Text')
+			.attr({ w:100, h:40 })
+			.textFont({ size: '24px' })
 			.bind('UpdateFrame', this.updateScore)
 	},
 	updateScore: function() {
-		this.replace('Score: '+String(gv.score))
+		// this.replace('$   '+String(gv.score))
+		this.text('$    '+gv.score)
 	}
 });
-Crafty.c('Power', {
-	init: function() {
-		this.requires('HTML')
-			.attr({ x:600, y:700, w:200, h:40 })
-			.append('Robot Power: 100')
-			.bind('UpdateFrame', this.updatePower)
-	},
-	updatePower: function() {
-		this.replace('Robot Power: '+String(gv.robot.power))
-		// if (gv.robot.power < 75){
-		// 	this.sprite([0,1])
-		// }
-	}
-});
+// Crafty.c('RobotPower', {
+// 	init: function() {
+// 		this.requires('2D, Canvas, Grid, spr_health1')
+// 			.attr({ w:100, h:20 })
+// 			// .textFont({ size: '20px' })
+// 			.bind('UpdateFrame', this.updatePower)
+// 	},
+// 	updatePower: function() {
+// 		// this.replace('Robot Power: '+String(gv.robot.power))
+// 		if (gv.robot.power < 75) {
+// 			this.sprite('spr_health2');
+// 		} else if (gv.robot.power < 50) {
+// 			this.sprite('spr_health3');
+// 		} else if (gv.robot.power < 25) {
+// 			this.sprite('spr_health4');
+// 		} else if (gv.robot.power < 50) {
+// 			this.sprite('spr_health5');
+// 		}
+// 	}
+// });
 
 
 
@@ -457,13 +481,33 @@ Crafty.c('Resource', {
 	},
 	collect: function() {
 		this.destroy();
-		gv.score = gv.score + this.r;
+		// gv.score = gv.score + this.r;
+		if (this.type() == 'egg') {
+			gv.score += this.r;
+			Crafty.trigger('UpdateLabel');
+		}
+	}
+});
+Crafty.c('ResourceLabel', {
+	init: function() {
+		this.requires('2D, Canvas, Text, Grid')
+			.attr({ z:5 })
+			.textFont({ size: '16px' })
+			.bind('UpdateLabel', this.update)
+			// .dynamicTextGeneration(true)
+	},
+	update: function() {
+		gv.resources.eggs = gv.resources.eggs+1;
+		this.text(gv.resources.eggs);
 	}
 });
 Crafty.c('Egg', {
 	init: function() {
 		this.requires('Resource, spr_egg')
-			.attr({ w:16, h:16, r:5 })
+			.attr({ w:16, h:16, r:1 })
+	},
+	type: function() {
+		return 'egg';
 	}
 });
 
@@ -488,27 +532,87 @@ Crafty.c('Wheat4', {
 	}
 });
 
-
+Crafty.c('Bag', {
+	init: function() {
+		this.requires('2D, Canvas, Grid, spr_bag')
+			.attr({ w:24, h:24 })
+			.bind('GetTools', this.getTools);
+	},
+	getTools: function() {
+		// var x = gv.tile_sz*
+		// var y = this.y/gv.tile_sz;
+		// Crafty.e('Egg').at(x, y);
+	}
+});
+Crafty.c('Barrel', {
+	init: function() {
+		this.requires('2D, Canvas, Grid, spr_barrels')
+			.attr({ w:40, h:40 })
+			.bind('GetSeeds', this.getSeeds);
+	},
+	getSeeds: function() {
+		// var x = gv.tile_sz*
+		// var y = this.y/gv.tile_sz;
+		// Crafty.e('Egg').at(x, y);
+	}
+});
 Crafty.c('Well', {
 	init: function() {
 		this.requires('2D, Canvas, Grid, spr_well')
 			.attr({ w:40, h:40 })
-			// .collision(50, 0,  20, 20,  0, 20)
-			// .debugStroke('black')
 	}
 });
+
+// Bottom panel
 Crafty.c('Bucket', {
 	init: function() {
 		this.requires('2D, Canvas, Grid, Solid, spr_bucket_empty, Collision')
-			.attr({ w:gv.tile_sz*2, h:gv.tile_sz*2 })
+			.attr({ w:gv.tile_sz*2.5, h:gv.tile_sz*2.5 })
 			.bind('FillBucket', this.fill)
+			.bind('EmptyBucket', this.empty)
 	},
 	fill: function() {
 		Crafty.log('fill');
 		this.sprite('spr_bucket_full');
+	},
+	empty: function() {
+		Crafty.log('empty');
+		this.sprite('spr_bucket_empty');
 	}
 });
-
+Crafty.c('SeedBag', {
+	init: function() {
+		this.requires('2D, Canvas, Grid, Solid, spr_seed_bag_empty, Collision')
+			.attr({ w:gv.tile_sz*2.5, h:gv.tile_sz*2.5 })
+			.bind('FillSeedBag', this.fill)
+			.bind('EmptySeedBag', this.empty)
+	},
+	fill: function() {
+		Crafty.log('fill');
+		this.sprite('spr_seed_bag_full');
+	},
+	empty: function() {
+		Crafty.log('empty');
+		this.sprite('spr_seed_bag_empty');
+	}
+});
+Crafty.c('Tools', {
+	init: function() {
+		this.requires('2D, Canvas, Grid, spr_tools')
+	}
+});
+Crafty.c('Scroll', {
+	init: function() {
+		this.requires('2D, Canvas, Grid, spr_scroll')
+			.attr({ w:450, h:120, z:0 })
+	}
+});
+Crafty.c('SqrBlock', {
+	init: function() {
+		this.requires('2D, Canvas, Grid, spr_block')
+			.attr({ w:120, h:120, z:0 })
+	}
+});
 
 
 // Scenery
