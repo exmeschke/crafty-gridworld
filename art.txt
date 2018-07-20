@@ -1,5 +1,16 @@
+Instructions:
+
+Bucket -- holds water from well or milk from cow
+
+
 (animals)
 https://opengameart.org/content/lpc-style-farm-animals
 
 (farm)
 https://opengameart.org/content/lpc-farming-tilesets-magic-animations-and-ui-elements
+
+(oven)
+http://lpc.opengameart.org/
+
+(well)
+https://opengameart.org/content/objects-0
