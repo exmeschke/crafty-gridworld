@@ -142,10 +142,13 @@ Crafty.scene('Game', function() {
 	this.bucket = Crafty.e('Bucket').at(20.2,box_b);
 	this.seed_bag = Crafty.e('SeedBag').at(25.2,box_b);
 	this.tools = Crafty.e('Tools').at(30.2,box_b);
+
 	this.egg = Crafty.e('Egg').at(35,box_b-.5).attr({ w:30, h:30 });
 	Crafty.e('EggLabel').at(36.5,box_b).text(0);
 	this.wool = Crafty.e('Wool').at(35,box_b+1.5).attr({ w:30, h:30 });
 	Crafty.e('WoolLabel').at(36.5,box_b+2).text(0);
+	this.milk = Crafty.e('Milk').at(38,box_b-.5).attr({ w:20, h:40 });
+	Crafty.e('MilkLabel').at(39.5,box_b).text(0);
 
 	
 
@@ -395,6 +398,13 @@ Crafty.scene('Loading', function() {
 				tileh: 12,
 				map: {
 					spr_wool: [0,0]
+				}
+			},
+			'assets/milk.png': {
+				tile: 174,
+				tileh: 323,
+				map: {
+					spr_milk: [0,0]
 				}
 			},
 			'assets/charging-station.png': {
