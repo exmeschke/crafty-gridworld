@@ -22,6 +22,9 @@ gv = {
 		},
 		chicken: {
 			movement: []
+		}, 
+		snake: {
+			movement: []
 		}
 	},
 	score: 0,
@@ -33,6 +36,11 @@ gv = {
 		milk: 0,
 		bread: 0,
 		thread: 0
+	},
+	chest: {
+		revealed: 0,
+		open: 0,
+		pin: 673824
 	}
 }
 
@@ -57,25 +65,26 @@ Crafty.c('Grid', {
 Crafty.c('Player', {
 	init: function() {
 		this.requires('2D, Canvas, Grid, Fourway, Keyboard, Collision, Delay, spr_player, SpriteAnimation')
-			.attr({ w:gv.tile_sz, h:gv.tile_sz, z:2 })
+			.attr({ w:gv.tile_sz, h:gv.tile_sz, z:5 })
 			.fourway(50)
 			.onHit('Obstacle', this.stopMovement)
 			.onHit('Resource', this.collectResource)
 			.onHit('Robot', this.pushRobot)
-			.reel('PlayerMovingUp', 1000, [
+			.onHit('Chicken', this.pushAnimal)
+			.reel('PlayerMovingUp', 600, [
 				[0,0], [1,0], [2,0]
 			])
-			.reel('PlayerMovingRight', 1000, [
+			.reel('PlayerMovingRight', 500, [
 				[0,1], [1,1], [2,1]
 			])
-			.reel('PlayerMovingDown', 1000, [
+			.reel('PlayerMovingDown', 600, [
 				[0,2], [1,2], [2,2]
 			])
-			.reel('PlayerMovingLeft', 1000, [
+			.reel('PlayerMovingLeft', 500, [
 				[0,3], [1,3], [2,3]
 			])
 			.bind('NewDirection', function(data) {
-				var animation_speed = 8;
+				var animation_speed = 20;
 				if (data.x > 0) {
 					this.animate('PlayerMovingRight', animation_speed, -1);
 					gv.player.movement.push('right');
@@ -134,6 +143,16 @@ Crafty.c('Player', {
 			if (gv.animal.cow.hasMilk == 1 && gv.resources.bucket == 0) {
 				Crafty.trigger('Milked');
 			}
+		} else if ((hitDatas = this.hit('Chest'))) {
+			if (gv.chest.revealed == 0) {
+				Crafty.trigger('DigChest');
+			} else if (gv.chest.revealed == 1) {
+				Crafty.trigger('OpenChest');
+			}
+		} else if ((hitDatas = this.hit('Rock'))) {
+			if (gv.resources.tools == 1) {
+				hitDatas[0].obj.break();
+			}
 		}
 	},
 	emptyBucket: function() {
@@ -167,8 +186,25 @@ Crafty.c('Player', {
 			this.attr({ x:this.x+1, y:this.y });
 			Crafty.trigger('RobotLeft');
 		}
+	},
+	pushAnimal: function() {
+		var hitDatas = this.hit('Animal');
+		if (gv.player.movement.slice(-1) == 'up') {
+			this.attr({ x:this.x, y:this.y+1 });
+			hitDatas[0].obj.moveUp();
+		} else if (gv.player.movement.slice(-1) == 'down') {
+			this.attr({ x:this.x, y:this.y-1 });
+			hitDatas[0].obj.moveDown();
+		} else if (gv.player.movement.slice(-1) == 'right') {
+			this.attr({ x:this.x-1, y:this.y });
+			hitDatas[0].obj.moveRight();
+		} else {
+			this.attr({ x:this.x+1, y:this.y });
+			hitDatas[0].obj.moveLeft();
+		}
 	}
 });
+
 
 // Robot character
 Crafty.c('Robot', {
@@ -342,6 +378,7 @@ Crafty.c('Animal', {
 				[0,7], [1,7], [2,7], [3,7], [0,7]
 			])
 			.onHit('Oven', this.turnAround)
+			.onHit('SpinningWheel', this.turnAround)
 			// .debugStroke('black')
 	},
 	char: function() {
@@ -362,7 +399,14 @@ Crafty.c('Animal', {
 	randomMove: function() {
 		var ra = Math.random()
 		var animation_speed = 8;
-		if (ra < 0.12) {
+
+		if (this.y/gv.tile_sz <= 2) {
+			this.moveDown();
+		} else if (this.x/gv.tile_sz >= 50) {
+			this.moveLeft();
+		} else if (this.y/gv.tile_sz >= 23) {
+			this.moveUp();
+		} else if (ra < 0.12) {
 			this.moveUp();
 		} else if (ra < 0.24) {
 			this.moveDown();
@@ -448,6 +492,7 @@ Crafty.c('Sheep', {
 		// MAKE NOISE
 	}
 });
+
 Crafty.c('Cow', {
 	init: function() {
 		this.requires('Animal, spr_cow13')
@@ -467,6 +512,7 @@ Crafty.c('Cow', {
 	},
 	hasMilk: function() {
 		gv.animal.cow.hasMilk = 1;
+		// window.alert('Cow milk!');
 	},
 	milked: function() {
 		gv.animal.cow.hasMilk = 0;
@@ -497,7 +543,25 @@ Crafty.c('Chicken', {
 		Crafty.e('Egg').at(x, y);
 	}
 });
-
+Crafty.c('Snake', {
+	init: function() {
+		this.requires('Animal, Solid, spr_snake5')
+			// .collision(0, 0, 5, 0, 5, 5, 0, 5)
+			.attr({ w:24, h:24, z:1 })
+	},
+	pushMovement: function(dir) {
+		gv.animal.snake.movement.push(dir);
+		if (gv.animal.snake.movement.length > 5) {
+			gv.animal.snake.movement.shift();
+		}
+	},
+	lastMovement: function() {
+		return gv.animal.snake.movement.slice(-1);
+	}, 
+	eatEgg: function() {
+		gv.resources.eggs -= 1;
+	}
+});
 
 // Resources
 Crafty.c('Resource', {
@@ -619,6 +683,7 @@ Crafty.c('ThreadLabel', {
 	}
 });
 
+
 // Objects to interact with
 Crafty.c('Well', {
 	init: function() {
@@ -667,7 +732,45 @@ Crafty.c('ChargingStation', {
 			.attr({ w:30, h:50 })
 	}
 });
-
+Crafty.c('Chest', {
+	init: function() {
+		this.requires('2D, Canvas, Grid, spr_chest_closed')
+			.attr({ w:40, h:40, z:-1 })
+			.bind('DigChest', this.reveal)
+			.bind('OpenChest', this.open)
+	},
+	reveal: function() {
+		this.attr({ z:2 });
+		Crafty.log('reveal');
+		gv.chest.revealed = 1;
+	},
+	open: function() {
+		var pin = prompt('Please enter the 6 digit pin number:');
+		if (pin == null || pin == "") {
+		} else if (pin == gv.chest.pin) {
+			this.sprite('spr_chest_open');
+		}
+		gv.chest.open = 1;
+	}
+});
+Crafty.c('Rock', {
+	init: function( ) {
+		this.requires('2D, Canvas, Grid, spr_rock')
+			.attr({ w:20, h:20, z:4, p:0 })
+	},
+	break: function() {
+		this.sprite('spr_rocks');
+		if (this.p == 1) {
+			this.revealPin();
+		}
+	}, 
+	hasPin: function() {
+		this.p = 1;
+	},
+	revealPin: function() {
+		window.alert(gv.chest.pin);
+	}
+});
 
 // Bottom panel
 Crafty.c('Score', {

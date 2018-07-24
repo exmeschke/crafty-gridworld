@@ -31,9 +31,11 @@ Crafty.scene('Game', function() {
 
 	this.chicken1 = Crafty.e('Chicken').at(46,6);
 	this.chicken1.delay(this.chicken1.randomMove, 1000, -1).delay(this.chicken1.layEgg, 20000, -1);
-	this.chicken2 = Crafty.e('Chicken').at(38,22);
+	this.chicken2 = Crafty.e('Chicken').at(38,20);
 	this.chicken2.delay(this.chicken2.randomMove, 1000, -1).delay(this.chicken1.layEgg, 15000, -1);
-	
+
+	var cc = 0;
+	var rr = 0;
 	// Add scenery
 	for (var x = 0; x < Game.w(); x++){
 		for (var y = 0; y < Game.h(); y++){
@@ -50,25 +52,34 @@ Crafty.scene('Game', function() {
 				if (x == 1) {
 					if (y == 1){
 						Crafty.e('Soil1').at(x,y);
+						this.occupied[x][y] = true;
 					} else if (y == field_s){
 						Crafty.e('Soil7').at(x,y);
+						this.occupied[x][y] = true;
 					} else {
 						Crafty.e('Soil4').at(x,y);
+						this.occupied[x][y] = true;
 					}
 				} else if (x == field_s-1) {
 					if (y == 1){
 						Crafty.e('Soil3').at(x,y);
+						this.occupied[x][y] = true;
 					} else if (y == field_s) {
 						Crafty.e('Soil9').at(x,y);
+						this.occupied[x][y] = true;
 					} else {
 						Crafty.e('Soil6').at(x,y);
+						this.occupied[x][y] = true;
 					}
 				} else if (y == 1) { 
 					Crafty.e('Soil2').at(x,y);
+					this.occupied[x][y] = true;
 				} else if (y == field_s) {
 					Crafty.e('Soil8').at(x,y);
+					this.occupied[x][y] = true;
 				} else {
 					Crafty.e('Soil5').at(x,y);
+					this.occupied[x][y] = true;
 				}
 
 			// animal pens
@@ -80,37 +91,61 @@ Crafty.scene('Game', function() {
 					// Crafty.e('Fence8').at(x,y);
 				} else if (x == field_s+c) {
 					Crafty.e('Fence9').at(x,y);
+					this.occupied[x][y] = true;
 				} else if (x == field_s+a) {
 					Crafty.e('Fence7').at(x,y);
+					this.occupied[x][y] = true;
 				} else if (x > field_s+a && x < field_s+c) {
 					Crafty.e('Fence2').at(x,y);
+					this.occupied[x][y] = true;
 				}
 			} else if (y == (Game.h()/5)+5) {
 				if (x == field_s+b) {
 					Crafty.e('Fence11').at(x,y);
+					this.occupied[x][y] = true;
 				} else if (x == field_s+c) {
 					Crafty.e('Fence12').at(x,y);
+					this.occupied[x][y] = true;
 				} else if (x == field_s+a) {
 					Crafty.e('Fence10').at(x,y);
+					this.occupied[x][y] = true;
 				} else if (x > field_s+a && x < field_s+c) {
 					if (x < field_s+6 || x == field_s+12 || x == field_s+13) {
 					} else{
 						Crafty.e('Fence2').at(x,y);
+						this.occupied[x][y] = true;
 					}
 					
 				}
 			} else if (x == field_s+a || x == field_s+b || x == field_s+c) {
 				if (y > 1 && y < (Game.h()/5)+5) {
 					Crafty.e('Fence4').at(x,y);
+					this.occupied[x][y] = true;
 				}
 
 			// grass
-			} else if (Math.random() < 0.05 && !this.occupied[x][y]) {
+			} else if (y < Game.h()-6 && Math.random() < 0.05 && !this.occupied[x][y]) {
 				Crafty.e('Grass').at(x,y);
+				cc+=1;
+				// place treasure chest here
+				if (cc == 30) {
+					this.chest = Crafty.e('Chest').at(x,y);
+					Crafty.log(x+y);
+				}
 			// eggs
-			} else if (Math.random() < 0.01 && !this.occupied[x][y]) {
+			} else if (y < Game.h()-6 && Math.random() < 0.01 && !this.occupied[x][y]) {
 				Crafty.e('Egg').at(x,y);
+			// rocks
+			} else if (y < Game.h()-6 && Math.random() < 0.004 && !this.occupied[x][y]) {
+				this.rock = Crafty.e('Rock').at(x,y);
+				rr += 1;
+				if (rr == 1) {
+					this.rock.hasPin();
+				}
 			} 
+			// else if (y == 23 || x == 52 || y == 2) {
+			// 	Crafty.e('Blank').at(x,y);
+			// }
 
 			// blank space at bottom
 			if (y > Game.h()-6) {
@@ -276,6 +311,13 @@ Crafty.scene('Loading', function() {
 					spr_chicken9: [0,2]
 				}
 			},
+			'assets/farm/animals/snake.png': {
+				tile: 32,
+				tileh: 32,
+				map: {
+					spr_snake5: [1,1]
+				}
+			},
 			'assets/well.png': {
 				tile: 59,
 				tileh: 49,
@@ -377,6 +419,14 @@ Crafty.scene('Loading', function() {
 					spr_chest_open: [0,1]
 				}
 			},
+			'assets/farm/rocks.png': {
+				tile: 32,
+				tileh: 32,
+				map: {
+					spr_rock: [0,0],
+					spr_rocks: [1,0]
+				}
+			},
 			'assets/oven.png': {
 				tile: 32,
 				tileh: 27,
@@ -389,13 +439,6 @@ Crafty.scene('Loading', function() {
 				tileh: 85,
 				map: {
 					spr_spinning_wheel: [0,0]
-				}
-			},
-			'assets/string.png': {
-				tile: 32,
-				tileh: 32,
-				map: {
-					spr_spool: [0,0]
 				}
 			},
 			'assets/wool.png': {
