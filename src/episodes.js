@@ -10,7 +10,33 @@ var states = {
 	}
 }
 
-// Notification
+// Alerts
+var sounds = {
+	play_low: function() {
+		Crafty.audio.play('alert_low');
+	},
+	play_med: function() {
+		Crafty.audio.play('alert_med');
+	},
+	play_high: function() {
+		Crafty.audio.play('alert_high');
+	},
+	play_cow: function() {
+		Crafty.audio.play('cow');
+	},
+	play_sheep: function() {
+		Crafty.audio.play('sheep');
+	}
+}
+
+// Human tasks
+var tasks = {
+	curr: 0,
+	text: [
+		'Gather 20 eggs.',
+		'Make bread.'
+	]
+}
 // The treasure chest is located at coordinates (x, y). 
 // The 
 
@@ -27,3 +53,4 @@ var states = {
 
 // Snake 
 // this.snake = Crafty.e('Snake').at(42,8);
+

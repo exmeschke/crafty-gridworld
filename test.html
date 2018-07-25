@@ -65,10 +65,26 @@
 	// 		}
 	// 	}
 	// }
-// 	Crafty.c('Bush', {
+
+
+// Crafty.c('RobotPower', {
 // 	init: function() {
-// 		this.requires('Obstacle, spr_bush')
-// 			.color('rgb(87, 109, 20)')
+// 		this.requires('2D, Canvas, Grid, spr_health1')
+// 			.attr({ w:100, h:20 })
+// 			// .textFont({ size: '20px' })
+// 			.bind('UpdateFrame', this.updatePower)
+// 	},
+// 	updatePower: function() {
+// 		// this.replace('Robot Power: '+String(gv.robot.power))
+// 		if (gv.robot.power < 75) {
+// 			this.sprite('spr_health2');
+// 		} else if (gv.robot.power < 50) {
+// 			this.sprite('spr_health3');
+// 		} else if (gv.robot.power < 25) {
+// 			this.sprite('spr_health4');
+// 		} else if (gv.robot.power < 50) {
+// 			this.sprite('spr_health5');
+// 		}
 // 	}
 // });
 	</script>

@@ -1,5 +1,10 @@
 // Game variables
 gv = {
+	sound: '', 
+	tasks: {
+		curr: 0,
+		text: []
+	},
 	tile_sz: 24,
 	player: {
 		movement: []
@@ -7,8 +12,15 @@ gv = {
 	robot: {
 		movement: [],
 		charging: 0,
+		task: 0,
 		power: 100,
 		speed: 1200
+	},
+	field: {
+		seed_loc_x: [],
+		seed_loc_y: [],
+		wheat_loc_x: [],
+		wheat_loc_y: []
 	},
 	animal: {
 		speed: 1500,
@@ -29,8 +41,9 @@ gv = {
 	},
 	score: 0,
 	resources: {
-		tools: 0,
 		bucket: 0,
+		seed_bag: 0,
+		tools: 0,
 		eggs: 0,
 		wool: 0,
 		milk: 0,
@@ -43,6 +56,8 @@ gv = {
 		pin: 673824
 	}
 }
+gv.tasks = tasks;
+gv.sound = sounds;
 
 // Grid
 Crafty.c('Grid', {
@@ -108,10 +123,13 @@ Crafty.c('Player', {
 				if (e.key == Crafty.keys.X) {
 					this.fill();
 					this.gather();
+					gv.sound.play_low();
 				} else if (e.key == Crafty.keys.C) {
 					this.emptyBucket();
+					gv.sound.play_med();
 				} else if (e.key == Crafty.keys.V) {
 					this.emptySeedBag();
+					gv.sound.play_low();
 				}
 			})
 	},
@@ -136,7 +154,6 @@ Crafty.c('Player', {
 		var hitDatas, hitData;
 		if ((hitDatas = this.hit('Sheep'))) {
 			if (gv.animal.sheep.hasWool == 1 && gv.resources.tools == 0) {
-				Crafty.log('sheep');
 				Crafty.trigger('Sheared');
 			}
 		} else if ((hitDatas = this.hit('Cow'))) {
@@ -173,6 +190,14 @@ Crafty.c('Player', {
 		}
 	}, 
 	pushRobot: function() {
+		if (Crafty.s('Keyboard').isKeyDown('X')) {
+			Crafty.log(gv.robot.task + ' ' + gv.resources.bucket);
+			if (gv.robot.task == 0 && gv.resources.bucket == 1) {
+				Crafty.log('water');
+				Crafty.trigger('Water');
+			}
+		}
+
 		if (gv.player.movement.slice(-1) == 'up') {
 			this.attr({ x:this.x, y:this.y+1 });
 			Crafty.trigger('RobotUp');
@@ -219,6 +244,9 @@ Crafty.c('Robot', {
 			.bind('RobotLeft', this.moveLeft)
 			.bind('RobotRight', this.moveRight)
 			.bind('Recharge', this.recharge)
+			.bind('Plant', this.plant)
+			.bind('Water', this.water)
+			.bind('Pick', this.pick)
 	},
 	char: function() {
 		return 'robot';
@@ -242,7 +270,8 @@ Crafty.c('Robot', {
 	},
 	randomMove: function() {
 		if (this.x/gv.tile_sz < 15 && this.y/gv.tile_sz < 15 && this.x/gv.tile_sz > 1 && this.y/gv.tile_sz > 1) {
-			this.plant();
+			// this.plant();
+			this.tendPlants();
 		}
 
 		if (this.x/gv.tile_sz < 2) {
@@ -323,20 +352,54 @@ Crafty.c('Robot', {
 			gv.robot.charging = 0;
 		}
 	},
+	tendPlants: function() {
+		if (gv.robot.task == 0) {
+			this.plant();
+		} else if (gv.robot.task == 1) {
+			this.water();
+		} else if (gv.robot.task == 2) {
+			this.pick();
+		}
+	},
 	plant: function() {
-		var x = this.x/gv.tile_sz;
-		var y = this.y/gv.tile_sz;
-		Crafty.e('Wheat1').at(x, y);
+		gv.robot.task = 0;
+
+		var x = Math.round(this.x/gv.tile_sz);
+		var y = Math.round(this.y/gv.tile_sz);
+
+		Crafty.e('Wheat2').at(x, y);
+		if (gv.field.seed_loc_x.indexOf(x) == -1) {
+			gv.field.seed_loc_x.push(x);
+		}
+		if (gv.field.seed_loc_y.indexOf(y) == -1) {
+			gv.field.seed_loc_y.push(y);
+		}
 	},
 	water: function() {
-		var x = this.x/gv.tile_sz;
-		var y = this.y/gv.tile_sz;
-		Crafty.e('Wheat2').at(x, y);
-	// }, 
-	// pick: function() {
-	// 	var x = this.x/gv.tile_sz;
-	// 	var y = this.y/gv.tile_sz;
-	// 	Crafty.e('Egg').at(x, y);
+		gv.robot.task = 1;
+
+		var x = Math.round(this.x/gv.tile_sz);
+		var y = Math.round(this.y/gv.tile_sz);
+
+		if (gv.field.seed_loc_x.indexOf(x) != -1 && gv.field.seed_loc_y.indexOf(y) != -1) {
+			Crafty.e('Wheat4').at(x, y);
+			if (gv.field.wheat_loc_x.indexOf(x) == -1) {
+				gv.field.wheat_loc_x.push(x);
+			}
+			if (gv.field.wheat_loc_y.indexOf(y) == -1) {
+				gv.field.wheat_loc_y.push(y);
+			}
+		}
+	}, 
+	pick: function() {
+		gv.robot.task = 2;
+
+		var x = Math.round(this.x/gv.tile_sz);
+		var y = Math.round(this.y/gv.tile_sz);
+
+		if (gv.field.wheat_loc_x.indexOf(x) != -1 && gv.field.wheat_loc_y.indexOf(y) != -1) {
+			Crafty.e('Soil5').at(x, y);
+		}
 	}
 });
 Crafty.c('RobotRequest', {
@@ -393,7 +456,7 @@ Crafty.c('Animal', {
 		} else if (movement == 'right') {
 			this.moveLeft();
 		} else {
-			this.moveRight()
+			this.moveRight();
 		}
 	},
 	randomMove: function() {
@@ -481,7 +544,7 @@ Crafty.c('Sheep', {
 		return gv.animal.sheep.movement.slice(-1);
 	},
 	hasWool: function() {
-		Crafty.log('has wool');
+		gv.sound.play_sheep();
 		gv.animal.sheep.hasWool = 1;
 	},
 	sheared: function() {
@@ -492,7 +555,6 @@ Crafty.c('Sheep', {
 		// MAKE NOISE
 	}
 });
-
 Crafty.c('Cow', {
 	init: function() {
 		this.requires('Animal, spr_cow13')
@@ -511,14 +573,13 @@ Crafty.c('Cow', {
 		return gv.animal.cow.movement.slice(-1);
 	},
 	hasMilk: function() {
+		gv.sound.play_cow();
 		gv.animal.cow.hasMilk = 1;
-		// window.alert('Cow milk!');
 	},
 	milked: function() {
 		gv.animal.cow.hasMilk = 0;
 		gv.score += this.r;
 		Crafty.trigger('MilkCount');
-		// MAKE NOISE
 	}
 });
 Crafty.c('Chicken', {
@@ -785,26 +846,20 @@ Crafty.c('Score', {
 		// this.text('Power: '+gv.robot.power);
 	}
 });
-// Crafty.c('RobotPower', {
-// 	init: function() {
-// 		this.requires('2D, Canvas, Grid, spr_health1')
-// 			.attr({ w:100, h:20 })
-// 			// .textFont({ size: '20px' })
-// 			.bind('UpdateFrame', this.updatePower)
-// 	},
-// 	updatePower: function() {
-// 		// this.replace('Robot Power: '+String(gv.robot.power))
-// 		if (gv.robot.power < 75) {
-// 			this.sprite('spr_health2');
-// 		} else if (gv.robot.power < 50) {
-// 			this.sprite('spr_health3');
-// 		} else if (gv.robot.power < 25) {
-// 			this.sprite('spr_health4');
-// 		} else if (gv.robot.power < 50) {
-// 			this.sprite('spr_health5');
-// 		}
-// 	}
-// });
+Crafty.c('Task', {
+	init: function() {
+		this.requires('2D, DOM, Grid, Text')
+			.attr( { w:200, h:200 })
+			.textFont({ size: '18px' })
+			.bind('UpdateFrame', this.updateTask)
+	},
+	updateTask: function() {
+		this.text(gv.tasks.text[gv.tasks.curr]);
+	},
+	completeTask: function() {
+		gv.tasks.curr += 1;
+	}
+});
 Crafty.c('Bucket', {
 	init: function() {
 		this.requires('2D, Canvas, Grid, Solid, spr_bucket_empty, Collision')
@@ -830,9 +885,11 @@ Crafty.c('SeedBag', {
 	},
 	fill: function() {
 		this.sprite('spr_seed_bag_full');
+		gv.resources.seed_bag = 1;
 	},
 	empty: function() {
 		this.sprite('spr_seed_bag_empty');
+		gv.resources.seed_bag = 0;
 	}
 });
 Crafty.c('Tools', {
@@ -1009,21 +1066,24 @@ Crafty.c('Soil9', {
 Crafty.c('Wheat1', {
 	init: function() {
 		this.requires('2D, Canvas, Grid, spr_wheat1')
+			// .attr({ w:gv.tile_sz, h:gv.tile_sz })
 	}
 });
 Crafty.c('Wheat2', {
 	init: function() {
 		this.requires('2D, Canvas, Grid, spr_wheat2')
+			// .attr({ w:gv.tile_sz, h:gv.tile_sz })
 	}
 });
 Crafty.c('Wheat3', {
 	init: function() {
 		this.requires('2D, Canvas, Grid, spr_wheat3')
+			// .attr({ w:gv.tile_sz, h:gv.tile_sz })
 	}
 });
 Crafty.c('Wheat4', {
-	init: function() {
-		this.requires('2D, Canvas, Grid, spr_wheat4')
+	init: function() { this.requires('2D, Canvas, Grid, spr_wheat4')
+		// .attr({ w:gv.tile_sz, h:gv.tile_sz })
 	}
 });
 

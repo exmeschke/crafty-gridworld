@@ -136,7 +136,7 @@ Crafty.scene('Game', function() {
 			} else if (y < Game.h()-6 && Math.random() < 0.01 && !this.occupied[x][y]) {
 				Crafty.e('Egg').at(x,y);
 			// rocks
-			} else if (y < Game.h()-6 && Math.random() < 0.004 && !this.occupied[x][y]) {
+			} else if (y < Game.h()-6 && Math.random() < 0.005 && !this.occupied[x][y]) {
 				this.rock = Crafty.e('Rock').at(x,y);
 				rr += 1;
 				if (rr == 1) {
@@ -166,7 +166,8 @@ Crafty.scene('Game', function() {
 	// Add score information
 	var box_b = Game.h()-3.8;
 	this.scroll = Crafty.e('Scroll').at(0,Game.h()-5);
-	this.score = Crafty.e('Score').at(4,box_b+1).text('$    0');
+	this.score = Crafty.e('Score').at(4,box_b+1).text('$     0');
+	this.currTask = Crafty.e('Task').at(8,box_b+.2).text('');
 	// this.power = Crafty.e('RobotPower').at(8,box_b+1.2);
 
 	for (var x = 0; x < 4; x++) {
@@ -192,6 +193,7 @@ Crafty.scene('Game', function() {
 	Crafty.e('ThreadLabel').at(st2+8,box_b+2).text(0);
 	
 
+
 });
 
 
@@ -203,6 +205,16 @@ Crafty.scene('Loading', function() {
 		.text('Loading...')
 		.attr({ x:0, y:Game.height()/2-24, w:Game.width() })
 		.css($text_css);
+
+	// Load audio
+	Crafty.audio.add({
+		alert_low: ['assets/sounds/low.mp3'],
+		alert_med: ['assets/sounds/med.mp3'],
+		alert_high: ['assets/sounds/high.mp3'],
+		sheep: ['assets/sounds/sheep.wav'],
+		cow: ['assets/sounds/cow.mp3'],
+		chicken: ['assets/sounds/chicken.wav']
+	});
 
 	// Load sprite map
 	var assetsObj = {
@@ -314,9 +326,7 @@ Crafty.scene('Loading', function() {
 			'assets/farm/animals/snake.png': {
 				tile: 32,
 				tileh: 32,
-				map: {
-					spr_snake5: [1,1]
-				}
+				map: { spr_snake5: [1,1] }
 			},
 			'assets/well.png': {
 				tile: 59,
