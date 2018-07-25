@@ -191,8 +191,10 @@ Crafty.scene('Game', function() {
 	Crafty.e('MilkLabel').at(st2+4.5,box_b+2).text(0);
 	this.bread = Crafty.e('Bread').at(st2+6,box_b-.4).attr({ w:40, h:30 });
 	Crafty.e('BreadLabel').at(st2+8,box_b).text(0);
-	this.thread = Crafty.e('Thread').at(st2+6,box_b+1.4).attr({ w:40, h:40 });
-	Crafty.e('ThreadLabel').at(st2+8,box_b+2).text(0);
+	this.muffin = Crafty.e('Muffin').at(st2+6.1,box_b+1.5).attr({ w:30, h:30 });
+	Crafty.e('MuffinLabel').at(st2+8,box_b+2).text(0);
+	this.thread = Crafty.e('Thread').at(st2+9.2,box_b-.5).attr({ w:40, h:40 });
+	Crafty.e('ThreadLabel').at(st2+11,box_b).text(0);
 	
 
 
@@ -217,9 +219,9 @@ Crafty.scene('Loading', function() {
 		cow: ['assets/sounds/cow.mp3'],
 		chicken: ['assets/sounds/chicken.wav'],
 		stone: ['assets/sounds/stone-crush2.mp3'],
-		radar_low: ['assets/sounds/radar-low.mp3'],
-		radar_med: ['assets/sounds/radar-med.mp3'],
-		radar_high: ['assets/sounds/radar-high.mp3']
+		radar_low: ['assets/sounds/radar-low.wav'],
+		radar_med: ['assets/sounds/radar-med.wav'],
+		radar_high: ['assets/sounds/radar-high.wav']
 	});
 
 	// Load sprite map
@@ -482,6 +484,14 @@ Crafty.scene('Loading', function() {
 				tileh: 93,
 				map: {
 					spr_bread: [0,0],
+					spr_ashes: [1,0]
+				}
+			},
+			'assets/muffins.png': {
+				tile: 128,
+				tileh: 123,
+				map: {
+					spr_muffin: [0,0],
 					spr_ashes: [1,0]
 				}
 			},

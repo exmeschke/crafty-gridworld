@@ -51,6 +51,7 @@ gv = {
 		wool: 0,
 		milk: 0,
 		bread: 0,
+		muffin: 0,
 		thread: 0
 	},
 	chest: {
@@ -711,6 +712,15 @@ Crafty.c('Bread', {
 		return 'bread';
 	}
 });
+Crafty.c('Muffin', {
+	init: function() {
+		this.requires('Resource, spr_muffin')
+			.attr({ w:16, h:16, r:2 })
+	},
+	type: function() {
+		return 'muffin';
+	}
+});
 Crafty.c('Thread', {
 	init: function() {
 		this.requires('Resource, spr_thread')
@@ -778,6 +788,16 @@ Crafty.c('BreadLabel', {
 	breadCount: function() {
 		gv.resources.bread = gv.resources.bread+1;
 		this.text(gv.resources.bread);
+	}
+});
+Crafty.c('MuffinLabel', {
+	init: function(){
+		this.requires('ResourceLabel')
+			.bind('MuffinCount', this.muffinCount)
+	},
+	muffinCount: function() {
+		gv.resources.muffin = gv.resources.muffin+1;
+		this.text(gv.resources.muffin);
 	}
 });
 Crafty.c('ThreadLabel', {
