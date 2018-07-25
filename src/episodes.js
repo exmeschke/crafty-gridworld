@@ -26,6 +26,9 @@ var sounds = {
 	},
 	play_sheep: function() {
 		Crafty.audio.play('sheep');
+	},
+	play_stone: function() {
+		Crafty.audio.play('stone');
 	}
 }
 
@@ -36,6 +39,12 @@ var tasks = {
 		'Gather 20 eggs.',
 		'Make bread.'
 	]
+}
+var task_list = {
+	curr: 0,
+	updateCurr: function() {
+		curr+=1;
+	}
 }
 // The treasure chest is located at coordinates (x, y). 
 // The 
@@ -52,5 +61,6 @@ var tasks = {
 // }
 
 // Snake 
-// this.snake = Crafty.e('Snake').at(42,8);
+// this.snake = Crafty.e('Snake').at(40,9);
+// this.snake.delay(this.snake.snakeMove('up'), 500, -1);
 

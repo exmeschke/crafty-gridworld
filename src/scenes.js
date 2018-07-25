@@ -13,7 +13,6 @@ Crafty.scene('Game', function() {
 	}
 	// Add player
 	this.player = Crafty.e('Player').at(24, 16).ignoreHits('Solid');
-	this.occupied[this.player.atX()][this.player.atY()] = true;
 
 	// Add robot
 	this.robot = Crafty.e('Robot').at(5,10);
@@ -143,9 +142,6 @@ Crafty.scene('Game', function() {
 					this.rock.hasPin();
 				}
 			} 
-			// else if (y == 23 || x == 52 || y == 2) {
-			// 	Crafty.e('Blank').at(x,y);
-			// }
 
 			// blank space at bottom
 			if (y > Game.h()-6) {
@@ -159,15 +155,19 @@ Crafty.scene('Game', function() {
 	this.well = Crafty.e('Well').at(1,scene_b);
 	this.bag = Crafty.e('Barrel').at(3,scene_b+.1);
 	this.stump = Crafty.e('Stump').at(5,scene_b+.3);
+	this.book = Crafty.e('Book').at(7,scene_b+.7);
 	this.oven = Crafty.e('Oven').at(Game.w()-3.5,1);
+	// Crafty.e('Bread').at(Game.w()-2.8, 1.8);
 	this.spinning_wheel = Crafty.e('SpinningWheel').at(Game.w()-5.5,1);
+	// Crafty.e('Thread').at(Game.w()-5, 1.8);
 	this.charging_station = Crafty.e('ChargingStation').at(16,3);
+	this.bbush = Crafty.e('BerryBush').at(Game.w()-3,22);
 
 	// Add score information
 	var box_b = Game.h()-3.8;
 	this.scroll = Crafty.e('Scroll').at(0,Game.h()-5);
-	this.score = Crafty.e('Score').at(4,box_b+1).text('$     0');
-	this.currTask = Crafty.e('Task').at(8,box_b+.2).text('');
+	this.score = Crafty.e('Score').at(3.2,box_b+1).text('$    0.00');
+	this.currTask = Crafty.e('Task').at(8,box_b+1.1).text('');
 	// this.power = Crafty.e('RobotPower').at(8,box_b+1.2);
 
 	for (var x = 0; x < 4; x++) {
@@ -183,6 +183,8 @@ Crafty.scene('Game', function() {
 	var st2 = 40;
 	this.egg = Crafty.e('Egg').at(st2,box_b-.5).attr({ w:30, h:30 });
 	Crafty.e('EggLabel').at(st2+1.5,box_b).text(0);
+	this.berry = Crafty.e('Berries').at(st2,box_b+1.7).attr({ w:30, h:20 });
+	Crafty.e('BerryLabel').at(st2+1.5,box_b+2).text(0);
 	this.wool = Crafty.e('Wool').at(st2+3,box_b-.3).attr({ w:30, h:25 });
 	Crafty.e('WoolLabel').at(st2+4.5,box_b).text(0);
 	this.milk = Crafty.e('Milk').at(st2+3.2,box_b+1.5).attr({ w:20, h:40 });
@@ -213,7 +215,11 @@ Crafty.scene('Loading', function() {
 		alert_high: ['assets/sounds/high.mp3'],
 		sheep: ['assets/sounds/sheep.wav'],
 		cow: ['assets/sounds/cow.mp3'],
-		chicken: ['assets/sounds/chicken.wav']
+		chicken: ['assets/sounds/chicken.wav'],
+		stone: ['assets/sounds/stone-crush2.mp3'],
+		radar_low: ['assets/sounds/radar-low.mp3'],
+		radar_med: ['assets/sounds/radar-med.mp3'],
+		radar_high: ['assets/sounds/radar-high.mp3']
 	});
 
 	// Load sprite map
@@ -343,6 +349,7 @@ Crafty.scene('Loading', function() {
 					spr_wheat2: [1,5],
 					spr_wheat3: [2,5],
 					spr_wheat4: [2,0]
+					// spr_wheat4: [1,4]
 				}
 			},
 			'assets/farm/buckets.png': {
@@ -421,6 +428,11 @@ Crafty.scene('Loading', function() {
 					spr_stump2: [1,0]
 				}
 			},
+			'assets/book.png': {
+				tile: 31,
+				tileh: 30,
+				map: { spr_book: [0,0] }
+			},
 			'assets/farm/chests.png': {
 				tile: 32,
 				tileh: 32,
@@ -437,14 +449,14 @@ Crafty.scene('Loading', function() {
 					spr_rocks: [1,0]
 				}
 			},
-			'assets/oven.png': {
-				tile: 32,
-				tileh: 27,
+			'assets/ovenn.png': {
+				tile: 64,
+				tileh: 41,
 				map: {
 					spr_oven: [0,0]
 				}
 			},
-			'assets/spinning-wheel.png': {
+			'assets/spinning-wheels.png': {
 				tile: 86,
 				tileh: 85,
 				map: {
@@ -473,7 +485,17 @@ Crafty.scene('Loading', function() {
 					spr_ashes: [1,0]
 				}
 			},
-			'assets/thread.png': {
+			'assets/bbushes.png': {
+				tile: 256,
+				tileh: 205,
+				map: { spr_bbush_empty: [0,0], spr_bbush_full: [1,0] }
+			},
+			'assets/berries.png': {
+				tile: 256,
+				tileh: 151,
+				map: { spr_berries: [0,0] }
+			},
+			'assets/thread-blue.png': {
 				tile: 32,
 				tileh: 32,
 				map: {
