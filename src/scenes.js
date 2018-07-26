@@ -197,6 +197,10 @@ Crafty.scene('Game', function() {
 	Crafty.e('ThreadLabel').at(st2+11,box_b).text(0);
 	
 
+	// TUTORIAL
+
+
+	// GAME
 
 });
 
@@ -238,19 +242,12 @@ Crafty.scene('Loading', function() {
 			'assets/hunter.png': {
 				tile: 16,
 				tileh: 18,
-				map: {
-					spr_player: [0,2],
-					spr_player_up: [0,0],
-					spr_player_right: [0,1],
-					spr_player_down: [0,3]
-				}
+				map: { spr_player: [0,2] }
 			},
 			'assets/bot.gif': {
 				tile: 16, 
 				tileh: 18,
-				map: {
-					spr_bot: [0,0]
-				}
+				map: { spr_bot: [0,0] }
 			},
 			'assets/health-bar.png': {
 				tile: 202,
@@ -281,16 +278,12 @@ Crafty.scene('Loading', function() {
 			'assets/farm/grass1.png': {
 				tile: 32,
 				tileh: 32,
-				map: {
-					spr_grass: [0,0]
-				}
+				map: { spr_grass: [0,0] }
 			},
 			'assets/farm/egg.png': {
 				tile: 32, 
 				tileh: 32,
-				map: {
-					spr_egg: [0,0]
-				}
+				map: { spr_egg: [0,0] }
 			},
 			'assets/farm/fence.png': {
 				tile: 32, 
@@ -313,23 +306,17 @@ Crafty.scene('Loading', function() {
 			'assets/farm/animals/sheep_all.png': {
 				tile: 129,
 				tileh: 128,
-				map: {
-					spr_sheep5: [0,1]
-				}
+				map: { spr_sheep5: [0,1] }
 			},
 			'assets/farm/animals/cow_all4.png': {
 				tile: 96,
 				tileh: 95,
-				map: {
-					spr_cow13: [0,3]
-				}
+				map: { spr_cow13: [0,3] }
 			},
 			'assets/farm/animals/chicken_all.png': {
 				tile: 96,
 				tileh: 96,
-				map: {
-					spr_chicken9: [0,2]
-				}
+				map: { spr_chicken9: [0,2] }
 			},
 			'assets/farm/animals/snake.png': {
 				tile: 32,
@@ -339,9 +326,7 @@ Crafty.scene('Loading', function() {
 			'assets/well.png': {
 				tile: 59,
 				tileh: 49,
-				map: {
-					spr_well: [0,0]
-				}
+				map: { spr_well: [0,0] }
 			},
 			'assets/farm/tilesets/wheat.png': {
 				tile: 32,
@@ -371,33 +356,20 @@ Crafty.scene('Loading', function() {
 					spr_scythe: [1,1]
 				}
 			},
-			'assets/farm/ui/box.png': {
-				tile: 1000,
-				tileh: 323,
-				map: {
-					spr_box: [0,0]
-				}
-			},
 			'assets/farm/ui/box-long.png': {
 				tile: 1225,
 				tileh: 314,
-				map: {
-					spr_box: [0,0]
-				}
+				map: { spr_box: [0,0] }
 			},
 			'assets/farm/ui/scroll.png': {
 				tile: 1000,
 				tileh: 274,
-				map: {
-					spr_scroll: [0,0]
-				}
+				map: { spr_scroll: [0,0] }
 			},
 			'assets/farm/ui/block.png': {
 				tile: 96,
 				tileh: 96,
-				map: {
-					spr_block: [0,0]
-				}
+				map: { spr_block: [0,0] }
 			},
 			'assets/farm/tools.png': {
 				tile: 32,
@@ -418,9 +390,7 @@ Crafty.scene('Loading', function() {
 			'assets/farm/barrels.png': {
 				tile: 64,
 				tileh: 64,
-				map: {
-					spr_barrels: [1,0]
-				}
+				map: { spr_barrels: [1,0] }
 			},
 			'assets/farm/tree-stumps.png': {
 				tile: 55,
@@ -454,30 +424,22 @@ Crafty.scene('Loading', function() {
 			'assets/ovenn.png': {
 				tile: 64,
 				tileh: 41,
-				map: {
-					spr_oven: [0,0]
-				}
+				map: { spr_oven: [0,0] }
 			},
 			'assets/spinning-wheels.png': {
 				tile: 86,
 				tileh: 85,
-				map: {
-					spr_spinning_wheel: [0,0]
-				}
+				map: { spr_spinning_wheel: [0,0] }
 			},
 			'assets/wool.png': {
 				tile: 25,
 				tileh: 12,
-				map: {
-					spr_wool: [0,0]
-				}
+				map: { spr_wool: [0,0] }
 			},
 			'assets/milk.png': {
 				tile: 174,
 				tileh: 323,
-				map: {
-					spr_milk: [0,0]
-				}
+				map: { spr_milk: [0,0] }
 			},
 			'assets/breads.png': {
 				tile: 125,
@@ -498,7 +460,10 @@ Crafty.scene('Loading', function() {
 			'assets/bbushes.png': {
 				tile: 256,
 				tileh: 205,
-				map: { spr_bbush_empty: [0,0], spr_bbush_full: [1,0] }
+				map: { 
+					spr_bbush_empty: [0,0], 
+					spr_bbush_full: [1,0] 
+				}
 			},
 			'assets/berries.png': {
 				tile: 256,
@@ -508,16 +473,12 @@ Crafty.scene('Loading', function() {
 			'assets/thread-blue.png': {
 				tile: 32,
 				tileh: 32,
-				map: {
-					spr_thread: [0,0]
-				}
+				map: { spr_thread: [0,0] }
 			},
 			'assets/charging-station.png': {
 				tile: 610,
 				tileh: 750,
-				map: {
-					spr_charging_station: [0,0]
-				}
+				map: { spr_charging_station: [0,0] }
 			}
 		}
 

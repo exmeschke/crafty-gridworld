@@ -72,9 +72,7 @@ Crafty.c('Grid', {
 		this.attr({ x: x*gv.tile_sz, y: y*gv.tile_sz })
 		return this;
 	},
-	pos: function() {
-		return this.x, this.y;
-	}
+	pos: function() { return this.x, this.y; }
 });
 
 // Player character
@@ -562,11 +560,9 @@ Crafty.c('Sheep', {
 		gv.animal.sheep.hasWool = 1;
 	},
 	sheared: function() {
-		Crafty.log('sheared');
 		gv.score += this.r;
 		Crafty.trigger('WoolCount');
 		gv.animal.sheep.hasWool = 0;
-		// MAKE NOISE
 	}
 });
 Crafty.c('Cow', {
@@ -591,9 +587,9 @@ Crafty.c('Cow', {
 		gv.animal.cow.hasMilk = 1;
 	},
 	milked: function() {
-		gv.animal.cow.hasMilk = 0;
 		gv.score += this.r;
 		Crafty.trigger('MilkCount');
+		gv.animal.cow.hasMilk = 0;
 	}
 });
 Crafty.c('Chicken', {
@@ -621,13 +617,10 @@ Crafty.c('Chicken', {
 Crafty.c('Snake', {
 	init: function() {
 		this.requires('Animal, Resource, spr_snake5')
-			// .collision(0, 0, 5, 0, 5, 5, 0, 5)
 			.attr({ w:24, h:24, z:1 })
 			.delay(this.eatEgg, 5000)
 	},
-	type: function() {
-		return 'snake';
-	},
+	type: function() { return 'snake'; },
 	snakeMove: function( dir ) {
 		if ('dir' == 'up') {
 			this.moveUp();
@@ -660,10 +653,11 @@ Crafty.c('Resource', {
 			.bind('Collect', this.collect)
 	},
 	collect: function() {
-		if (this.type() == 'egg') {
-			gv.score += this.r;
-			Crafty.trigger('EggCount');
-		} 
+		if (this.type() == 'egg') { Crafty.trigger('EggCount'); } 
+		else if (this.type() == 'bread') { Crafty.trigger('BreadCount'); } 
+		else if (this.type() == 'muffin') { Crafty.trigger('MuffinCount'); } 
+		else if (this.type() == 'thread') { Crafty.trigger('ThreadCount'); } 
+		gv.score += this.r;
 		this.destroy();
 	}
 });
@@ -672,63 +666,49 @@ Crafty.c('Egg', {
 		this.requires('Resource, spr_egg')
 			.attr({ w:16, h:16, r:.25 })
 	},
-	type: function() {
-		return 'egg';
-	}
+	type: function() { return 'egg'; }
 });
 Crafty.c('Berries', {
 	init: function() {
 		this.requires('Resource, spr_berries')
 			.attr({ r:.10 })
 	},
-	type: function() {
-		return 'berry';
-	}
+	type: function() { return 'berry'; }
 });
 Crafty.c('Wool', {
 	init: function() {
 		this.requires('Resource, spr_wool')
 			.attr({ w:16, h:16, r:2 })
 	},
-	type: function() {
-		return 'wool';
-	}
+	type: function() { return 'wool'; }
 });
 Crafty.c('Milk', {
 	init: function() {
 		this.requires('Resource, spr_milk')
 			.attr({ w:16, h:16, r:2 })
 	},
-	type: function() {
-		return 'milk';
-	}
+	type: function() { return 'milk'; }
 });
 Crafty.c('Bread', {
 	init: function() {
 		this.requires('Resource, spr_bread')
-			.attr({ w:16, h:16, r:2 })
+			.attr({ w:16, h:16, r:15 })
 	},
-	type: function() {
-		return 'bread';
-	}
+	type: function() { return 'bread'; }
 });
 Crafty.c('Muffin', {
 	init: function() {
 		this.requires('Resource, spr_muffin')
-			.attr({ w:16, h:16, r:2 })
+			.attr({ w:16, h:16, r:18 })
 	},
-	type: function() {
-		return 'muffin';
-	}
+	type: function() { return 'muffin'; }
 });
 Crafty.c('Thread', {
 	init: function() {
 		this.requires('Resource, spr_thread')
-			.attr({ w:16, h:16, r:2 })
+			.attr({ w:16, h:16, r:8 })
 	},
-	type: function() {
-		return 'thread';
-	}
+	type: function() { return 'thread'; }
 });
 
 
@@ -737,78 +717,68 @@ Crafty.c('ResourceLabel', {
 		this.requires('2D, Canvas, Text, Grid')
 			.attr({ z:5 })
 			.textFont({ size: '16px' })
+	},
+	count: function() {
+		var update;
+		if (this.type() == 'egg') { update = gv.resources.eggs; }
+		else if (this.type() == 'berry') { update = gv.resources.berries; }
+		else if (this.type() == 'wool') { update = gv.resources.wool; }
+		else if (this.type() == 'milk') { update = gv.resources.milk; }
+		else if (this.type() == 'bread') { update = gv.resources.bread; }
+		else if (this.type() == 'muffin') { update = gv.resources.muffin; }
+		else if (this.type() == 'thread') { update = gv.resources.thread; }
+		update += 1;
+		this.text(update);
 	}
 });
 Crafty.c('EggLabel', {
 	init: function(){
 		this.requires('ResourceLabel')
-			.bind('EggCount', this.eggCount)
+			.bind('EggCount', this.count)
 	},
-	eggCount: function() {
-		gv.resources.eggs = gv.resources.eggs+1;
-		this.text(gv.resources.eggs);
-	}
+	type: function() { return 'egg'; }
 });
 Crafty.c('BerryLabel', {
 	init: function(){
 		this.requires('ResourceLabel')
-			.bind('BerryCount', this.berryCount)
+			.bind('BerryCount', this.count)
 	},
-	berryCount: function() {
-		gv.resources.berries = gv.resources.berries+1;
-		this.text(gv.resources.berries);
-	}
+	type: function() { return 'berry'; }
 });
 Crafty.c('WoolLabel', {
 	init: function(){
 		this.requires('ResourceLabel')
-			.bind('WoolCount', this.woolCount)
+			.bind('WoolCount', this.count)
 	},
-	woolCount: function() {
-		Crafty.log('woolCount');
-		gv.resources.wool = gv.resources.wool+1;
-		this.text(gv.resources.wool);
-	}
+	type: function() { return 'wool'; }
 });
 Crafty.c('MilkLabel', {
 	init: function(){
 		this.requires('ResourceLabel')
-			.bind('MilkCount', this.milkCount)
+			.bind('MilkCount', this.count)
 	},
-	milkCount: function() {
-		gv.resources.milk = gv.resources.milk+1;
-		this.text(gv.resources.milk);
-	}
+	type: function() { return 'milk'; }
 });
 Crafty.c('BreadLabel', {
 	init: function(){
 		this.requires('ResourceLabel')
-			.bind('BreadCount', this.breadCount)
+			.bind('BreadCount', this.count)
 	},
-	breadCount: function() {
-		gv.resources.bread = gv.resources.bread+1;
-		this.text(gv.resources.bread);
-	}
+	type: function() { return 'bread'; }
 });
 Crafty.c('MuffinLabel', {
 	init: function(){
 		this.requires('ResourceLabel')
-			.bind('MuffinCount', this.muffinCount)
+			.bind('MuffinCount', this.count)
 	},
-	muffinCount: function() {
-		gv.resources.muffin = gv.resources.muffin+1;
-		this.text(gv.resources.muffin);
-	}
+	type: function() { return 'muffin'; }
 });
 Crafty.c('ThreadLabel', {
 	init: function(){
 		this.requires('ResourceLabel')
-			.bind('ThreadCount', this.threadCount)
+			.bind('ThreadCount', this.count)
 	},
-	threadCount: function() {
-		gv.resources.thread = gv.resources.thread+1;
-		this.text(gv.resources.thread);
-	}
+	type: function() { return 'thread'; }
 });
 
 
@@ -1026,7 +996,6 @@ Crafty.c('Blank', {
 	init: function() {
 		this.requires('2D, Canvas, Grid, Color')
 			.color('white')
-			// .attr({ z:-1 })
 	}
 });
 Crafty.c('Box', {
@@ -1054,150 +1023,36 @@ Crafty.c('Obstacle', {
 			.attr({ w:gv.tile_sz, h:gv.tile_sz})
 	}
 });
-Crafty.c('Tree', {
-	init: function() {
-		this.requires('Obstacle, spr_tree')
-	}
-});
-Crafty.c('Fence1', {
-	init: function() {
-		this.requires('Obstacle, spr_fence1')
-	}
-});
-Crafty.c('Fence2', {
-	init: function() {
-		this.requires('Obstacle, spr_fence2')
-	}
-});
-Crafty.c('Fence3', {
-	init: function() {
-		this.requires('Obstacle, spr_fence3')
-	}
-});
-Crafty.c('Fence4', {
-	init: function() {
-		this.requires('Obstacle, spr_fence4')
-	}
-});
-Crafty.c('Fence5', {
-	init: function() {
-		this.requires('Obstacle, spr_fence5')
-	}
-});
-Crafty.c('Fence6', {
-	init: function() {
-		this.requires('Obstacle, spr_fence6')
-	}
-});
-Crafty.c('Fence7', {
-	init: function() {
-		this.requires('Obstacle, spr_fence7')
-	}
-});
-Crafty.c('Fence8', {
-	init: function() {
-		this.requires('Obstacle, spr_fence8')
-	}
-});
-Crafty.c('Fence9', {
-	init: function() {
-		this.requires('Obstacle, spr_fence9')
-	}
-});
-Crafty.c('Fence10', {
-	init: function() {
-		this.requires('Obstacle, spr_fence10')
-	}
-});
-Crafty.c('Fence11', {
-	init: function() {
-		this.requires('Obstacle, spr_fence11')
-	}
-});
-Crafty.c('Fence12', {
-	init: function() {
-		this.requires('Obstacle, spr_fence12')
-	}
-});
+Crafty.c('Tree', {init: function() {this.requires('Obstacle, spr_tree')}});
+Crafty.c('Fence1', {init: function() {this.requires('Obstacle, spr_fence1')}});
+Crafty.c('Fence2', {init: function() {this.requires('Obstacle, spr_fence2')}});
+Crafty.c('Fence3', {init: function() {this.requires('Obstacle, spr_fence3')}});
+Crafty.c('Fence4', {init: function() {this.requires('Obstacle, spr_fence4')}});
+Crafty.c('Fence5', {init: function() {this.requires('Obstacle, spr_fence5')}});
+Crafty.c('Fence6', {init: function() {this.requires('Obstacle, spr_fence6')}});
+Crafty.c('Fence7', {init: function() {this.requires('Obstacle, spr_fence7')}});
+Crafty.c('Fence8', {init: function() {this.requires('Obstacle, spr_fence8')}});
+Crafty.c('Fence9', {init: function() {this.requires('Obstacle, spr_fence9')}});
+Crafty.c('Fence10', {init: function() {this.requires('Obstacle, spr_fence10')}});
+Crafty.c('Fence11', {init: function() {this.requires('Obstacle, spr_fence11')}});
+Crafty.c('Fence12', {init: function() {this.requires('Obstacle, spr_fence12')}});
 
-Crafty.c('Ground', {
-	init: function() {
-		this.requires('2D, Canvas, Grid')
-	}
-});
-Crafty.c('Grass', {
-	init: function() {
-		this.requires('Ground, spr_grass')
-	}
-});
-Crafty.c('Soil1', {
-	init: function() {
-		this.requires('Ground, spr_soil1')
-	}
-});
-Crafty.c('Soil2', {
-	init: function() {
-		this.requires('Ground, spr_soil2')
-	}
-});
-Crafty.c('Soil3', {
-	init: function() {
-		this.requires('Ground, spr_soil3')
-	}
-});
-Crafty.c('Soil4', {
-	init: function() {
-		this.requires('Ground, spr_soil4')
-	}
-});
-Crafty.c('Soil5', {
-	init: function() {
-		this.requires('Ground, spr_soil5')
-	}
-});
-Crafty.c('Soil6', {
-	init: function() {
-		this.requires('Ground, spr_soil6')
-	}
-});
-Crafty.c('Soil7', {
-	init: function() {
-		this.requires('Ground, spr_soil7')
-	}
-});
-Crafty.c('Soil8', {
-	init: function() {
-		this.requires('Ground, spr_soil8')
-	}
-});
-Crafty.c('Soil9', {
-	init: function() {
-		this.requires('Ground, spr_soil9')
-	}
-});
-Crafty.c('Wheat1', {
-	init: function() {
-		this.requires('2D, Canvas, Grid, spr_wheat1')
-			// .attr({ w:gv.tile_sz, h:gv.tile_sz })
-	}
-});
-Crafty.c('Wheat2', {
-	init: function() {
-		this.requires('2D, Canvas, Grid, spr_wheat2')
-			// .attr({ w:gv.tile_sz, h:gv.tile_sz })
-	}
-});
-Crafty.c('Wheat3', {
-	init: function() {
-		this.requires('2D, Canvas, Grid, spr_wheat3')
-			// .attr({ w:gv.tile_sz, h:gv.tile_sz })
-	}
-});
-Crafty.c('Wheat4', {
-	init: function() { this.requires('2D, Canvas, Grid, spr_wheat4')
-		// .attr({ w:gv.tile_sz, h:gv.tile_sz })
-	}
-});
+Crafty.c('Ground', {init: function() {this.requires('2D, Canvas, Grid')}});
+Crafty.c('Grass', {init: function() {this.requires('Ground, spr_grass')}});
+Crafty.c('Soil1', {init: function() {this.requires('Ground, spr_soil1')}});
+Crafty.c('Soil2', {init: function() {this.requires('Ground, spr_soil2')}});
+Crafty.c('Soil3', {init: function() {this.requires('Ground, spr_soil3')}});
+Crafty.c('Soil4', {init: function() {this.requires('Ground, spr_soil4')}});
+Crafty.c('Soil5', {init: function() {this.requires('Ground, spr_soil5')}});
+Crafty.c('Soil6', {init: function() {this.requires('Ground, spr_soil6')}});
+Crafty.c('Soil7', {init: function() {this.requires('Ground, spr_soil7')}});
+Crafty.c('Soil8', {init: function() {this.requires('Ground, spr_soil8')}});
+Crafty.c('Soil9', {init: function() {this.requires('Ground, spr_soil9')}});
+
+Crafty.c('Wheat1', {init: function() {this.requires('2D, Canvas, Grid, spr_wheat1')}});
+Crafty.c('Wheat2', {init: function() {this.requires('2D, Canvas, Grid, spr_wheat2')}});
+Crafty.c('Wheat3', {init: function() {this.requires('2D, Canvas, Grid, spr_wheat3')}});
+Crafty.c('Wheat4', {init: function() {this.requires('2D, Canvas, Grid, spr_wheat4')}});
 
 
 
