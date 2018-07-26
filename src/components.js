@@ -1,10 +1,7 @@
 // Game variables
 gv = {
 	sound: '', 
-	tasks: {
-		curr: 0,
-		text: []
-	},
+	tasks: '',
 	tile_sz: 24,
 	player: {
 		movement: []
@@ -45,14 +42,16 @@ gv = {
 		bucket: 0,
 		seed_bag: 0,
 		tools: 0,
+		lgtools: 0,
 		bush: 0,
-		eggs: 0,
-		berries: 0,
-		wool: 0,
-		milk: 0,
-		bread: 0,
-		muffin: 0,
-		thread: 0
+		eggs: -1,
+		berries: -1,
+		wheat: -1,
+		wool: -1,
+		milk: -1,
+		bread: -1,
+		muffin: -1,
+		thread: -1
 	},
 	chest: {
 		revealed: 0,
@@ -60,7 +59,7 @@ gv = {
 		pin: 673824
 	}
 }
-gv.tasks = tasks;
+gv.tasks = task_list;
 gv.sound = sounds;
 
 // Grid
@@ -143,6 +142,8 @@ Crafty.c('Player', {
 			Crafty.trigger('FillSeedBag');
 		} else if ((hitDatas = this.hit('Stump'))) {
 			Crafty.trigger('SwitchTools');
+		} else if ((hitDatas = this.hit('GroundTools'))) {
+			Crafty.trigger('SwitchLgTools');
 		} else if ((hitDatas = this.hit('Book'))) { 
 			Crafty.trigger('OpenBook');
 		} else if ((hitDatas = this.hit('BerryBush'))) {
@@ -164,7 +165,8 @@ Crafty.c('Player', {
 				gv.sound.play_low(); 
 			}
 		} else if ((hitDatas = this.hit('Chest'))) {
-			if (gv.chest.revealed == 0) {
+			Crafty.log('chest '+gv.resources.lgtools);
+			if (gv.chest.revealed == 0 && gv.resources.lgtools == 1) {
 				Crafty.trigger('DigChest');
 			} else if (gv.chest.revealed == 1) {
 				Crafty.trigger('OpenChest');
@@ -177,6 +179,13 @@ Crafty.c('Player', {
 			} else { 
 				gv.sound.play_low(); 
 			}
+		} else if ((hitDatas = this.hit('Wheat4'))) {
+			Crafty.log('wheat');
+			if (gv.resources.lgtools == 0) {
+				Crafty.trigger('WheatCount');
+				hitDatas[0].obj.destroy();
+				gv.score += 1;
+			}
 		} else {
 			gv.sound.play_low();
 		}
@@ -188,14 +197,15 @@ Crafty.c('Player', {
 		Crafty.trigger('EmptySeedBag');
 	},
 	stopMovement: function() {
+		var back = 1.2;
 		if (gv.player.movement.slice(-1) == 'up') {
-			this.attr({ x:this.x, y:this.y+1 });
+			this.attr({ x:this.x, y:this.y+back });
 		} else if (gv.player.movement.slice(-1) == 'down') {
-			this.attr({ x:this.x, y:this.y-1 });
+			this.attr({ x:this.x, y:this.y-back });
 		} else if (gv.player.movement.slice(-1) == 'right') {
-			this.attr({ x:this.x-1, y:this.y });
+			this.attr({ x:this.x-back, y:this.y });
 		} else {
-			this.attr({ x:this.x+1, y:this.y });
+			this.attr({ x:this.x+back, y:this.y });
 		}
 	}, 
 	pushRobot: function() {
@@ -656,7 +666,7 @@ Crafty.c('Resource', {
 		if (this.type() == 'egg') { Crafty.trigger('EggCount'); } 
 		else if (this.type() == 'bread') { Crafty.trigger('BreadCount'); } 
 		else if (this.type() == 'muffin') { Crafty.trigger('MuffinCount'); } 
-		else if (this.type() == 'thread') { Crafty.trigger('ThreadCount'); } 
+		else if (this.type() == 'thread') { Crafty.trigger('ThreadCount'); }
 		gv.score += this.r;
 		this.destroy();
 	}
@@ -664,16 +674,16 @@ Crafty.c('Resource', {
 Crafty.c('Egg', {
 	init: function() {
 		this.requires('Resource, spr_egg')
-			.attr({ w:16, h:16, r:.25 })
+			.attr({ w:10, h:10, r:.25 })
 	},
 	type: function() { return 'egg'; }
 });
-Crafty.c('Berries', {
+Crafty.c('Wheat', {
 	init: function() {
-		this.requires('Resource, spr_berries')
-			.attr({ r:.10 })
+		this.requires('Resource, spr_wheat')
+			.attr({ w:16, h:16, r:1 })
 	},
-	type: function() { return 'berry'; }
+	type: function() { return 'wheat'; }
 });
 Crafty.c('Wool', {
 	init: function() {
@@ -710,6 +720,13 @@ Crafty.c('Thread', {
 	},
 	type: function() { return 'thread'; }
 });
+Crafty.c('Berries', {
+	init: function() {
+		this.requires('Resource, spr_berries')
+			.attr({ r:.10 })
+	},
+	type: function() { return 'berry'; }
+});
 
 
 Crafty.c('ResourceLabel', {
@@ -720,14 +737,16 @@ Crafty.c('ResourceLabel', {
 	},
 	count: function() {
 		var update;
-		if (this.type() == 'egg') { update = gv.resources.eggs; }
-		else if (this.type() == 'berry') { update = gv.resources.berries; }
-		else if (this.type() == 'wool') { update = gv.resources.wool; }
-		else if (this.type() == 'milk') { update = gv.resources.milk; }
-		else if (this.type() == 'bread') { update = gv.resources.bread; }
-		else if (this.type() == 'muffin') { update = gv.resources.muffin; }
-		else if (this.type() == 'thread') { update = gv.resources.thread; }
-		update += 1;
+		if (this.type() == 'egg') { update = gv.resources.eggs+=1; }
+		else if (this.type() == 'berry') { update = gv.resources.berries+=1; }
+		else if (this.type() == 'wheat') { update = gv.resources.wheat+=1; }
+		else if (this.type() == 'wool') { update = gv.resources.wool+=1; }
+		else if (this.type() == 'milk') { update = gv.resources.milk+=1; }
+		else if (this.type() == 'bread') { update = gv.resources.bread+=1; }
+		else if (this.type() == 'muffin') { update = gv.resources.muffin+=1; }
+		else if (this.type() == 'thread') { update = gv.resources.thread+=1; }
+		Crafty.log(update);
+		update = update+1;
 		this.text(update);
 	}
 });
@@ -738,12 +757,12 @@ Crafty.c('EggLabel', {
 	},
 	type: function() { return 'egg'; }
 });
-Crafty.c('BerryLabel', {
+Crafty.c('WheatLabel', {
 	init: function(){
 		this.requires('ResourceLabel')
-			.bind('BerryCount', this.count)
+			.bind('WheatCount', this.count)
 	},
-	type: function() { return 'berry'; }
+	type: function() { return 'wheat'; }
 });
 Crafty.c('WoolLabel', {
 	init: function(){
@@ -780,7 +799,13 @@ Crafty.c('ThreadLabel', {
 	},
 	type: function() { return 'thread'; }
 });
-
+Crafty.c('BerryLabel', {
+	init: function(){
+		this.requires('ResourceLabel')
+			.bind('BerryCount', this.count)
+	},
+	type: function() { return 'berry'; }
+});
 
 // Objects to interact with
 Crafty.c('Well', {
@@ -809,6 +834,22 @@ Crafty.c('Stump', {
 		} else if (gv.resources.tools == 1) {
 			gv.resources.tools = 0;
 			this.sprite('spr_stump1');
+		}
+	}
+});
+Crafty.c('GroundTools', {
+	init: function() {
+		this.requires('2D, Canvas, Grid, spr_shovel')
+			.attr({ w:30, h:30 })
+			.bind('SwitchLgTools', this.switchTools);
+	},
+	switchTools: function() {
+		if (gv.resources.lgtools == 0){
+			gv.resources.lgtools = 1;
+			this.sprite('spr_scythe');
+		} else if (gv.resources.lgtools == 1) {
+			gv.resources.lgtools = 0;
+			this.sprite('spr_shovel');
 		}
 	}
 });
@@ -933,14 +974,14 @@ Crafty.c('Task', {
 		this.requires('2D, DOM, Grid, Text')
 			.attr( { w:200, h:200 })
 			.textFont({ size: '18px' })
-			.bind('UpdateFrame', this.updateTask)
-	},
-	updateTask: function() {
-		this.text(gv.tasks.text[gv.tasks.curr]);
-	},
-	completeTask: function() {
-		gv.tasks.curr += 1;
+			// .bind('UpdateFrame', this.updateTask)
 	}
+	// updateTask: function() {
+	// 	this.text(gv.tasks.text[gv.tasks.curr]);
+	// },
+	// completeTask: function() {
+	// 	gv.tasks.curr += 1;
+	// }
 });
 Crafty.c('Bucket', {
 	init: function() {
@@ -988,7 +1029,20 @@ Crafty.c('Tools', {
 		}
 	}
 });
-
+Crafty.c('LgTools', {
+	init: function() {
+		this.requires('2D, Canvas, Grid, spr_scythe')
+			.attr({ w:gv.tile_sz*2.5, h:gv.tile_sz*2.5 })
+			.bind('SwitchLgTools', this.switchTools);
+	}, 
+	switchTools: function() {
+		if (gv.resources.lgtools == 0){ // shovel
+			this.sprite('spr_scythe');
+		} else if (gv.resources.lgtools == 1) { // scythe
+			this.sprite('spr_shovel');
+		}
+	}
+});
 
 
 // Scenery

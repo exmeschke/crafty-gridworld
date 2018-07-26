@@ -79,6 +79,9 @@ Crafty.scene('Game', function() {
 				} else {
 					Crafty.e('Soil5').at(x,y);
 					this.occupied[x][y] = true;
+					if (y == 2 && (x > 3 && x < 12)) {
+						Crafty.e('Wheat4').at(x,y);
+					}
 				}
 
 			// animal pens
@@ -135,10 +138,10 @@ Crafty.scene('Game', function() {
 			} else if (y < Game.h()-6 && Math.random() < 0.01 && !this.occupied[x][y]) {
 				Crafty.e('Egg').at(x,y);
 			// rocks
-			} else if (y < Game.h()-6 && Math.random() < 0.005 && !this.occupied[x][y]) {
+			} else if (y < Game.h()-6 && Math.random() < 0.005 && !this.occupied[x][y] && rr < 4) {
 				this.rock = Crafty.e('Rock').at(x,y);
 				rr += 1;
-				if (rr == 1) {
+				if (rr == 2) {
 					this.rock.hasPin();
 				}
 			} 
@@ -155,7 +158,8 @@ Crafty.scene('Game', function() {
 	this.well = Crafty.e('Well').at(1,scene_b);
 	this.bag = Crafty.e('Barrel').at(3,scene_b+.1);
 	this.stump = Crafty.e('Stump').at(5,scene_b+.3);
-	this.book = Crafty.e('Book').at(7,scene_b+.7);
+	this.grtools = Crafty.e('GroundTools').at(6.5,scene_b+.2);
+	this.book = Crafty.e('Book').at(7.8,scene_b+.7);
 	this.oven = Crafty.e('Oven').at(Game.w()-3.5,1);
 	// Crafty.e('Bread').at(Game.w()-2.8, 1.8);
 	this.spinning_wheel = Crafty.e('SpinningWheel').at(Game.w()-5.5,1);
@@ -179,12 +183,13 @@ Crafty.scene('Game', function() {
 	this.bucket = Crafty.e('Bucket').at(st,box_b);
 	this.seed_bag = Crafty.e('SeedBag').at(st+5,box_b);
 	this.tools = Crafty.e('Tools').at(st+10,box_b);
+	this.lg_tools = Crafty.e('LgTools').at(st+15,box_b);
 
 	var st2 = 40;
 	this.egg = Crafty.e('Egg').at(st2,box_b-.5).attr({ w:30, h:30 });
 	Crafty.e('EggLabel').at(st2+1.5,box_b).text(0);
-	this.berry = Crafty.e('Berries').at(st2,box_b+1.7).attr({ w:30, h:20 });
-	Crafty.e('BerryLabel').at(st2+1.5,box_b+2).text(0);
+	this.berry = Crafty.e('Wheat').at(st2,box_b+1.7).attr({ w:30, h:30 });
+	Crafty.e('WheatLabel').at(st2+1.5,box_b+2).text(0);
 	this.wool = Crafty.e('Wool').at(st2+3,box_b-.3).attr({ w:30, h:25 });
 	Crafty.e('WoolLabel').at(st2+4.5,box_b).text(0);
 	this.milk = Crafty.e('Milk').at(st2+3.2,box_b+1.5).attr({ w:20, h:40 });
@@ -195,6 +200,8 @@ Crafty.scene('Game', function() {
 	Crafty.e('MuffinLabel').at(st2+8,box_b+2).text(0);
 	this.thread = Crafty.e('Thread').at(st2+9.2,box_b-.5).attr({ w:40, h:40 });
 	Crafty.e('ThreadLabel').at(st2+11,box_b).text(0);
+	// this.berry = Crafty.e('Berries').at(st2,box_b+1.7).attr({ w:30, h:20 });
+	// Crafty.e('BerryLabel').at(st2+1.5,box_b+2).text(0);
 	
 
 	// TUTORIAL
@@ -335,9 +342,14 @@ Crafty.scene('Loading', function() {
 					spr_wheat1: [0,5],
 					spr_wheat2: [1,5],
 					spr_wheat3: [2,5],
-					spr_wheat4: [2,0]
+					spr_wheat4: [1,3]
 					// spr_wheat4: [1,4]
 				}
+			},
+			'assets/farm/tilesets/wheat-bag.png': {
+				tile: 32,
+				tileh: 32,
+				map: { spr_wheat: [0,0] }
 			},
 			'assets/farm/buckets.png': {
 				tile: 105, 

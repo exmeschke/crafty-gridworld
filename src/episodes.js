@@ -1,18 +1,21 @@
 // Human tasks
-var tasks = {
-	curr: 0,
-	text: [
-		'Gather 16 eggs.',
-		'Make bread.'
-	]
-}
+// var tasks = {
+// 	curr: 0,
+// 	text: [
+// 		'Gather 16 eggs.',
+// 		'Make bread.'
+// 	]
+// }
 
 // Task structure
 var task = {
+	num: 0,
 	// difficulty - [0:low, 1:high]
 	diff: 0,
 	// cue for player
 	txt: '',
+	// check if met
+	met: [],
 	// timing 
 	time: {
 		start: 0,
@@ -40,17 +43,50 @@ var task = {
 var task_list = {
 	curr: 0,
 	list: [],
-	updateCurr: function() {
+	nextTask: function() {
 		curr+=1;
 	},
-	getCurr: function() {
-		return curr;
-	}
 }
 
 // Manually store task information
+c = 0;
+t = task;
+t.num = 1;
+t.diff = 0;
+t.txt = 'Collect 16 eggs.';
+t.met = ['eggs', 16];
+task_list[c] = t;
 
-task_list[0] = task;
+c = 1;
+t = task;
+t.num = 1;
+t.diff = 0;
+t.txt = 'Gather 40 berries.';
+t.met = ['berries', 40];
+task_list[c] = t;
+
+c = 2;
+t = task;
+t.num = 1;
+t.diff = 0;
+t.txt = 'Collect 2 wool (shears + sheep).';
+t.met = ['wool', 2];
+task_list[c] = t;
+
+c = 3;
+t = task;
+t.num = 1;
+t.diff = 0;
+t.txt = 'Collect 2 milk (empty bucket + cow).';
+t.met = ['milk', 2];
+task_list[c] = t;
+
+// c = 3;
+// t = task;
+// t.num = 1;
+// t.diff = 0;
+// t.txt = 'Collect 1 wool (shears + sheep) and 1 milk (empty bucket + cow).';
+// task_list[c] = t;
 
 // t.diff = 0;
 // t.txt = 'Gather 40 berries.'
