@@ -171,7 +171,7 @@ Crafty.scene('Game', function() {
 	var box_b = Game.h()-3.8;
 	this.scroll = Crafty.e('Scroll').at(0,Game.h()-5);
 	this.score = Crafty.e('Score').at(3,box_b+1).text('$    0.00');
-	this.currTask = Crafty.e('Task').at(7,box_b+1).text('').trigger('UpdateTask');
+	this.currTask = Crafty.e('Task').at(7,box_b+.8).text('').trigger('UpdateTask');
 	// this.power = Crafty.e('RobotPower').at(8,box_b+1.2);
 
 	for (var x = 0; x < 4; x++) {
@@ -185,7 +185,7 @@ Crafty.scene('Game', function() {
 	this.tools = Crafty.e('Tools').at(st+10,box_b);
 	this.lg_tools = Crafty.e('LgTools').at(st+15,box_b);
 
-	var st2 = 40;
+	var st2 = 40.2;
 	this.egg = Crafty.e('Egg').at(st2,box_b-.5).attr({ w:30, h:30 });
 	Crafty.e('EggLabel').at(st2+1.5,box_b).text(0);
 	this.berry = Crafty.e('Wheat').at(st2,box_b+1.7).attr({ w:30, h:30 });
@@ -200,15 +200,10 @@ Crafty.scene('Game', function() {
 	Crafty.e('MuffinLabel').at(st2+8,box_b+2).text(0);
 	this.thread = Crafty.e('Thread').at(st2+9.2,box_b-.5).attr({ w:40, h:40 });
 	Crafty.e('ThreadLabel').at(st2+11,box_b).text(0);
-	// this.berry = Crafty.e('Berries').at(st2,box_b+1.7).attr({ w:30, h:20 });
-	// Crafty.e('BerryLabel').at(st2+1.5,box_b+2).text(0);
-	
+	this.berry = Crafty.e('Berries').at(st2+9.3,box_b+1.8).attr({ w:30, h:20 });
+	Crafty.e('BerryLabel').at(st2+11,box_b+2).text(0);
 
-	// TUTORIAL
-
-
-	// GAME
-
+	// spawn_gopher(0);
 });
 
 
@@ -228,8 +223,14 @@ Crafty.scene('Loading', function() {
 		alert_high: ['assets/sounds/high.mp3'],
 		sheep: ['assets/sounds/sheep.wav'],
 		cow: ['assets/sounds/cow.mp3'],
-		chicken: ['assets/sounds/chicken.wav'],
+		chicken: ['assets/sounds/chickenn.wav'],
+		crow: ['assets/sounds/crow.wav'],
 		stone: ['assets/sounds/stone-crush2.mp3'],
+		whack: ['assets/sounds/whack.wav'],
+		well_water: ['assets/sounds/well-water2.wav'],
+		water: ['assets/sounds/water.wav'],
+		grain: ['assets/sounds/grain2.wav'],
+		rustle: ['assets/sounds/rustle.wav'],
 		radar_low: ['assets/sounds/radar-low.wav'],
 		radar_med: ['assets/sounds/radar-med.wav'],
 		radar_high: ['assets/sounds/radar-high.wav']
@@ -251,9 +252,9 @@ Crafty.scene('Loading', function() {
 				tileh: 18,
 				map: { spr_player: [0,2] }
 			},
-			'assets/bot.gif': {
-				tile: 16, 
-				tileh: 18,
+			'assets/bots.png': {
+				tile: 32, 
+				tileh: 36,
 				map: { spr_bot: [0,0] }
 			},
 			'assets/health-bar.png': {
@@ -329,6 +330,11 @@ Crafty.scene('Loading', function() {
 				tile: 32,
 				tileh: 32,
 				map: { spr_snake5: [1,1] }
+			},
+			'assets/farm/animals/gophers.png': {
+				tile: 132,
+				tileh: 182,
+				map: { spr_gopher_hole: [0,0] }
 			},
 			'assets/well.png': {
 				tile: 59,
