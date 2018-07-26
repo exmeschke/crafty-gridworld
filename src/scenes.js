@@ -138,7 +138,7 @@ Crafty.scene('Game', function() {
 			} else if (y < Game.h()-6 && Math.random() < 0.01 && !this.occupied[x][y]) {
 				Crafty.e('Egg').at(x,y);
 			// rocks
-			} else if (y < Game.h()-6 && Math.random() < 0.005 && !this.occupied[x][y] && rr < 4) {
+			} else if (y < Game.h()-7 && Math.random() < 0.005 && !this.occupied[x][y] && rr < 4) {
 				this.rock = Crafty.e('Rock').at(x,y);
 				rr += 1;
 				if (rr == 2) {
@@ -170,8 +170,8 @@ Crafty.scene('Game', function() {
 	// Add score information
 	var box_b = Game.h()-3.8;
 	this.scroll = Crafty.e('Scroll').at(0,Game.h()-5);
-	this.score = Crafty.e('Score').at(3.2,box_b+1).text('$    0.00');
-	this.currTask = Crafty.e('Task').at(8,box_b+1.1).text('');
+	this.score = Crafty.e('Score').at(3,box_b+1).text('$    0.00');
+	this.currTask = Crafty.e('Task').at(7,box_b+1).text('').trigger('UpdateTask');
 	// this.power = Crafty.e('RobotPower').at(8,box_b+1.2);
 
 	for (var x = 0; x < 4; x++) {

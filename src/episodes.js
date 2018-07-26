@@ -1,95 +1,42 @@
 // Human tasks
-// var tasks = {
-// 	curr: 0,
-// 	text: [
-// 		'Gather 16 eggs.',
-// 		'Make bread.'
-// 	]
-// }
-
-// Task structure
-var task = {
-	num: 0,
-	// difficulty - [0:low, 1:high]
-	diff: 0,
-	// cue for player
-	txt: '',
-	// check if met
-	met: [],
-	// timing 
-	time: {
-		start: 0,
-		end: 0,
-		duration: 0
-	},
-	// moment - [0:break, 1:mid]
-	moment: 0,
-	// task completed - [0:no, 1:yes]
-	completed: 0,
-
-	// functions
-	getCompleted: function() { return completed; },
-
-	setStartTime: function() { time.start = new Date().getTime() / 1000; },
-	setEndTime: function() { 
-		time.end = new Date().getTime() / 1000; 
-		time.duration = time.end - time.start;
-	},
-	updateMoment: function() {
-		
-	}
-	
+function Task(num, diff, txt, met) {
+    this.num = num;
+    this.diff = diff;
+    this.txt = txt;
+    this.met = met;
+    this.time = { begin:0, end:0, duration:0 };
+    this.moment = 0;
+    this.completed = false; 
+    // setters
+    this.setStart = function() {this.time.begin = new Date().getTime()/1000;};
+    this.setEnd = function() {
+    	this.time.end = new Date().getTime()/1000;
+    	this.time.duration = this.time.end - this.time.begin;
+    };
 }
-var task_list = {
-	curr: 0,
+var tasks = {
 	list: [],
-	nextTask: function() {
-		curr+=1;
-	},
-}
+	addTask: function(task) {this.list.push(task);},
+	getText: function(curr) {return this.list[curr].txt;},
+	getMet: function(curr) {return this.list[curr].met;},
+	setStart: function(curr) {this.list[curr].setStart();},
+	setEnd: function(curr) {this.list[curr].setEnd();}
+};
 
 // Manually store task information
-c = 0;
-t = task;
-t.num = 1;
-t.diff = 0;
-t.txt = 'Collect 16 eggs.';
-t.met = ['eggs', 16];
-task_list[c] = t;
+var t;
+t = new Task(1, 0, 'Collect 16 eggs', ['eggs',16]);
+tasks.addTask(t);
+t = new Task(1, 0, "Gather 40 berries (water+bush+'X')", ['berries',40]);
+tasks.addTask(t);
+t = new Task(1, 0, 'Collect 2 wool (shears+sheep)', ['wool',2]);
+tasks.addTask(t);
+t = new Task(1, 0, 'Collect 2 milk (empty_bucket+cow)', ['milk',2]);
+tasks.addTask(t);
 
-c = 1;
-t = task;
-t.num = 1;
-t.diff = 0;
-t.txt = 'Gather 40 berries.';
-t.met = ['berries', 40];
-task_list[c] = t;
+// Crafty.log(task_list[0].txt);
+// Crafty.log(task_list[1].txt);
 
-c = 2;
-t = task;
-t.num = 1;
-t.diff = 0;
-t.txt = 'Collect 2 wool (shears + sheep).';
-t.met = ['wool', 2];
-task_list[c] = t;
-
-c = 3;
-t = task;
-t.num = 1;
-t.diff = 0;
-t.txt = 'Collect 2 milk (empty bucket + cow).';
-t.met = ['milk', 2];
-task_list[c] = t;
-
-// c = 3;
-// t = task;
-// t.num = 1;
-// t.diff = 0;
-// t.txt = 'Collect 1 wool (shears + sheep) and 1 milk (empty bucket + cow).';
-// task_list[c] = t;
-
-// t.diff = 0;
-// t.txt = 'Gather 40 berries.'
 
 
 

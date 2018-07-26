@@ -1,7 +1,10 @@
 // Game variables
 gv = {
-	sound: '', 
-	tasks: '',
+	sound: {}, 
+	tasks: {
+		curr: 0,
+		list: {}
+	},
 	tile_sz: 24,
 	player: {
 		movement: []
@@ -59,7 +62,7 @@ gv = {
 		pin: 673824
 	}
 }
-gv.tasks = task_list;
+gv.tasks.list = tasks;
 gv.sound = sounds;
 
 // Grid
@@ -974,14 +977,28 @@ Crafty.c('Task', {
 		this.requires('2D, DOM, Grid, Text')
 			.attr( { w:200, h:200 })
 			.textFont({ size: '18px' })
-			// .bind('UpdateFrame', this.updateTask)
+			.textAlign('center')
+			.bind('UpdateTask', this.updateTask)
+			.bind('UpdateFrame', this.checkTask)
+	},
+	updateTask: function() {
+		this.text(gv.tasks.list.getText(gv.tasks.curr));
+		gv.tasks.list.setStart(gv.tasks.curr);
+	},
+	checkTask: function() {
+		var met = gv.tasks.list.getMet(gv.tasks.curr);
+		var resource = met[0];
+		var quantity = met[1];
+
+		if (resource == 'eggs') {
+			if (quantity == gv.resources.eggs) {this.completedTask();}
+		}
+	},
+	completedTask: function() {
+		gv.tasks.list.setEnd(gv.tasks.curr);
+		gv.tasks.curr += 1;
+		this.updateTask();
 	}
-	// updateTask: function() {
-	// 	this.text(gv.tasks.text[gv.tasks.curr]);
-	// },
-	// completeTask: function() {
-	// 	gv.tasks.curr += 1;
-	// }
 });
 Crafty.c('Bucket', {
 	init: function() {
