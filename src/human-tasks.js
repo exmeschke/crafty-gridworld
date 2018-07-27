@@ -31,6 +31,7 @@ var task_funcs = {
     gopherGone: function() {this.gopher.gone+=1;},
     gopherComplete: function() {
         if (this.gopher.hit + this.gopher.gone >= this.gopher.num) {
+            Crafty.log(this.gopher.completed);
             this.gopher.completed+=1;
             return true;
         }
@@ -50,8 +51,6 @@ var task_list = {
 	addTasks: function(list) {this.list = list;},
 
     nextTask: function() {this.curr = this.curr+1;},
-    // completed: function() {this.list[this.curr].completed += 1;},
-    // checkCompleted: function() {return this.list[this.curr].completed;},
 
     getCurr: function() {return this.curr;},
 	getText: function() {return this.list[this.curr].txt;},

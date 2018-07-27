@@ -693,7 +693,7 @@ Crafty.c('Gopher', {
 		this.requires('Animal, spr_gopher_hole')
 			.attr({ w:24, h:24 })
 			.delay(this.disappear, 20000)
-			.reel('PopOut', 4000, [
+			.reel('PopOut', 2000, [
 				[0,0], [1,0], [2,0]
 			])
 			.reel('PopIn', 5000, [
@@ -722,7 +722,6 @@ Crafty.c('Gopher', {
 		
 		task_funcs.gopherHit();
 		if (task_funcs.gopherComplete()) {
-			task_list.completed();
 			if (task_funcs.gopherNext() == 1) {Crafty.trigger('CompletedTask');}
 		}
 	}
@@ -1120,8 +1119,10 @@ Crafty.c('Task', {
 			.bind('UpdateFrame', this.checkTask)
 	},
 	updateTask: function() {
-		this.text(task_list.getText());
-		task_list.setStart();
+		if (typeof task_list.getText != 'undefined'){
+			this.text(task_list.getText());
+			task_list.setStart();
+		}		
 	},
 	checkTask: function() {
 		var met = task_list.getMet();

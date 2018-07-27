@@ -13,7 +13,7 @@ function gopher_task() {
 		setInterval(function () {
 			a++;
 			spawn_gopher(a);
-		}, 2000*i);
+		}, 10000*i);
 	}
 };
 
