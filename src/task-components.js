@@ -10,14 +10,15 @@ function gopher_task() {
 	var a = 0;
 	spawn_gopher(a);
 	for (var i = 1; i < 6; i++) {
-		setInterval(function () {
+		setTimeout(function () {
 			a++;
 			spawn_gopher(a);
 		}, 10000*i);
 	}
 };
+// CROWS
 
-
+// SNAKES
 function spawn_snakes(loc) {
 	// var path1 = [ [44,10], [32,20] ];
 	// var coord = options[loc];

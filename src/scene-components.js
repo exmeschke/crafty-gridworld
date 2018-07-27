@@ -12,7 +12,9 @@ sounds = {
 	play_well_water: function() {Crafty.audio.play('well_water');},
 	play_water: function() {Crafty.audio.play('water');},
 	play_grain: function() {Crafty.audio.play('grain');},
-	play_rustle: function() {Crafty.audio.play('rustle');}
+	play_rustle: function() {Crafty.audio.play('rustle');},
+	play_ding: function() {Crafty.audio.play('oven');},
+	play_ding25: function() {Crafty.audio.play('oven25');}
 };
 // Game variables
 gv = {
@@ -197,11 +199,21 @@ Crafty.c('Player', {
 				sounds.play_low(); 
 			}
 		} else if ((hitDatas = this.hit('Wheat4'))) {
-			Crafty.log('wheat');
 			if (gv.resources.lgtools == 0) {
 				Crafty.trigger('WheatCount');
 				hitDatas[0].obj.destroy();
 				gv.score += 1;
+			}
+		} else if ((hitDatas = this.hit('Oven'))) {
+			var bake = prompt('What would you like to bake (bread or muffin)?');
+			if (bake == 'bread') {
+				// if (gv.resources.eggs >= 0 && gv.resources.milk >= 0 && gv.resources.wheat >= 0){
+				Crafty.trigger('BakeBread');
+				// } else {sounds.play_low();}
+			} else if (bake == 'muffin') {
+				Crafty.trigger('BakeMuffin');
+			} else {
+				sounds.play_low();
 			}
 		} else {
 			sounds.play_low();
@@ -580,7 +592,7 @@ Crafty.c('Sheep', {
 		this.requires('Animal, spr_sheep5')
 			.crop(35, 38, 55, 50)
 			.collision(0, 0, 64, 0, 64, 48, 0, 60)
-			.attr({ w:32, h:32 })
+			.attr({ w:32, h:32, r:2 })
 			.delay(this.randomMove, 3000, -1)
 			.onHit('Solid', this.turnAround)
 			.delay(this.hasWool, 15000, -1)
@@ -608,7 +620,7 @@ Crafty.c('Sheep', {
 Crafty.c('Cow', {
 	init: function() {
 		this.requires('Animal, spr_cow13')
-			.attr({ w:60, h:60 })
+			.attr({ w:60, h:60, r:2 })
 			.delay(this.randomMove, 2000, -1)
 			.onHit('Solid', this.turnAround)
 			.delay(this.hasMilk, 20000, -1)
@@ -736,7 +748,10 @@ Crafty.c('Resource', {
 	},
 	collect: function() {
 		if (this.type() == 'egg') { Crafty.trigger('EggCount'); } 
-		else if (this.type() == 'bread') { Crafty.trigger('BreadCount'); } 
+		else if (this.type() == 'bread') { 
+			if (this.burned() == false) {Crafty.trigger('BreadCount');}
+			else {gv.score -= this.r;}
+		} 
 		else if (this.type() == 'muffin') { Crafty.trigger('MuffinCount'); } 
 		else if (this.type() == 'thread') { Crafty.trigger('ThreadCount'); }
 		gv.score += this.r;
@@ -772,18 +787,38 @@ Crafty.c('Milk', {
 	type: function() { return 'milk'; }
 });
 Crafty.c('Bread', {
+	_burned: 0,
 	init: function() {
-		this.requires('Resource, spr_bread')
+		this.requires('Resource, Delay, spr_bread')
 			.attr({ w:16, h:16, r:15 })
 	},
-	type: function() { return 'bread'; }
+	type: function() { return 'bread'; },
+	bake: function() {this.delay(this.burn, 3000);},
+	burn: function() {
+		this.sprite('spr_ashes');
+		this._burned = 1;
+	},
+	burned: function() {
+		if (this._burned == 1) {return true;}
+		else {return false;}
+	}
 });
 Crafty.c('Muffin', {
+	_burned: 0,
 	init: function() {
-		this.requires('Resource, spr_muffin')
+		this.requires('Resource, Delay, spr_muffin')
 			.attr({ w:16, h:16, r:18 })
 	},
-	type: function() { return 'muffin'; }
+	type: function() { return 'muffin'; },
+	bake: function() {this.delay(this.burn, 3000);},
+	burn: function() {
+		this.sprite('spr_ashes');
+		this._burned = 1;
+	},
+	burned: function() {
+		if (this._burned == 1) {return true;}
+		else {return false;}
+	}
 });
 Crafty.c('Thread', {
 	init: function() {
@@ -964,6 +999,12 @@ Crafty.c('BerryBush', {
 
 	}
 });
+function wait_bake_bread() {
+	eval("Crafty.e('Bread').at(Game.w()-2.8,1.8).bake();");
+}
+function wait_bake_muffin() {
+	eval("Crafty.e('Muffin').at(Game.w()-2.8,1.8).bake();");
+}
 Crafty.c('Oven', {
 	init: function() {
 		this.requires('2D, Canvas, Grid, SpriteAnimation, spr_oven')
@@ -971,7 +1012,17 @@ Crafty.c('Oven', {
 			.reel('OvenFire', 500, [
 				[0,0], [1,0], [2,0], [3,0]
 			])
-			.animate('OvenFire', -1);
+			.animate('OvenFire', -1)
+			.bind('BakeBread', this.bakeBread)
+			.bind('BakeMuffin', this.bakeMuffin)
+	},
+	bakeBread: function() {
+		sounds.play_ding();
+		setTimeout(wait_bake_bread,20000);
+	}, 
+	bakeMuffin: function() {
+		sounds.play_ding25();
+		setTimeout(wait_bake_muffin,20000);
 	}
 });
 Crafty.c('SpinningWheel', {
@@ -1040,7 +1091,7 @@ Crafty.c('Score', {
 			.bind('UpdateFrame', this.updateScore)
 	},
 	updateScore: function() {
-		this.text('$   '+gv.score.toFixed(2));
+		this.text('$ '+gv.score.toFixed(2));
 		// this.text('Power: '+gv.robot.power);
 	}
 });
@@ -1122,7 +1173,8 @@ Crafty.c('Task', {
 		if (typeof task_list.getText != 'undefined'){
 			this.text(task_list.getText());
 			task_list.setStart();
-		}		
+		}	
+		task_list.runCommand();	
 	},
 	checkTask: function() {
 		var met = task_list.getMet();

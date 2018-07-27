@@ -161,7 +161,7 @@ Crafty.scene('Game', function() {
 	// Add score information
 	var box_b = Game.h()-3.8;
 	this.scroll = Crafty.e('Scroll').at(0,Game.h()-5);
-	this.score = Crafty.e('Score').at(3,box_b+1).text('$    0.00');
+	this.score = Crafty.e('Score').at(3,box_b+1).text('$ 0.00');
 	// this.power = Crafty.e('RobotPower').at(8,box_b+1.2);
 
 	for (var x = 0; x < 4; x++) {
@@ -196,7 +196,7 @@ Crafty.scene('Game', function() {
 	// TASKS
 	this.currTask = Crafty.e('Task').at(7,box_b+.8).text('').trigger('UpdateTask');
 
-	eval('gopher_task();');
+	// eval('gopher_task();');
 	// this.currTask.trigger('CompletedTask');
 
 });
@@ -228,7 +228,9 @@ Crafty.scene('Loading', function() {
 		rustle: ['assets/sounds/rustle.wav'],
 		radar_low: ['assets/sounds/radar-low.wav'],
 		radar_med: ['assets/sounds/radar-med.wav'],
-		radar_high: ['assets/sounds/radar-high.wav']
+		radar_high: ['assets/sounds/radar-high.wav'],
+		oven: ['assets/sounds/oven-ding.wav'],
+		oven25: ['assets/sounds/oven-ding25.wav']
 	});
 
 	// Load sprite map

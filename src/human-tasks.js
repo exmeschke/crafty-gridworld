@@ -15,6 +15,7 @@ function Task(num, diff, txt, met, cmd) {
     	this.time.end = new Date().getTime()/1000;
     	this.time.duration = this.time.end - this.time.begin;
     };
+    this.runCode = function() {eval(this.command);}
 };
 // task specific functions
 var task_funcs = {
@@ -51,11 +52,11 @@ var task_list = {
 	addTasks: function(list) {this.list = list;},
 
     nextTask: function() {this.curr = this.curr+1;},
+    runCommand: function() {this.list[this.curr].runCode();},
 
     getCurr: function() {return this.curr;},
 	getText: function() {return this.list[this.curr].txt;},
 	getMet: function() {return this.list[this.curr].met;},
-    getCommand: function() {return this.list[this.curr].command},
 	setStart: function() {this.list[this.curr].setStart();},
 	setEnd: function() {this.list[this.curr].setEnd();}
 };
