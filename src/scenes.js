@@ -12,7 +12,7 @@ Crafty.scene('Game', function() {
 		}
 	}
 	// Add player
-	this.player = Crafty.e('Player').at(24, 16).ignoreHits('Solid');
+	this.player = Crafty.e('Player').at(24, 16);
 	// Add robot
 	this.robot = Crafty.e('Robot').at(5,10);
 
@@ -152,9 +152,7 @@ Crafty.scene('Game', function() {
 	this.grtools = Crafty.e('GroundTools').at(6.5,scene_b+.2);
 	this.book = Crafty.e('Book').at(7.8,scene_b+.7);
 	this.oven = Crafty.e('Oven').at(Game.w()-3.5,1);
-	// Crafty.e('Bread').at(Game.w()-2.8, 1.8);
 	this.spinning_wheel = Crafty.e('SpinningWheel').at(Game.w()-5.5,1);
-	// Crafty.e('Thread').at(Game.w()-5, 1.8);
 	this.charging_station = Crafty.e('ChargingStation').at(16,3);
 	this.bbush = Crafty.e('BerryBush').at(Game.w()-3,22);
 
@@ -164,17 +162,20 @@ Crafty.scene('Game', function() {
 	this.score = Crafty.e('Score').at(3,box_b+1).text('$ 0.00');
 	// this.power = Crafty.e('RobotPower').at(8,box_b+1.2);
 
+	// Add lower panels
 	for (var x = 0; x < 4; x++) {
 		Crafty.e('SqrBlock').at(19+(x*5),Game.h()-5);
 	}
 	this.box = Crafty.e('Box').at(39,Game.h()-5).attr({ w:360 });
 
+	// Add tools 
 	var st = 20.2;
 	this.bucket = Crafty.e('Bucket').at(st,box_b);
 	this.seed_bag = Crafty.e('SeedBag').at(st+5,box_b);
 	this.tools = Crafty.e('Tools').at(st+10,box_b);
 	this.lg_tools = Crafty.e('LgTools').at(st+15,box_b);
 
+	// Add resources and counts
 	var st2 = 40.2;
 	this.egg = Crafty.e('Egg').at(st2,box_b-.5).attr({ w:30, h:30 });
 	Crafty.e('EggLabel').at(st2+1.5,box_b).text(0);
@@ -193,12 +194,10 @@ Crafty.scene('Game', function() {
 	this.berry = Crafty.e('Berries').at(st2+9.3,box_b+1.8).attr({ w:30, h:20 });
 	Crafty.e('BerryLabel').at(st2+11,box_b+2).text(0);
 
-	// TASKS
+	// HUMAN TASKS
 	this.currTask = Crafty.e('Task').at(7,box_b+.8).text('').trigger('UpdateTask');
-
+	// eval('spawn_snakes();');
 	// eval('gopher_task();');
-	// this.currTask.trigger('CompletedTask');
-
 });
 
 
@@ -211,7 +210,7 @@ Crafty.scene('Loading', function() {
 		.attr({ x:0, y:Game.height()/2-24, w:Game.width() })
 		.css($text_css);
 
-	// Load audio
+	// Load audio files
 	Crafty.audio.add({
 		alert_low: ['assets/sounds/low.mp3'],
 		alert_med: ['assets/sounds/med.mp3'],
@@ -233,7 +232,12 @@ Crafty.scene('Loading', function() {
 		oven25: ['assets/sounds/oven-ding25.wav']
 	});
 
-	// Load sprite map
+	// Load sprites (images)
+	// 'sprite sheet:' {	
+	// 		tile: width of each sprite in sprite sheet,
+	// 		tileh: height of each sprite in sprite sheet,
+	//		map: specifies location [x,y] of each sprite in sprite sheet
+	// }
 	var assetsObj = {
 		'sprites': {
 			'assets/16x16_forest_1.gif': {
@@ -332,6 +336,11 @@ Crafty.scene('Loading', function() {
 				tile: 132,
 				tileh: 182,
 				map: { spr_gopher_hole: [0,0] }
+			},
+			'assets/farm/animals/raven.png': {
+				tile: 16,
+				tileh: 16,
+				map: { spr_raven: [1,3] }
 			},
 			'assets/well.png': {
 				tile: 59,

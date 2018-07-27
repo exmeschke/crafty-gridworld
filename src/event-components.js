@@ -16,12 +16,26 @@ function gopher_task() {
 		}, 10000*i);
 	}
 };
+
 // CROWS
 
 // SNAKES
-function spawn_snakes(loc) {
+function spawn_snakes() {
+	Crafty.e('Snake').at(40,24).setDir('up');
+	// snake.delay(snake.snakeMove('up'), 500, -1);
+
+	// .delay(this.snakeMove('up'), 500, -1);
+
 	// var path1 = [ [44,10], [32,20] ];
 	// var coord = options[loc];
 	// Crafty.e('Gopher').at(coord[0],coord[1]);
 };
+function snake_task() {
+	
+}
 
+// HIDDEN CHEST
+
+
+// Robot requests
+// 
