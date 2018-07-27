@@ -1,10 +1,11 @@
 // HUMAN TASKS
 // general task definition
-function Task(num, diff, txt, met) {
+function Task(num, diff, txt, met, cmd) {
     this.num = num;
     this.diff = diff;
     this.txt = txt;
     this.met = met;
+    this.command = cmd;
     this.time = { begin:0, end:0, duration:0 };
     this.moment = 0;
     this.completed = false; 
@@ -29,15 +30,14 @@ var task_list = {
 };
 // manually add tasks to list
 var tasks = [];
-tasks[4] = new Task(1, 0, 'Collect 16 eggs', ['eggs',16]);
-tasks[1] = new Task(1, 0, "Gather 40 berries (water+bush)", ['berries',40]);
-tasks[2] = new Task(1, 0, 'Collect 2 wool (shears+sheep)', ['wool',2]);
-tasks[3] = new Task(1, 0, 'Collect 2 milk (empty bucket+cow)', ['milk',2]);
-tasks[0] = new Task(2, 1, 'Hit 5 pesky gophers with your hammer', ['gophers',5]);
+tasks[4] = new Task(1, 0, 'Collect 16 eggs', ['eggs',16], '');
+tasks[1] = new Task(1, 0, "Gather 40 berries (water+bush)", ['berries',40], '');
+tasks[2] = new Task(1, 0, 'Collect 2 wool (shears+sheep)', ['wool',2], '');
+tasks[3] = new Task(1, 0, 'Collect 2 milk (empty bucket+cow)', ['milk',2], '');
+tasks[0] = new Task(2, 1, 'Hit 5 pesky gophers with your hammer', ['gophers',5], 'spawn_gopher();');
 task_list.addTasks(tasks);
 
 
-// spawn_gopher(0);
 // ROBOT REQUESTS
 
 
@@ -68,19 +68,4 @@ task_list.addTasks(tasks);
 // this.gopher = Crafty.e('Gopher').at(44,10);
 
 
-// SOUNDS
-var sounds = {
-	play_low: function() {Crafty.audio.play('alert_low');},
-	play_med: function() {Crafty.audio.play('alert_med');},
-	play_high: function() {Crafty.audio.play('alert_high');},
-	play_cow: function() {Crafty.audio.play('cow');},
-	play_sheep: function() {Crafty.audio.play('sheep');},
-	play_chicken: function() {Crafty.audio.play('chicken');},
-	play_crow: function() {Crafty.audio.play('chicken');},
-	play_stone: function() {Crafty.audio.play('stone');},
-	play_whack: function() {Crafty.audio.play('whack');},
-	play_well_water: function() {Crafty.audio.play('well_water');},
-	play_water: function() {Crafty.audio.play('water');},
-	play_grain: function() {Crafty.audio.play('grain');},
-	play_rustle: function() {Crafty.audio.play('rustle');}
-};
+

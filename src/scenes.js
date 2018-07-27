@@ -13,25 +13,16 @@ Crafty.scene('Game', function() {
 	}
 	// Add player
 	this.player = Crafty.e('Player').at(24, 16).ignoreHits('Solid');
-
 	// Add robot
 	this.robot = Crafty.e('Robot').at(5,10);
-	// move every 1.5 seconds
-	this.robot.delay(this.robot.randomMove, 1500, -1);
-	// lose 10% of power every 10 seconds
-	this.robot.delay(this.robot.losePower, 10000, -1);
 
 	// Add animals
 	this.sheep = Crafty.e('Sheep').at(21,3);
-	this.sheep.delay(this.sheep.randomMove, 3000, -1);
-
 	this.cow = Crafty.e('Cow').at(32,4);
-	this.cow.delay(this.cow.randomMove, 2000, -1);
-
 	this.chicken1 = Crafty.e('Chicken').at(46,6);
-	this.chicken1.delay(this.chicken1.randomMove, 1000, -1).delay(this.chicken1.layEgg, 20000, -1);
+	this.chicken1.delay(this.chicken1.layEgg, 30000, -1);
 	this.chicken2 = Crafty.e('Chicken').at(38,20);
-	this.chicken2.delay(this.chicken2.randomMove, 1000, -1).delay(this.chicken1.layEgg, 15000, -1);
+	this.chicken2.delay(this.chicken2.layEgg, 35000, -1);
 
 	var cc = 0;
 	var rr = 0;
@@ -171,7 +162,7 @@ Crafty.scene('Game', function() {
 	var box_b = Game.h()-3.8;
 	this.scroll = Crafty.e('Scroll').at(0,Game.h()-5);
 	this.score = Crafty.e('Score').at(3,box_b+1).text('$    0.00');
-	this.currTask = Crafty.e('Task').at(7,box_b+.8).text('').trigger('UpdateTask');
+	// this.currTask = Crafty.e('Task').at(7,box_b+.8).text('').trigger('UpdateTask');
 	// this.power = Crafty.e('RobotPower').at(8,box_b+1.2);
 
 	for (var x = 0; x < 4; x++) {
@@ -203,7 +194,11 @@ Crafty.scene('Game', function() {
 	this.berry = Crafty.e('Berries').at(st2+9.3,box_b+1.8).attr({ w:30, h:20 });
 	Crafty.e('BerryLabel').at(st2+11,box_b+2).text(0);
 
+	// TASKS
+	// this.currTask = Crafty.e('Task').at(7,box_b+.8).text('').trigger('UpdateTask');
 	// spawn_gopher(0);
+	// eval('spawn_gopher();');
+
 });
 
 
