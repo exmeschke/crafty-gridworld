@@ -1229,16 +1229,16 @@ Crafty.c('Task', {
 		var quantity = met[1];
 		var _current = this._quant;
 
-		if (resource == 'eggs') {_current = gv.resources.eggs;}
-		else if (resource == 'wheat') {_current = gv.resources.wheat;}
-		else if (resource == 'wool') {_current = gv.resources.wool;}
-		else if (resource == 'milk') {_current = gv.resources.milk;}
-		else if (resource == 'bread') {_current = gv.resources.bread;}
-		else if (resource == 'muffin') {_current = gv.resources.muffin;}
-		else if (resource == 'thread') {_current = gv.resources.thread;}
-		else if (resource == 'berries') {_current = gv.resources.berries;}
+		if (resource == 'eggs') {_current = gv.resources.eggs-_initial;}
+		else if (resource == 'wheat') {_current = gv.resources.wheat-_initial;}
+		else if (resource == 'wool') {_current = gv.resources.wool-_initial;}
+		else if (resource == 'milk') {_current = gv.resources.milk-_initial;}
+		else if (resource == 'bread') {_current = gv.resources.bread-_initial;}
+		else if (resource == 'muffin') {_current = gv.resources.muffin-_initial;}
+		else if (resource == 'thread') {_current = gv.resources.thread-_initial;}
+		else if (resource == 'berries') {_current = gv.resources.berries-_initial;}
 
-		if (quantity-1 == _current) {this.completedTask();}
+		if (quantity <= _current) {this.completedTask();}
 	},
 	completedTask: function() {
 		task_list.setEnd();

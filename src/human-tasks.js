@@ -62,14 +62,14 @@ var task_list = {
 };
 // manually add tasks to list
 var tasks = [];
-tasks[0] = new Task(1, 0, 'Collect 16 eggs', ['eggs',16], '');
-tasks[1] = new Task(1, 0, "Gather 40 berries (water+bush)", ['berries',40], '');
+tasks[1] = new Task(1, 0, 'Collect 16 eggs', ['eggs',2], '');
+tasks[0] = new Task(1, 0, "Gather 40 berries (water+bush)", ['berries',10], '');
 tasks[2] = new Task(1, 0, 'Collect 2 wool (shears+sheep)', ['wool',2], '');
 tasks[3] = new Task(1, 0, 'Collect 2 milk (empty bucket+cow)', ['milk',2], '');
 tasks[4] = new Task(2, 1, 'Hit gophers with your hammer', ['gophers',5], 'gopher_task();');
 tasks[5] = new Task(5, 1, 'Bake a loaf of bread (recipe in book)', ['bread',1], '');
-tasks[5] = new Task(5, 1, 'Bake a muffin (recipe in book)', ['muffin',1], '');
-tasks[5] = new Task(5, 1, 'Make a spool of thread (recipe in book)', ['thread',1], '');
+tasks[6] = new Task(5, 1, 'Bake a muffin (recipe in book)', ['muffin',1], '');
+tasks[7] = new Task(5, 1, 'Make a spool of thread (recipe in book)', ['thread',1], '');
 task_list.addTasks(tasks);
 
 
