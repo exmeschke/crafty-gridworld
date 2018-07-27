@@ -16,10 +16,6 @@ sounds = {
 };
 // Game variables
 gv = {
-	tasks: {
-		curr: 0,
-		list: {}
-	},
 	requests: {
 		curr: 0,
 		list: {}
@@ -81,7 +77,6 @@ gv = {
 		pin: 673824
 	}
 }
-gv.tasks.list = task_list;
 
 
 // Grid
@@ -94,45 +89,6 @@ Crafty.c('Grid', {
 		return this;
 	},
 	pos: function() { return this.x, this.y; }
-});
-
-
-// Tasks
-Crafty.c('Task', {
-	init: function() {
-		this.requires('2D, DOM, Grid, Text')
-			.attr( { w:200, h:200 })
-			.textFont({ size: '18px' })
-			.textAlign('center')
-			.bind('UpdateTask', this.updateTask)
-			.bind('UpdateFrame', this.checkTask)
-	},
-	updateTask: function() {
-		this.text(gv.tasks.list.getText(gv.tasks.curr));
-		gv.tasks.list.setStart(gv.tasks.curr);
-	},
-	checkTask: function() {
-		var met = gv.tasks.list.getMet(gv.tasks.curr);
-		var resource = met[0];
-		var quantity = met[1];
-		var curr_quantity;
-
-		if (resource == 'eggs') {curr_quantity = gv.resources.eggs;}
-		else if (resource == 'wheat') {curr_quantity = gv.resources.wheat;}
-		else if (resource == 'wool') {curr_quantity = gv.resources.wool;}
-		else if (resource == 'milk') {curr_quantity = gv.resources.milk;}
-		else if (resource == 'bread') {curr_quantity = gv.resources.bread;}
-		else if (resource == 'muffin') {curr_quantity = gv.resources.muffin;}
-		else if (resource == 'thread') {curr_quantity = gv.resources.thread;}
-		else if (resource == 'berries') {curr_quantity = gv.resources.berries;}
-
-		if (quantity-1 == curr_quantity) {this.completedTask();}
-	},
-	completedTask: function() {
-		gv.tasks.list.setEnd(gv.tasks.curr);
-		gv.tasks.curr += 1;
-		this.updateTask();
-	}
 });
 
 
@@ -224,7 +180,7 @@ Crafty.c('Player', {
 			}
 		} else if ((hitDatas = this.hit('Gopher'))) {
 			if (gv.resources.tools == 1) {
-				Crafty.trigger('HitGopher');
+				hitDatas[0].obj.hitGopher();
 			}
 		} else if ((hitDatas = this.hit('Chest'))) {
 			if (gv.chest.revealed == 0 && gv.resources.lgtools == 1) {
@@ -736,15 +692,14 @@ Crafty.c('Gopher', {
 	init: function() {
 		this.requires('Animal, spr_gopher_hole')
 			.attr({ w:24, h:24 })
-			.delay(this.disappear, 30000)
-			.bind('HitGopher', this.hitGopher)
-			.reel('PopOut', 5000, [
+			.delay(this.disappear, 20000)
+			.reel('PopOut', 4000, [
 				[0,0], [1,0], [2,0]
 			])
 			.reel('PopIn', 5000, [
 				[2,0], [1,0], [0,0], [3,0]
 			])
-			.reel('AnimateHit', 1000, [
+			.reel('AnimateHit', 500, [
 				[2,0], [0,0], [3,0]
 			])
 			.animate('PopOut')
@@ -752,11 +707,24 @@ Crafty.c('Gopher', {
 	type: function() { return 'gopher'; },
 	disappear: function() {
 		this.animate('PopIn');
-		gv.score -= 1;
+		this.destroy();
+
+		task_funcs.gopherGone();
+		if (task_funcs.gopherComplete()) {
+			if (task_funcs.gopherNext() == 1) {Crafty.trigger('CompletedTask');}
+		}
+		else {gv.score -= 1;}
 	},
 	hitGopher: function() {
-		sounds.play_whack();
 		this.animate('AnimateHit');
+		this.destroy();
+		sounds.play_whack();
+		
+		task_funcs.gopherHit();
+		if (task_funcs.gopherComplete()) {
+			task_list.completed();
+			if (task_funcs.gopherNext() == 1) {Crafty.trigger('CompletedTask');}
+		}
 	}
 });
 
@@ -1077,7 +1045,6 @@ Crafty.c('Score', {
 		// this.text('Power: '+gv.robot.power);
 	}
 });
-
 Crafty.c('Bucket', {
 	init: function() {
 		this.requires('2D, Canvas, Grid, Solid, spr_bucket_empty, Collision')
@@ -1140,6 +1107,46 @@ Crafty.c('LgTools', {
 		}
 	}
 });
+
+// TASKS
+Crafty.c('Task', {
+	init: function() {
+		this.requires('2D, DOM, Grid, Text')
+			.attr( { w:200, h:200 })
+			.textFont({ size: '18px' })
+			.textAlign('center')
+			.bind('CompletedTask', this.completedTask)
+			.bind('UpdateTask', this.updateTask)
+			.bind('UpdateFrame', this.checkTask)
+	},
+	updateTask: function() {
+		this.text(task_list.getText());
+		task_list.setStart();
+	},
+	checkTask: function() {
+		var met = task_list.getMet();
+		var resource = met[0];
+		var quantity = met[1];
+		var curr_quantity;
+
+		if (resource == 'eggs') {curr_quantity = gv.resources.eggs;}
+		else if (resource == 'wheat') {curr_quantity = gv.resources.wheat;}
+		else if (resource == 'wool') {curr_quantity = gv.resources.wool;}
+		else if (resource == 'milk') {curr_quantity = gv.resources.milk;}
+		else if (resource == 'bread') {curr_quantity = gv.resources.bread;}
+		else if (resource == 'muffin') {curr_quantity = gv.resources.muffin;}
+		else if (resource == 'thread') {curr_quantity = gv.resources.thread;}
+		else if (resource == 'berries') {curr_quantity = gv.resources.berries;}
+
+		if (quantity-1 == curr_quantity) {this.completedTask();}
+	},
+	completedTask: function() {
+		task_list.setEnd();
+		task_list.nextTask();
+		this.updateTask();
+	}
+});
+
 
 // Scenery
 Crafty.c('Blank', {

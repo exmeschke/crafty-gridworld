@@ -162,7 +162,6 @@ Crafty.scene('Game', function() {
 	var box_b = Game.h()-3.8;
 	this.scroll = Crafty.e('Scroll').at(0,Game.h()-5);
 	this.score = Crafty.e('Score').at(3,box_b+1).text('$    0.00');
-	// this.currTask = Crafty.e('Task').at(7,box_b+.8).text('').trigger('UpdateTask');
 	// this.power = Crafty.e('RobotPower').at(8,box_b+1.2);
 
 	for (var x = 0; x < 4; x++) {
@@ -195,9 +194,10 @@ Crafty.scene('Game', function() {
 	Crafty.e('BerryLabel').at(st2+11,box_b+2).text(0);
 
 	// TASKS
-	// this.currTask = Crafty.e('Task').at(7,box_b+.8).text('').trigger('UpdateTask');
-	// spawn_gopher(0);
-	// eval('spawn_gopher();');
+	this.currTask = Crafty.e('Task').at(7,box_b+.8).text('').trigger('UpdateTask');
+
+	eval('gopher_task();');
+	// this.currTask.trigger('CompletedTask');
 
 });
 

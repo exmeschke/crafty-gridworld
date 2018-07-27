@@ -8,7 +8,7 @@ function Task(num, diff, txt, met, cmd) {
     this.command = cmd;
     this.time = { begin:0, end:0, duration:0 };
     this.moment = 0;
-    this.completed = false; 
+    this.completed = 0; 
     // setters
     this.setStart = function() {this.time.begin = new Date().getTime()/1000;};
     this.setEnd = function() {
@@ -16,17 +16,49 @@ function Task(num, diff, txt, met, cmd) {
     	this.time.duration = this.time.end - this.time.begin;
     };
 };
+// task specific functions
+var task_funcs = {
+    gopher: {
+        num: 7,
+        loc_x: [44, 32, 46, 39, 12, 24, 48],
+        loc_y: [10, 20, 18, 2, 19, 16, 11],
+        hit: 0,
+        gone: 0,
+        completed: 0
+    },
+    gopherCoord: function(i) {return [this.gopher.loc_x[i], this.gopher.loc_y[i]];},
+    gopherHit: function() {this.gopher.hit+=1;},
+    gopherGone: function() {this.gopher.gone+=1;},
+    gopherComplete: function() {
+        if (this.gopher.hit + this.gopher.gone >= this.gopher.num) {
+            this.gopher.completed+=1;
+            return true;
+        }
+        else {return false;}
+    },
+    gopherNext: function() {
+        if (this.gopher.completed == 1) {return true;}
+        else {return false;}
+    }
+};
 // task list
 var task_list = {
+    curr: 0,
 	list: [],
 	addTask: function(task) {this.list.push(task);},
 	addTask: function(task, index) {this.list.splice(index,0,task);},
 	addTasks: function(list) {this.list = list;},
 
-	getText: function(curr) {return this.list[curr].txt;},
-	getMet: function(curr) {return this.list[curr].met;},
-	setStart: function(curr) {this.list[curr].setStart();},
-	setEnd: function(curr) {this.list[curr].setEnd();}
+    nextTask: function() {this.curr = this.curr+1;},
+    // completed: function() {this.list[this.curr].completed += 1;},
+    // checkCompleted: function() {return this.list[this.curr].completed;},
+
+    getCurr: function() {return this.curr;},
+	getText: function() {return this.list[this.curr].txt;},
+	getMet: function() {return this.list[this.curr].met;},
+    getCommand: function() {return this.list[this.curr].command},
+	setStart: function() {this.list[this.curr].setStart();},
+	setEnd: function() {this.list[this.curr].setEnd();}
 };
 // manually add tasks to list
 var tasks = [];
@@ -34,8 +66,10 @@ tasks[4] = new Task(1, 0, 'Collect 16 eggs', ['eggs',16], '');
 tasks[1] = new Task(1, 0, "Gather 40 berries (water+bush)", ['berries',40], '');
 tasks[2] = new Task(1, 0, 'Collect 2 wool (shears+sheep)', ['wool',2], '');
 tasks[3] = new Task(1, 0, 'Collect 2 milk (empty bucket+cow)', ['milk',2], '');
-tasks[0] = new Task(2, 1, 'Hit 5 pesky gophers with your hammer', ['gophers',5], 'spawn_gopher();');
+tasks[0] = new Task(2, 1, 'Hit gophers with your hammer', ['gophers',5], 'gopher_task();');
 task_list.addTasks(tasks);
+
+
 
 
 // ROBOT REQUESTS
@@ -65,7 +99,6 @@ task_list.addTasks(tasks);
 // this.snake = Crafty.e('Snake').at(40,9);
 // this.snake.delay(this.snake.snakeMove('up'), 500, -1);
 // Gopher
-// this.gopher = Crafty.e('Gopher').at(44,10);
 
 
 
