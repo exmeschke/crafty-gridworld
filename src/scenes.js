@@ -125,7 +125,8 @@ Crafty.scene('Game', function() {
 				// place treasure chest here
 				if (cc == 30) {
 					this.chest = Crafty.e('Chest').at(x,y);
-					Crafty.log(x+y);
+					// sets password and location
+					task_funcs.chestInitialize(x,y);
 				}
 			// eggs
 			} else if (y < Game.h()-6 && Math.random() < 0.01 && !this.occupied[x][y]) {
@@ -156,6 +157,7 @@ Crafty.scene('Game', function() {
 	this.oven = Crafty.e('Oven').at(Game.w()-3.5,1);
 	this.spinning_wheel = Crafty.e('SpinningWheel').at(Game.w()-5.5,1);
 	this.charging_station = Crafty.e('ChargingStation').at(16,3);
+	this.screen = Crafty.e('RequestScreen').at(16,5.3);
 	this.bbush = Crafty.e('BerryBush').at(Game.w()-3,22);
 
 	// Add score information
@@ -197,6 +199,7 @@ Crafty.scene('Game', function() {
 	Crafty.e('BerryLabel').at(st2+11,box_b+2).text(0);
 
 	// HUMAN TASKS
+	Crafty.e('TaskTitle').at(7,box_b-.1);
 	this.currTask = Crafty.e('Task').at(7,box_b+.8).text('').trigger('UpdateTask');
 });
 
@@ -482,27 +485,27 @@ Crafty.scene('Loading', function() {
 				}
 			},
 			'assets/bbushes.png': {
-				tile: 256,
-				tileh: 205,
+				tile: 256, tileh: 205,
 				map: { 
 					spr_bbush_empty: [0,0], 
 					spr_bbush_full: [1,0] 
 				}
 			},
 			'assets/berries.png': {
-				tile: 256,
-				tileh: 151,
+				tile: 256, tileh: 151,
 				map: { spr_berries: [0,0] }
 			},
 			'assets/thread-blue.png': {
-				tile: 32,
-				tileh: 32,
+				tile: 32, tileh: 32,
 				map: { spr_thread: [0,0] }
 			},
-			'assets/charging-station.png': {
-				tile: 610,
-				tileh: 750,
+			'assets/charging-station2.png': {
+				tile: 610, tileh: 750,
 				map: { spr_charging_station: [0,0] }
+			},
+			'assets/screen.png': {
+				tile: 230, tileh: 244,
+				map: { spr_screen: [0,0] }
 			}
 		}
 

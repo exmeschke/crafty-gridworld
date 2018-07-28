@@ -53,11 +53,13 @@ function snake_task() {
 
 // HIDDEN CHEST
 function chest_task() {
-	task_funcs.chestGeneratePassword();
-	// setTimeout(function() {
-
-	// 	Crafty.trigger()
-	// }, 3000);
+	var coord = task_funcs.chestGetLocation();
+	setTimeout(function() {
+		update_robot_text('The chest is located at ['+coord[0]+','+coord[1]+']');
+	}, 3000);
+	setTimeout(function() {
+		update_robot_text('Did you know you can break rocks with your hammer?');
+	}, 20000);
 };
 chest_task();
 

@@ -2,7 +2,8 @@
 
 // HUMAN TASKS
 // general task definition
-//      num - the task number
+//      num - the task number 
+//          [1:easy gather, 2:hard gather, 3:easy chase, 4:hard chase, 5:easy combo, 6:hard combo]
 //      diff - task difficulty [0 = low, 1 = high]
 //      txt - the prompt shown to player
 //      met - the conditions that need to be met to complete task
@@ -60,20 +61,20 @@ var task_list = {
 };
 // manually add tasks to list
 var tasks = [];
-tasks[0] = new Task(1, 0, 'Collect 16 eggs', ['eggs',16], '');
-tasks[1] = new Task(1, 0, "Harvest 5 wheat (scythe)", ['berries',40], '');
-tasks[1] = new Task(1, 0, "Gather 40 berries (water+bush)", ['berries',40], '');
-tasks[2] = new Task(1, 0, 'Collect 2 wool (shears+sheep)', ['wool',2], '');
-tasks[3] = new Task(1, 0, 'Collect 2 milk (empty bucket+cow)', ['milk',2], '');
-tasks[4] = new Task(2, 1, 'Hit gophers with your hammer', ['gophers',5], 'gopher_task();');
-tasks[5] = new Task(3, 0, 'Chase and collect butterflies', ['butterflies',8], 'butterfly_task();');
-tasks[6] = new Task(4, 0, 'Chase and hit snakes with your hammer', ['snakes',5], 'snake_task();');
-tasks[7] = new Task(5, 0, 'Dig up and open the chest (with hidden treasure!!) burried under a tuft of grass.', ['chest',1], '');
-tasks[8] = new Task(6, 1, 'Bake a loaf of bread (recipe in book)', ['bread',1], '');
-tasks[9] = new Task(6, 1, 'Bake a muffin (recipe in book)', ['muffin',1], '');
-tasks[10] = new Task(6, 1, 'Make a spool of thread (recipe in book)', ['thread',1], '');
-tasks[11] = new Task(1, 0, '', ['eggs',100], '');
-tasks[12] = new Task(1, 0, '', ['eggs',100], '');
+// tasks[0] = new Task(1, 0, 'Collect 16 eggs', ['eggs',16], '');
+// tasks[1] = new Task(1, 0, "Harvest 5 wheat (scythe)", ['berries',40], '');
+// tasks[1] = new Task(1, 0, "Gather 40 berries (water+bush)", ['berries',40], '');
+// tasks[2] = new Task(1, 0, 'Collect 2 wool (shears+sheep)', ['wool',2], '');
+// tasks[3] = new Task(1, 0, 'Collect 2 milk (empty bucket+cow)', ['milk',2], '');
+// tasks[4] = new Task(2, 1, 'Hit gophers with your hammer', ['gophers',5], 'gopher_task();');
+// tasks[5] = new Task(3, 0, 'Chase and collect butterflies', ['butterflies',8], 'butterfly_task();');
+// tasks[6] = new Task(4, 0, 'Chase and hit snakes with your hammer', ['snakes',5], 'snake_task();');
+tasks[0] = new Task(5, 0, 'Dig up and open the treasure chest burried under a tuft of grass', ['chest',1], '');
+// tasks[8] = new Task(6, 1, 'Bake a loaf of bread (recipe in book)', ['bread',1], '');
+// tasks[9] = new Task(6, 1, 'Bake a muffin (recipe in book)', ['muffin',1], '');
+// tasks[10] = new Task(6, 1, 'Make a spool of thread (recipe in book)', ['thread',1], '');
+tasks[1] = new Task(0, 0, '', ['eggs',100], '');
+tasks[2] = new Task(0, 0, '', ['eggs',100], '');
 task_list.addTasks(tasks);
 
 
@@ -149,6 +150,7 @@ var task_funcs = {
     },
     // chest task
     chest: {
+        location: [],
         // [0:hidden, 1:revealed]
         revealed: 0,
         // [0:closed, 1:opened]
@@ -156,7 +158,12 @@ var task_funcs = {
         // password
         password: 0
     },
-    chestGeneratePassword: function() {
+    // initializes location and generates password
+    chestInitialize: function(x, y) {
+        this.chest.location.push(x);
+        this.chest.location.push(y);
+        Crafty.log('chest: '+x+','+y);
+
         var num = '';
         for (var i = 0; i < 7; i++) {
             var temp = Math.floor(Math.random()*10);
@@ -165,7 +172,14 @@ var task_funcs = {
         this.chest.password = num;
         Crafty.log(this.chest.password);
     },
-    chestGetPassword: function() {return this.chest.password;}
+    // setters
+    chestIsRevealed: function() {this.chest.revealed = 1;},
+    chestIsOpen: function() {this.chest.opened = 1;},
+    // getters
+    chestGetLocation: function() {return this.location;},
+    chestGetPassword: function() {return this.chest.password;},
+    chestGetRevealed: function() {return this.chest.revealed;},
+    chestGetOpened: function() {return this.chest.opened;}
 };
 
 
