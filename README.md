@@ -1,8 +1,6 @@
 # Gridworld with Crafty.js
 
-Single player game where player works with robot to complete a series of tasks.
-
-Navigate using the arrow keys and 'X' triggers actions.
+Single player game where player works with robot to complete a series of tasks. Navigate using the arrow keys and press 'X' to triggers actions.
 
 The player has three types of individual tasks: 
 1) Collect stationary resources
