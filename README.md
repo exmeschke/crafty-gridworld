@@ -12,21 +12,17 @@ The player has three types of individual tasks:
 The robot will periodically request the player for assistance, alerting them with a noise and/or a blinking light. The player may choose to respond or ignore the request.
 
 ## File content
-/root/
-
 index.html - open in browser to start game
 
-/src/
+src/game-setup.js - initializes Crafty game and defines sound effects
 
-game-setup.js - initializes Crafty game and defines sound effects
+src/task-requests.js - defines human task list and robot request list
 
-task-requests.js - defines human task list and robot request list
+src/scene-components.js - defines game components and rules for interactions with environment
 
-scene-components.js - defines game components and rules for interactions with environment
+src/scenes.js - places objects in scene and loads sprite sheets
 
-scenes.js - places objects in scene and loads sprite sheets
-
-event-components.js - javascript functions that for events related to human tasks and robot requests
+src/event-components.js - javascript functions that for events related to human tasks and robot requests
 
 ## Attributions
 (animals)
