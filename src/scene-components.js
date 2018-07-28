@@ -151,6 +151,8 @@ Crafty.c('Player', {
 			Crafty.trigger('SwitchLgTools');
 		} else if ((hitDatas = this.hit('Book'))) { 
 			Crafty.trigger('OpenBook');
+		} else if ((hitDatas = this.hit('RequestScreen'))) {
+			Crafty.trigger('ShowRequest');	
 		} else if ((hitDatas = this.hit('BerryBush'))) {
 			// if the bush has berries and the bucket is empty, collect berries
 			if (gv.bush == 1) {
@@ -180,10 +182,10 @@ Crafty.c('Player', {
 			else {sounds.play_low();}
 		} else if ((hitDatas = this.hit('Chest'))) {
 			// if chest is hidden and holding shovel, reveal the chest
-			if (task_funcs.getChestRevealed() == 0 && gv.tools.lgtools == 1) {
+			if (task_funcs.chestGetRevealed() == 0 && gv.tools.lgtools == 1) {
 				Crafty.trigger('DigChest');
 			// if chest is revealed, try to open chest
-			} else if (task_funcs.getChestRevealed() == 1) {
+			} else if (task_funcs.chestGetRevealed() == 1) {
 				Crafty.trigger('OpenChest');
 			} else {sounds.play_low();}
 		} else if ((hitDatas = this.hit('Rock'))) {
@@ -282,10 +284,10 @@ Crafty.c('Robot', {
 			.bind('Plant', this.plant)
 			.bind('Water', this.water)
 			.bind('Pick', this.pick)
-			.bind('RobotRequestLow', this.requestLow)
-			.bind('RobotRequestMed', this.requestMed)
-			.bind('RobotRequestHigh', this.requestHigh)
-			.bind('StopRequest', this.stopRequest)
+			.bind('LowAlert', this.lowAlert)
+			.bind('MedAlert', this.medAlert)
+			.bind('HighAlert', this.highAlert)
+			.bind('StopAlert', this.stopAlert)
 	},
 	char: function() {return 'robot';},
 	lastMovement: function() {return gv.robot.movement.slice(-1);}, 
@@ -304,7 +306,7 @@ Crafty.c('Robot', {
 		if (this.x/gv.tile_sz < 2) {this.moveRight();}
 		else if (this.y/gv.tile_sz < 2) {this.moveDown();}
 		else if (this.y/gv.tile_sz > 15) {this.moveUp();}
-		else if (this.x/gv.tile_sz < 16) {this.moveLeft();}
+		else if (this.x/gv.tile_sz > 16) {this.moveLeft();}
 		else {
 			if (gv.robot.power > 0 && gv.robot.charging == 0) {
 				var ra = Math.random()
@@ -393,49 +395,20 @@ Crafty.c('Robot', {
 			Crafty.e('Soil5').at(x, y);
 		}
 	},
-	requestLow: function() {
+	lowAlert: function() {
 		this.animate('AnimateLight', -1);
-		this.delay(this.stopRequest(), 10000);
+		this.delay(this.stopRequest, 15000);
 	},
-	requestMed: function() {
+	medAlert: function() {
 		robot_alert_sound();
-		this.delay(this.stopRequest(), 10000);
+		this.delay(this.stopRequest, 10000);
 	},
-	requestHigh: function() {
+	highAlert: function() {
 		this.animate('AnimateLight', -1);
 		robot_alert_sound();
-		this.delay(this.stopRequest(), 10000);
+		this.delay(this.stopRequest, 10000);
 	},
-	stopRequest: function() {this.pauseAnimation();}
-});
-function update_robot_text(text) {gv.robot.txt = text;};
-// Crafty.c('RobotRequest', {
-// 	init: function() {
-// 		this.requires('2D, Canvas, Grid, Color, Text')
-// 			.attr({ z:1 })
-// 			.textFont({ size: '14px' })
-// 			.dynamicTextGeneration(true)
-// 			.bind('UpdateFrame', this.updateRequest)
-// 			.bind('ShowRequest', this.showRequest)
-// 			.bind('HideRequest', this.HideRequest)
-// 	},
-// 	updateRequest: function() {this.text(gv.robot.txt);},
-// 	showRequest: function() {
-// 		this.color("#FFFFFF", 0.9).text(this._text);
-// 	},
-// 	hideRequest: function() {
-// 		this.color("#FFFFFF", 0).text('');
-// 	}
-// });
-Crafty.c('RobotRequest', {
-	init: function() {
-		this.requires('2D, Canvas, Grid')
-			// .bind('UpdateFrame', this.updateRequest)
-			.bind('ShowRequest', this.showRequest)
-			// .bind('HideRequest', this.HideRequest)
-	},
-	// updateRequest: function() {gv.robot.txt;},
-	showRequest: function() {alert(gv.robot.txt);}
+	stopAlert: function() {this.pauseAnimation();}
 });
 
 
@@ -1047,6 +1020,7 @@ Crafty.c('BerryBush', {
 		gv.bush = 1;
 	}
 });
+// Baking
 function wait_bake_bread() {eval("Crafty.e('Bread').at(Game.w()-2.8,1.8).bake();");}
 function wait_bake_muffin() {eval("Crafty.e('Muffin').at(Game.w()-2.8,1.8).bake();");}
 Crafty.c('Oven', {
@@ -1078,6 +1052,7 @@ Crafty.c('Oven', {
 		setTimeout(wait_bake_muffin, gv.recipes.muffin.time);
 	}
 });
+// Spinning
 function wait_make_thread() {
 	eval("Crafty.e('Thread').at(Game.w()-5,2);");
 	Crafty.trigger('StopWheel');
@@ -1100,7 +1075,6 @@ Crafty.c('SpinningWheel', {
 		setTimeout(wait_make_thread, gv.recipes.thread.time);
 	},
 	stopAnimation: function() {this.pauseAnimation();}
-
 });
 Crafty.c('ChargingStation', {
 	init: function() {
@@ -1108,32 +1082,77 @@ Crafty.c('ChargingStation', {
 			.attr({ w:43, h:50, z:0 })
 	}
 });
+// Requests
+function update_robot_text(text) {
+	gv.robot.txt = text;
+	Crafty.trigger('LowAlert');
+};
 Crafty.c('RequestScreen', {
 	init: function() {
 		this.requires('2D, Canvas, Grid, spr_screen')
 			.attr( {w:50, h:42 })
+			.bind('ShowRequest', this.showRequest)
+	},
+	showRequest: function() {
+		// if (confirm(gv.robot.txt)) {
+		// } else {
+		// }
+		alert(gv.robot.txt);
+		Crafty.trigger('StopAlert');
+	}
+});
+// Hidden Chest
+var exp;
+function wait_destroy_chest() {
+	Crafty.trigger('ChestExplosion');
+	task_funcs.chestIsDestroyed();
+};
+Crafty.c('ChestExplosion', {
+	init: function() {
+		this.requires('2D, Canvas, Grid, SpriteAnimation, spr_explosion')
+			.attr({ z:-1 })
+			.reel('Explode', 3000, [
+				[0,0], [0,1], [0,2], [0,3], [0,4]
+			])
+			.bind('ChestExplosion', function() {
+				this.attr({ z:5 });
+				this.animate('Explode');
+				Crafty.trigger('CompletedTask');
+			})
 	}
 });
 Crafty.c('Chest', {
 	init: function() {
 		this.requires('2D, Canvas, Grid, spr_chest_closed')
 			.attr({ w:40, h:40, z:-1 })
+			// .attr({ w:gv.tile_sz, h:gv.tile_sz, z:-1 })
 			.bind('DigChest', this.reveal)
 			.bind('OpenChest', this.open)
+			.bind('ChestExplosion', this.hide)
 	},
+	hide: function() {this.attr({ z:-2 });},
 	reveal: function() {
 		this.attr({ z:2 });
 		task_funcs.chestIsRevealed();
+		// countdown
+		sounds.play_ticking();
+		exp = setTimeout(wait_destroy_chest, 65000);
 	},
 	open: function() {
-		if (task_funcs.chestGetOpened() == 0){
+		if (task_funcs.chestGetOpened() == 0 && task_funcs.chestGetDestroyed() == 0){
 			var pin = prompt('Please enter the 7 digit password:');
 			if (pin == null || pin == "") {
 			} else if (pin == task_funcs.chestGetPassword()) {
+				// open chest
 				this.sprite('spr_chest_open');
+				task_funcs.chestIsOpen();
+				// stop explosion
+				clearTimeout(exp);
+				sounds.stop_ticking();
+				// get reward
+				sounds.play_money();
 				gv.score+=20;
 			}
-			task_funcs.chestIsOpen();
 			Crafty.trigger('CompletedTask');
 		}
 	}

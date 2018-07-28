@@ -15,8 +15,8 @@ Crafty.scene('Game', function() {
 	this.player = Crafty.e('Player').at(24, 16);
 	// Add robot
 	this.robot = Crafty.e('Robot').at(5,10);
-	this.request = Crafty.e('RobotRequest').at(6,9);
-	this.robot.attach(this.request);
+	// this.request = Crafty.e('RobotRequest').at(6,9);
+	// this.robot.attach(this.request);
 
 	// Add animals
 	this.sheep = Crafty.e('Sheep').at(21,3);
@@ -125,6 +125,7 @@ Crafty.scene('Game', function() {
 				// place treasure chest here
 				if (cc == 30) {
 					this.chest = Crafty.e('Chest').at(x,y);
+					this.explosion = Crafty.e('ChestExplosion').at(x,y);
 					// sets password and location
 					task_funcs.chestInitialize(x,y);
 				}
@@ -199,8 +200,8 @@ Crafty.scene('Game', function() {
 	Crafty.e('BerryLabel').at(st2+11,box_b+2).text(0);
 
 	// HUMAN TASKS
-	Crafty.e('TaskTitle').at(7,box_b-.1);
-	this.currTask = Crafty.e('Task').at(7,box_b+.8).text('').trigger('UpdateTask');
+	// Crafty.e('TaskTitle').at(7,box_b-.1);
+	this.currTask = Crafty.e('Task').at(7,box_b+.1).text('').trigger('UpdateTask');
 });
 
 
@@ -232,7 +233,9 @@ Crafty.scene('Loading', function() {
 		radar_med: ['assets/sounds/radar-med.wav'],
 		radar_high: ['assets/sounds/radar-high.wav'],
 		oven: ['assets/sounds/oven-ding.wav'],
-		oven25: ['assets/sounds/oven-ding25.wav']
+		oven25: ['assets/sounds/oven-ding25.wav'],
+		ticking: ['assets/sounds/ticking-countdown.wav'],
+		cha_ching: ['assets/sounds/cha-ching.wav']
 	});
 
 	// Load sprites (images)
@@ -506,6 +509,10 @@ Crafty.scene('Loading', function() {
 			'assets/screen.png': {
 				tile: 230, tileh: 244,
 				map: { spr_screen: [0,0] }
+			},
+			'assets/explosions/chest-explosion2.png': {
+				tile: 35, tileh: 34,
+				map: { spr_explosion: [0,0] }
 			}
 		}
 

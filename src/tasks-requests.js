@@ -69,7 +69,7 @@ var tasks = [];
 // tasks[4] = new Task(2, 1, 'Hit gophers with your hammer', ['gophers',5], 'gopher_task();');
 // tasks[5] = new Task(3, 0, 'Chase and collect butterflies', ['butterflies',8], 'butterfly_task();');
 // tasks[6] = new Task(4, 0, 'Chase and hit snakes with your hammer', ['snakes',5], 'snake_task();');
-tasks[0] = new Task(5, 0, 'Dig up and open the treasure chest burried under a tuft of grass', ['chest',1], '');
+tasks[0] = new Task(5, 0, 'Dig up and open the treasure chest burried under a tuft of grass. But be careful-ticking means it might explode!', ['chest',1], 'chest_task();');
 // tasks[8] = new Task(6, 1, 'Bake a loaf of bread (recipe in book)', ['bread',1], '');
 // tasks[9] = new Task(6, 1, 'Bake a muffin (recipe in book)', ['muffin',1], '');
 // tasks[10] = new Task(6, 1, 'Make a spool of thread (recipe in book)', ['thread',1], '');
@@ -155,6 +155,8 @@ var task_funcs = {
         revealed: 0,
         // [0:closed, 1:opened]
         opened: 0,
+        // [0:intact, 1:destroyed]
+        destroyed: 0,
         // password
         password: 0
     },
@@ -175,11 +177,13 @@ var task_funcs = {
     // setters
     chestIsRevealed: function() {this.chest.revealed = 1;},
     chestIsOpen: function() {this.chest.opened = 1;},
+    chestIsDestroyed: function() {this.chest.destroyed = 1;},
     // getters
-    chestGetLocation: function() {return this.location;},
+    chestGetLocation: function() {return this.chest.location;},
     chestGetPassword: function() {return this.chest.password;},
     chestGetRevealed: function() {return this.chest.revealed;},
-    chestGetOpened: function() {return this.chest.opened;}
+    chestGetOpened: function() {return this.chest.opened;},
+    chestGetDestroyed: function() {return this.chest.destroyed;}
 };
 
 
@@ -188,7 +192,7 @@ var task_funcs = {
 function robot_request(txt) {
     Crafty.e('RobotRequest').at(6,9).text(txt);
 };
-function robot_alert_sound(typ) {
+function robot_alert_sound() {
     sounds.play_med();
     for (var i = 0; i < 10; i++) {
          setTimeout(function() {sounds.play_med();}, 1000*i);
