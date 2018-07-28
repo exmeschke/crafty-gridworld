@@ -15,6 +15,8 @@ Crafty.scene('Game', function() {
 	this.player = Crafty.e('Player').at(24, 16);
 	// Add robot
 	this.robot = Crafty.e('Robot').at(5,10);
+	this.request = Crafty.e('RobotRequest').at(6,9);
+	this.robot.attach(this.request);
 
 	// Add animals
 	this.sheep = Crafty.e('Sheep').at(21,3);
@@ -195,9 +197,7 @@ Crafty.scene('Game', function() {
 	Crafty.e('BerryLabel').at(st2+11,box_b+2).text(0);
 
 	// HUMAN TASKS
-	this.currTask = Crafty.e('Task').at(6.5,box_b+.8).text('').trigger('UpdateTask');
-	// eval('butterfly_task();');
-	// eval('gopher_task();');
+	this.currTask = Crafty.e('Task').at(7,box_b+.8).text('').trigger('UpdateTask');
 });
 
 

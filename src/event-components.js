@@ -5,11 +5,11 @@ function spawn_gopher(i) {
 	if (task_funcs.gopherComplete() == false){
 		Crafty.e('Gopher').at(coord[0],coord[1]);
 	}
-}
+};
 function gopher_task() {
 	var a = 0;
 	spawn_gopher(a);
-	for (var i = 1; i < 6; i++) {
+	for (var i = 1; i < 7; i++) {
 		setTimeout(function () {
 			a++;
 			spawn_gopher(a);
@@ -32,7 +32,7 @@ function butterfly_task() {
 			spawn_butterfly(a);
 		}, 5000*i);
 	}
-}
+};
 
 // SNAKES
 function spawn_snake(i) {
@@ -49,10 +49,19 @@ function snake_task() {
 			spawn_snake(a);
 		}, 8000*i);
 	}
-}
+};
 
 // HIDDEN CHEST
+function chest_task() {
+	task_funcs.chestGeneratePassword();
+	// setTimeout(function() {
 
+	// 	Crafty.trigger()
+	// }, 3000);
+};
+chest_task();
 
 // Robot requests
 // 
+
+
