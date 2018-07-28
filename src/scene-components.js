@@ -46,9 +46,7 @@ gv = {
 		},
 		chicken: {
 			movement: []
-		}, 
-		snake: {speed: 500},
-		butterfly: {speed: 900}
+		}
 	},
 	score: 0,
 	resources: {
@@ -107,10 +105,11 @@ Crafty.c('Grid', {
 
 // Player characters
 Crafty.c('Player', {
+	_back: 1.6,
 	init: function() {
 		this.requires('2D, Canvas, Grid, Fourway, Keyboard, Collision, Delay, spr_player, SpriteAnimation')
 			.attr({ w:gv.tile_sz, h:gv.tile_sz, z:5 })
-			.fourway(200) //60
+			.fourway(80) //80
 			.onHit('Obstacle', this.stopMovement)
 			.onHit('Resource', this.collectResource)
 			.onHit('Robot', this.pushRobot)
@@ -230,15 +229,14 @@ Crafty.c('Player', {
 		}
 	},
 	stopMovement: function() {
-		var back = 1.2;
 		if (gv.player.movement.slice(-1) == 'up') {
-			this.attr({ x:this.x, y:this.y+back });
+			this.attr({ x:this.x, y:this.y+this._back });
 		} else if (gv.player.movement.slice(-1) == 'down') {
-			this.attr({ x:this.x, y:this.y-back });
+			this.attr({ x:this.x, y:this.y-this._back });
 		} else if (gv.player.movement.slice(-1) == 'right') {
-			this.attr({ x:this.x-back, y:this.y });
+			this.attr({ x:this.x-this._back, y:this.y });
 		} else {
-			this.attr({ x:this.x+back, y:this.y });
+			this.attr({ x:this.x+this._back, y:this.y });
 		}
 	}, 
 	pushRobot: function() {
@@ -253,16 +251,16 @@ Crafty.c('Player', {
 		}
 
 		if (gv.player.movement.slice(-1) == 'up') {
-			this.attr({ x:this.x, y:this.y+1 });
+			this.attr({ x:this.x, y:this.y+this._back });
 			Crafty.trigger('RobotUp');
 		} else if (gv.player.movement.slice(-1) == 'down') {
-			this.attr({ x:this.x, y:this.y-1 });
+			this.attr({ x:this.x, y:this.y-this._back });
 			Crafty.trigger('RobotDown');
 		} else if (gv.player.movement.slice(-1) == 'right') {
-			this.attr({ x:this.x-1, y:this.y });
+			this.attr({ x:this.x-this._back, y:this.y });
 			Crafty.trigger('RobotRight');
 		} else {
-			this.attr({ x:this.x+1, y:this.y });
+			this.attr({ x:this.x+this._back, y:this.y });
 			Crafty.trigger('RobotLeft');
 		}
 	},
@@ -499,8 +497,6 @@ Crafty.c('Animal', {
 			.reel('AnimalEatingRight', 2000, [
 				[0,7], [1,7], [2,7], [3,7], [0,7]
 			])
-			.onHit('Oven', this.turnAround)
-			.onHit('SpinningWheel', this.turnAround)
 			// .debugStroke('black')
 	},
 	char: function() {
@@ -635,6 +631,8 @@ Crafty.c('Chicken', {
 			.attr({ w:24, h:24 })
 			.delay(this.randomMove, 1000, -1)
 			.onHit('Solid', this.turnAround)
+			.onHit('Oven', this.turnAround)
+			.onHit('SpinningWheel', this.turnAround)
 	},
 	pushMovement: function(dir) {
 		gv.animal.chicken.movement.push(dir);
@@ -652,76 +650,18 @@ Crafty.c('Chicken', {
 		sounds.play_chicken();
 	}
 });
-Crafty.c('Snake', {
-	_dir: '',
-	init: function() {
-		this.requires('Animal, spr_snake5')
-			.attr({ w:24, h:24 })
-			.delay(this.eatEgg, 1500, -1)
-			.delay(this.snakeMove, 600, -1)
-			.bind('UpdateFrame', this.offScreen)
-	},
-	type: function() { return 'snake'; },
-	setDir: function(dir) {this._dir = dir;},
-	snakeMove: function() {
-		if (Math.random() < 0.4) {
-			var a = Math.random();
-			if (a < 0.25){this._dir = 'up';}
-			else if (a < 0.5){this._dir = 'down';}
-			else if (a < 0.75){this._dir = 'left';}
-			else {this._dir = 'right';}
-		}
-		
-		if (this._dir == 'up') {
-			this.animate('AnimalMovingUp');
-			this.tween({ x: this.x, y: this.y-gv.tile_sz }, 500);
-		} 
-		else if (this._dir == 'down') {
-			this.animate('AnimalMovingDown');
-			this.tween({ x: this.x, y: this.y+gv.tile_sz }, 500);
-		} 
-		else if (this._dir == 'left') {
-			this.animate('AnimalMovingLeft');
-			this.tween({ x: this.x-gv.tile_sz, y: this.y }, 500);
-		}
-		else if (this._dir == 'right') {
-			this.animate('AnimalMovingRight');
-			this.tween({ x: this.x+gv.tile_sz, y: this.y }, 500);
-		}
-	},
-	pushMovement: function(dir) {
-		gv.animal.snake.movement.push(dir);
-		if (gv.animal.snake.movement.length > 5) {gv.animal.snake.movement.shift();}
-	},
-	lastMovement: function() {return gv.animal.snake.movement.slice(-1);
-	}, 
-	eatEgg: function() {
-		gv.resources.eggs -= 1;
-		if (gv.resources.eggs < 0) {gv.resources.eggs=0;}
-		gv.score-=.25;
-	},
-	hitSnake: function() {
-		this.destroy();
-		sounds.play_whack();
-	},
-	offScreen: function() {
-		if (this._x < -1 || this._x > gv.tile_sz*54 || this._y < -1 || this._y > gv.tile_sz*30) {
-			this.destroy();
-		}
-	}
-});
 Crafty.c('Butterfly', {
 	_dir: '',
 	init: function() {
 		this.requires('Animal, Resource, spr_butterfly')
 			.attr({ w:24, h:24, r:1 })
 			.delay(this.butterflyMove, 600, -1)
-			// .bind('UpdateFrame', this.offScreen)
+			.bind('UpdateFrame', this.offScreen)
 	},
 	type: function() { return 'butterfly'; },
 	setDir: function(dir) {this._dir = dir;},
 	butterflyMove: function() {
-		if (Math.random() < 0.4) {
+		if (Math.random() < 0.2) {
 			var a = Math.random();
 			if (a < 0.25){this._dir = 'up';}
 			else if (a < 0.5){this._dir = 'down';}
@@ -749,7 +689,74 @@ Crafty.c('Butterfly', {
 	offScreen: function() {
 		if (this._x < -1 || this._x > gv.tile_sz*54 || this._y < -1 || this._y > gv.tile_sz*30) {
 			this.destroy();
+			task_funcs.butterflyGone();
 		}
+		if (task_funcs.butterflyComplete()) {Crafty.trigger('CompletedTask');}
+	}
+});
+Crafty.c('Snake', {
+	_dir: '',
+	_speed: 700,
+	init: function() {
+		this.requires('Animal, spr_snake5')
+			.attr({ w:24, h:24 })
+			.delay(this.eatEgg, 2000, -1)
+			.delay(this.snakeMove, this._speed, -1)
+			.bind('UpdateFrame', this.offScreen)
+	},
+	type: function() { return 'snake'; },
+	setDir: function(dir) {this._dir = dir;},
+	snakeMove: function() {
+		if (Math.random() < 0.1) {
+			var a = Math.random();
+			if (a < 0.25){this._dir = 'up';}
+			else if (a < 0.5){this._dir = 'down';}
+			else if (a < 0.75){this._dir = 'left';}
+			else {this._dir = 'right';}
+		}
+
+		if (this._dir == 'up') {
+			this.animate('AnimalMovingUp');
+			this.tween({ x: this.x, y: this.y-gv.tile_sz }, this._speed);
+		} 
+		else if (this._dir == 'down') {
+			this.animate('AnimalMovingDown');
+			this.tween({ x: this.x, y: this.y+gv.tile_sz }, this._speed);
+		} 
+		else if (this._dir == 'left') {
+			this.animate('AnimalMovingLeft');
+			this.tween({ x: this.x-gv.tile_sz, y: this.y }, this._speed);
+		}
+		else if (this._dir == 'right') {
+			this.animate('AnimalMovingRight');
+			this.tween({ x: this.x+gv.tile_sz, y: this.y }, this._speed);
+		}
+	},
+	pushMovement: function(dir) {
+		gv.animal.snake.movement.push(dir);
+		if (gv.animal.snake.movement.length > 5) {gv.animal.snake.movement.shift();}
+	},
+	lastMovement: function() {return gv.animal.snake.movement.slice(-1);
+	}, 
+	eatEgg: function() {
+		gv.resources.eggs -= 1;
+		if (gv.resources.eggs < 0) {gv.resources.eggs=0;}
+		gv.score-=.25;
+	},
+	hitSnake: function() {
+		this.destroy();
+		sounds.play_whack();
+		gv.score+=1;
+
+		task_funcs.snakeHit();
+		if (task_funcs.snakeComplete()) {Crafty.trigger('CompletedTask');}
+	},
+	offScreen: function() {
+		if (this._x < -1 || this._x > gv.tile_sz*54 || this._y < -1 || this._y > gv.tile_sz*23) {
+			this.destroy();
+			task_funcs.snakeGone();
+		}
+		if (task_funcs.snakeComplete()) {Crafty.trigger('CompletedTask');}
 	}
 });
 Crafty.c('Gopher', {
@@ -804,7 +811,12 @@ Crafty.c('Resource', {
 			if (this.burned() == false) {Crafty.trigger('MuffinCount');}
 			else {gv.score -= this.r;}
 		else if (this.type() == 'thread') {Crafty.trigger('ThreadCount');}
-		else if (this.type() == 'butterfly') {gv.score+=this.r;}
+		else if (this.type() == 'butterfly') {
+			task_funcs.butterflyHit();
+			gv.score+=this.r;
+
+			if (task_funcs.butterflyComplete()) {Crafty.trigger('CompletedTask');}
+		}
 		this.destroy();
 	}
 });
@@ -1122,7 +1134,7 @@ Crafty.c('SpinningWheel', {
 Crafty.c('ChargingStation', {
 	init: function() {
 		this.requires('2D, Canvas, Grid, spr_charging_station')
-			.attr({ w:30, h:50 })
+			.attr({ w:30, h:50, z:0 })
 	}
 });
 Crafty.c('Chest', {
@@ -1138,18 +1150,22 @@ Crafty.c('Chest', {
 		gv.chest.revealed = 1;
 	},
 	open: function() {
-		var pin = prompt('Please enter the 6 digit pin number:');
-		if (pin == null || pin == "") {
-		} else if (pin == gv.chest.pin) {
-			this.sprite('spr_chest_open');
+		if (gv.chest.open == 0){
+			var pin = prompt('Please enter the 6 digit password:');
+			if (pin == null || pin == "") {
+			} else if (pin == gv.chest.pin) {
+				this.sprite('spr_chest_open');
+				gv.score+=20;
+			}
+			gv.chest.open = 1;
+			Crafty.trigger('CompletedTask');
 		}
-		gv.chest.open = 1;
 	}
 });
 Crafty.c('Rock', {
 	init: function( ) {
 		this.requires('2D, Canvas, Grid, spr_rock')
-			.attr({ w:20, h:20, z:4, p:0 })
+			.attr({ w:20, h:20, z:0, p:0 })
 	},
 	break: function() {
 		sounds.play_stone();
@@ -1247,8 +1263,8 @@ Crafty.c('Task', {
 	_initial: 0,
 	init: function() {
 		this.requires('2D, DOM, Grid, Text')
-			.attr( { w:200, h:200 })
-			.textFont({ size: '18px' })
+			.attr( { w:220, h:200 })
+			.textFont({ size: '16px' })
 			.textAlign('center')
 			.bind('UpdateQuant', this.updateQuant)
 			.bind('CompletedTask', this.completedTask)
@@ -1257,18 +1273,18 @@ Crafty.c('Task', {
 	},
 	updateTask: function() {
 		// set initial quantity
-		var met = task_list.getMet();
-		var resource = met[0];
-		if (resource == 'eggs') {_initial = gv.resources.eggs;}
-		else if (resource == 'wheat') {_initial = gv.resources.wheat;}
-		else if (resource == 'wool') {_initial = gv.resources.wool;}
-		else if (resource == 'milk') {_initial = gv.resources.milk;}
-		else if (resource == 'bread') {_initial = gv.resources.bread;}
-		else if (resource == 'muffin') {_initial = gv.resources.muffin;}
-		else if (resource == 'thread') {_initial = gv.resources.thread;}
-		else if (resource == 'berries') {_initial = gv.resources.berries;}
-
 		if (typeof task_list.getText != 'undefined'){
+			var met = task_list.getMet();
+			var resource = met[0];
+			if (resource == 'eggs') {_initial = gv.resources.eggs;}
+			else if (resource == 'wheat') {_initial = gv.resources.wheat;}
+			else if (resource == 'wool') {_initial = gv.resources.wool;}
+			else if (resource == 'milk') {_initial = gv.resources.milk;}
+			else if (resource == 'bread') {_initial = gv.resources.bread;}
+			else if (resource == 'muffin') {_initial = gv.resources.muffin;}
+			else if (resource == 'thread') {_initial = gv.resources.thread;}
+			else if (resource == 'berries') {_initial = gv.resources.berries;}
+
 			this.text(task_list.getText());
 			task_list.setStart();
 		}	

@@ -73,29 +73,33 @@ var task_funcs = {
     // records gopher disappears
     butterflyGone: function() {this.butterfly.gone+=1;},
     // checks whether gopher task is complete
-    butterflyCmplete: function() {
+    butterflyComplete: function() {
         if (this.butterfly.hit + this.butterfly.gone >= this.butterfly.num) {return true;}
         else {return false;}
     },
     // snake task
     snake: {
         // number of snakes that will appear
-        num: 4,
+        num: 6,
+        // direction of movement
+        direction: ['right', 'down', 'right', 'left', 'down', 'left', 'down', 'left'],
         // location coordinates
-        loc_x: [44, 32, 46, 39],
-        loc_y: [10, 20, 18,  2],
+        loc_x: [0, 14, 0, 52, 46, 52, 12, 52],
+        loc_y: [10, 0, 2, 19,  0,  3,  0, 4],
         // number hit
         hit: 0,
         // number disappear
         gone: 0,
     },
+    snakeDir: function(i) {return this.snake.direction[i];},
     snakeCoord: function(i)  {return [this.snake.loc_x[i], this.snake.loc_y[i]];},
     // records gopher hit
     snakeHit: function() {this.snake.hit+=1;},
     // records gopher disappears
     snakeGone: function() {this.snake.gone+=1;},
     // checks whether gopher task is complete
-    snakeCmplete: function() {
+    snakeComplete: function() {
+        // Crafty.log(this.snake.hit+this.snake.gone);
         if (this.snake.hit + this.snake.gone >= this.snake.num) {return true;}
         else {return false;}
     }
@@ -119,16 +123,17 @@ var task_list = {
 };
 // manually add tasks to list
 var tasks = [];
-tasks[0] = new Task(1, 0, 'Collect 16 eggs', ['eggs',2], '');
-tasks[0] = new Task(1, 0, "Gather 40 berries (water+bush)", ['berries',40], '');
-tasks[0] = new Task(1, 0, 'Collect 2 wool (shears+sheep)', ['wool',2], '');
-tasks[0] = new Task(1, 0, 'Collect 2 milk (empty bucket+cow)', ['milk',2], '');
-tasks[0] = new Task(2, 1, 'Hit gophers with hammer', ['gophers',5], 'gopher_task();');
-tasks[0] = new Task(3, 0, 'Chase and collect butterflies', ['butterflies',8], 'gopher_task();');
-tasks[0] = new Task(5, 0, 'Find and open the chest hidden under a tuft of grass.', ['chest',1], 'robot_notif();');
-tasks[0] = new Task(6, 1, 'Bake a loaf of bread (recipe in book)', ['bread',1], '');
-tasks[0] = new Task(6, 1, 'Bake a muffin (recipe in book)', ['muffin',1], '');
-tasks[0] = new Task(6, 1, 'Make a spool of thread (recipe in book)', ['thread',1], '');
+// tasks[0] = new Task(1, 0, 'Collect 16 eggs', ['eggs',2], '');
+// tasks[0] = new Task(1, 0, "Gather 40 berries (water+bush)", ['berries',40], '');
+// tasks[0] = new Task(1, 0, 'Collect 2 wool (shears+sheep)', ['wool',2], '');
+// tasks[0] = new Task(1, 0, 'Collect 2 milk (empty bucket+cow)', ['milk',2], '');
+// tasks[0] = new Task(2, 1, 'Hit gophers with your hammer', ['gophers',5], 'gopher_task();');
+// tasks[0] = new Task(3, 0, 'Chase and collect butterflies', ['butterflies',8], 'butterfly_task();');
+tasks[0] = new Task(4, 0, 'Chase and hit snakes with your hammer', ['snakes',5], 'snake_task();');
+tasks[1] = new Task(5, 0, 'Find and open the chest hidden under a tuft of grass.', ['chest',1], '');
+// tasks[0] = new Task(6, 1, 'Bake a loaf of bread (recipe in book)', ['bread',1], '');
+// tasks[0] = new Task(6, 1, 'Bake a muffin (recipe in book)', ['muffin',1], '');
+// tasks[0] = new Task(6, 1, 'Make a spool of thread (recipe in book)', ['thread',1], '');
 task_list.addTasks(tasks);
 
 

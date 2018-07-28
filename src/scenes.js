@@ -195,8 +195,8 @@ Crafty.scene('Game', function() {
 	Crafty.e('BerryLabel').at(st2+11,box_b+2).text(0);
 
 	// HUMAN TASKS
-	this.currTask = Crafty.e('Task').at(7,box_b+.8).text('').trigger('UpdateTask');
-	eval('butterfly_task();');
+	this.currTask = Crafty.e('Task').at(6.5,box_b+.8).text('').trigger('UpdateTask');
+	// eval('butterfly_task();');
 	// eval('gopher_task();');
 });
 

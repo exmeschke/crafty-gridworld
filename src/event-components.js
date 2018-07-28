@@ -35,11 +35,20 @@ function butterfly_task() {
 }
 
 // SNAKES
-function spawn_snake() {
-	Crafty.e('Snake').at(coord[0],coord[1]).setDir('up');
+function spawn_snake(i) {
+	var coord = task_funcs.snakeCoord(i);
+	var dir = task_funcs.snakeDir(i);
+	Crafty.e('Snake').at(coord[0],coord[1]).setDir(dir);
 };
 function snake_task() {
-
+	var a = 0;
+	spawn_snake(a);
+	for (var i = 1; i < 6; i++) {
+		setTimeout(function() {
+			a++;
+			spawn_snake(a);
+		}, 8000*i);
+	}
 }
 
 // HIDDEN CHEST
