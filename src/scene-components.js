@@ -12,7 +12,10 @@ gv = {
 	robot: {
 		speed: 1200,
 		movement: [],
+		// tracks robot power
 		power: 100,
+		// how often -10 power
+		battery_life: 20000,
 		// stops moving if charging == 1
 		charging: 0,
 		// [-1:none, 0:plant, 1:water, 2:pick]
@@ -79,9 +82,7 @@ gv = {
 
 // Grid
 Crafty.c('Grid', {
-	init: function() {
-		this.attr({ w: gv.tile_sz, h: gv.tile_sz })
-	},
+	init: function() {this.attr({ w: gv.tile_sz, h: gv.tile_sz })},
 	at: function(x, y) {
 		this.attr({ x: x*gv.tile_sz, y: y*gv.tile_sz })
 		return this;
@@ -90,7 +91,7 @@ Crafty.c('Grid', {
 });
 
 
-// Player characters
+// Player character
 Crafty.c('Player', {
 	_back: 1.6,
 	init: function() {
@@ -103,7 +104,6 @@ Crafty.c('Player', {
 				if ((hitDatas = this.hit('Resource'))) {hitDatas[0].obj.collect();}
 			})
 			.onHit('Robot', this.pushRobot)
-			.onHit('Butterfly', this.pushAnimal)
 			.reel('PlayerMovingUp', 600, [
 				[0,0], [1,0], [2,0]
 			])
@@ -137,8 +137,12 @@ Crafty.c('Player', {
 			})
 			.bind('KeyDown', function(e) {
 				if (e.key == Crafty.keys.X) {this.action();} 
+				if (e.key == Crafty.keys.R) {this.reset();}
 			})
 	},
+	// resets location if off screen
+	reset: function() {this.at(30,16);},
+	// action triggered by hitting object and pressed 'X'
 	action: function() {
 		var hitDatas, hitData;
 		if ((hitDatas = this.hit('Well'))) {
@@ -154,13 +158,12 @@ Crafty.c('Player', {
 		} else if ((hitDatas = this.hit('RequestScreen'))) {
 			Crafty.trigger('ShowRequest');	
 		} else if ((hitDatas = this.hit('BerryBush'))) {
-			// if the bush has berries and the bucket is empty, collect berries
+			// if the bush has berries, collect berries
 			if (gv.bush == 1) {
 				Crafty.trigger('CollectBerries');
 			// if the bush is empty and the bucket is full, water the bush
 			} else if (gv.bush == 0 && gv.tools.bucket == 1) {
 				Crafty.trigger('WaterBush');
-			// else play tone
 			} else {sounds.play_low();}
 		} else if ((hitDatas = this.hit('Sheep'))) {
 			// if the sheep has wool and the holding shears, collect wool
@@ -225,6 +228,7 @@ Crafty.c('Player', {
 			// Crafty.trigger('ShowRequest');
 		}
 	},
+	// prevents from moving through obstacles
 	stopMovement: function() {
 		if (gv.player.movement.slice(-1) == 'up') {
 			this.attr({ x:this.x, y:this.y+this._back });
@@ -236,28 +240,32 @@ Crafty.c('Player', {
 			this.attr({ x:this.x+this._back, y:this.y });
 		}
 	}, 
+	// pushes robot
 	pushRobot: function() {
+		// hands item to robot to trigger robot action
 		if (Crafty.s('Keyboard').isKeyDown('X')) {
-			if (gv.robot.task == -1 && gv.tools.seed_bag == 1) {
+			// if seed bag full, set robot task to plant
+			if (gv.tools.seed_bag == 1) {
 				Crafty.trigger('Plant');
 				Crafty.trigger('EmptySeedBag');
+			// if robot is planting and bucket is full
 			} else if (gv.robot.task == 0 && gv.tools.bucket == 1) {
 				Crafty.trigger('Water');
 				Crafty.trigger('EmptyBucket');
 			}
 		}
-
+		// slow down player and trigger robot movement
 		if (gv.player.movement.slice(-1) == 'up') {
-			this.attr({ x:this.x, y:this.y+this._back-.2 });
+			this.attr({ x:this.x, y:this.y+this._back-.4 });
 			Crafty.trigger('RobotUp');
 		} else if (gv.player.movement.slice(-1) == 'down') {
-			this.attr({ x:this.x, y:this.y-this._back+.2 });
+			this.attr({ x:this.x, y:this.y-this._back+.4 });
 			Crafty.trigger('RobotDown');
 		} else if (gv.player.movement.slice(-1) == 'right') {
-			this.attr({ x:this.x-this._back+.2, y:this.y });
+			this.attr({ x:this.x-this._back+.4, y:this.y });
 			Crafty.trigger('RobotRight');
 		} else {
-			this.attr({ x:this.x+this._back-.2, y:this.y });
+			this.attr({ x:this.x+this._back-.4, y:this.y });
 			Crafty.trigger('RobotLeft');
 		}
 	}
@@ -270,7 +278,7 @@ Crafty.c('Robot', {
 		this.requires('2D, Canvas, Grid, Collision, SpriteAnimation, spr_bot, Tween, Delay, Text')
 			.attr({ w: gv.tile_sz+2, h: gv.tile_sz+2, z:1 })
 			.delay(this.randomMove, 1500, -1)
-			.delay(this.losePower, 20000, -1)
+			.delay(this.losePower, gv.robot.battery_life, -1)
 			.onHit('Solid', this.turnAround)
 			.onHit('ChargingStation', this.recharge)
 			.reel('AnimateLight', 1000, [
@@ -290,7 +298,8 @@ Crafty.c('Robot', {
 			.bind('StopAlert', this.stopAlert)
 	},
 	char: function() {return 'robot';},
-	lastMovement: function() {return gv.robot.movement.slice(-1);}, 
+	lastMovement: function() {return gv.robot.movement.slice(-1);},
+	// checks last movement and does opposite 
 	turnAround: function() {
 		var movement = this.lastMovement();
 		if (movement == 'up') {this.moveDown();}
@@ -298,6 +307,7 @@ Crafty.c('Robot', {
 		else if (movement == 'right') {this.moveLeft();}
 		else {this.moveRight();}
 	},
+	// does random movement
 	randomMove: function() {
 		if (this.x/gv.tile_sz < 15 && this.y/gv.tile_sz < 15 && this.x/gv.tile_sz > 1 && this.y/gv.tile_sz > 1) {
 			this.tendPlants();
@@ -343,12 +353,14 @@ Crafty.c('Robot', {
 		gv.robot.movement.push('right');
 		if (gv.robot.movement.length > 5) {gv.robot.movement.shift();}
 	},
+	// -10 robot power
 	losePower: function() {
 		if (gv.robot.charging == 0) {
 			if (gv.robot.power >= 10) {gv.robot.power -= 10;}
 			else {gv.robot.power = 0;}
 		}
 	},
+	// adds to robot power
 	recharge: function() {
 		if (gv.robot.power < 100) {
 			gv.robot.power += .05;
@@ -360,6 +372,7 @@ Crafty.c('Robot', {
 			gv.robot.charging = 0;
 		}
 	},
+	// either plants, waters, or collects wheat
 	tendPlants: function() {
 		if (gv.robot.task == 0) {this.plant();}
 		else if (gv.robot.task == 1) {this.water();}
@@ -397,13 +410,16 @@ Crafty.c('Robot', {
 			Crafty.e('Soil5').at(x, y);
 		}
 	},
+	// flashing light
 	lowAlert: function() {
 		// this.animate('AnimateLight', -1);
 		// this.delay(this.stopAlert, 12000);
 	},
+	// beeping
 	medAlert: function() {
 		robot_alert_sound();
 	},
+	// flashing light + beeping
 	highAlert: function() {
 		// this.animate('AnimateLight', -1);
 		// this.delay(this.stopAlert, 10000);
@@ -416,8 +432,9 @@ Crafty.c('Robot', {
 // Animals
 Crafty.c('Animal', {
 	init: function() {
-		this.requires('2D, Canvas, Grid, Collision, Solid, Tween, Delay, SpriteAnimation') //WiredHitBox
+		this.requires('2D, Canvas, Grid, Collision, Solid, Tween, Delay, SpriteAnimation')
 			.attr({ z:3 })
+			// animations
 			.reel('AnimalMovingUp', 1000, [
 				[0,0], [1,0], [2,0], [3,0]
 			])
@@ -442,11 +459,9 @@ Crafty.c('Animal', {
 			.reel('AnimalEatingRight', 2000, [
 				[0,7], [1,7], [2,7], [3,7], [0,7]
 			])
-			// .debugStroke('black')
 	},
-	char: function() {
-		return 'animal';
-	}, 
+	char: function() {return 'animal';},
+	// checks last movement and does opposite
 	turnAround: function() {
 		var movement = this.lastMovement();
 		if (movement == 'up') {this.moveDown();}
@@ -454,28 +469,24 @@ Crafty.c('Animal', {
 		else if (movement == 'right') {this.moveLeft();}
 		else {this.moveRight();}
 	},
+	// does random movement
 	randomMove: function() {
 		var ra = Math.random()
 		var animation_speed = 8;
 
-		if (this.y/gv.tile_sz <= 2) {
+		if (this.y/gv.tile_sz < 2) {
 			this.moveDown();
 		} else if (this.x/gv.tile_sz >= 50) {
 			this.moveLeft();
-		} else if (this.y/gv.tile_sz >= 23) {
+		} else if (this.y/gv.tile_sz > 22) {
 			this.moveUp();
-		} else if (ra < 0.12) {
-			this.moveUp();
-		} else if (ra < 0.24) {
-			this.moveDown();
-		} else if (ra < 0.36) {
-			this.moveLeft();
-		} else if (ra < 0.48) {
-			this.moveRight();
-		} else {
-			this.eat();
-		}
+		} else if (ra < 0.12) {this.moveUp();}
+		else if (ra < 0.24) {this.moveDown();}
+		else if (ra < 0.36) {this.moveLeft();}
+		else if (ra < 0.48) {this.moveRight();}
+		else {this.eat();}
 	},
+	// specifies eating animation
 	eat: function() {
 		var movement = this.lastMovement();
 		if (movement == 'up') {this.animate('AnimalEatingUp', 2, -1);} 
@@ -506,12 +517,6 @@ Crafty.c('Animal', {
 		this.animate('AnimalMovingRight', 8, -1);
 		var dir = 'right';
 		this.pushMovement(dir);
-	},
-	collectResource: function() {
-		var hitDatas, hitData;
-		if ((hitDatas = this.hit('Resource'))) {
-			hitData.obj.collect();
-		}
 	}
 });
 Crafty.c('Sheep', {
@@ -521,23 +526,21 @@ Crafty.c('Sheep', {
 			.collision(0, 0, 64, 0, 64, 48, 0, 60)
 			.attr({ w:32, h:32 })
 			.delay(this.randomMove, 3000, -1)
-			.onHit('Solid', this.turnAround)
 			.delay(this.hasWool, 15000, -1)
 			.bind('Sheared', this.sheared)
+			.onHit('Solid', this.turnAround)
 	},
 	pushMovement: function(dir) {
 		gv.animal.sheep.movement.push(dir);
-		if (gv.animal.sheep.movement.length > 5) {
-			gv.animal.sheep.movement.shift();
-		}
+		if (gv.animal.sheep.movement.length > 5) {gv.animal.sheep.movement.shift();}
 	},
-	lastMovement: function() {
-		return gv.animal.sheep.movement.slice(-1);
-	},
+	lastMovement: function() {return gv.animal.sheep.movement.slice(-1);},
+	// baas if has wool
 	hasWool: function() {
 		sounds.play_sheep();
 		gv.animal.sheep.hasWool = 1;
 	},
+	// collect wool
 	sheared: function() {
 		Crafty.trigger('WoolCount');
 		gv.animal.sheep.hasWool = 0;
@@ -554,17 +557,15 @@ Crafty.c('Cow', {
 	},
 	pushMovement: function(dir) {
 		gv.animal.cow.movement.push(dir);
-		if (gv.animal.cow.movement.length > 5) {
-			gv.animal.cow.movement.shift();
-		}
+		if (gv.animal.cow.movement.length > 5) {gv.animal.cow.movement.shift();}
 	},
-	lastMovement: function() {
-		return gv.animal.cow.movement.slice(-1);
-	},
+	lastMovement: function() {return gv.animal.cow.movement.slice(-1);},
+	// moos if has milk
 	hasMilk: function() {
 		sounds.play_cow();
 		gv.animal.cow.hasMilk = 1;
 	},
+	// collect milk
 	milked: function() {
 		Crafty.trigger('MilkCount');
 		gv.animal.cow.hasMilk = 0;
@@ -581,13 +582,10 @@ Crafty.c('Chicken', {
 	},
 	pushMovement: function(dir) {
 		gv.animal.chicken.movement.push(dir);
-		if (gv.animal.chicken.movement.length > 5) {
-			gv.animal.chicken.movement.shift();
-		}
+		if (gv.animal.chicken.movement.length > 5) {gv.animal.chicken.movement.shift();}
 	},
-	lastMovement: function() {
-		return gv.animal.chicken.movement.slice(-1);
-	}, 
+	lastMovement: function() {return gv.animal.chicken.movement.slice(-1);},
+	// lays an egg in current square 
 	layEgg: function() {
 		var x = this.x/gv.tile_sz;
 		var y = this.y/gv.tile_sz;
@@ -597,14 +595,17 @@ Crafty.c('Chicken', {
 });
 Crafty.c('Butterfly', {
 	_dir: '',
+	_speed: 600,
 	init: function() {
 		this.requires('Animal, Resource, spr_butterfly')
 			.attr({ w:24, h:24, r:1 })
-			.delay(this.butterflyMove, 600, -1)
+			.delay(this.butterflyMove, this._speed, -1)
 			.bind('UpdateFrame', this.offScreen)
 	},
 	type: function() { return 'butterfly'; },
+	// initial direction
 	setDir: function(dir) {this._dir = dir;},
+	// deviates from movement with a probability of 0.2
 	butterflyMove: function() {
 		if (Math.random() < 0.2) {
 			var a = Math.random();
@@ -631,11 +632,13 @@ Crafty.c('Butterfly', {
 			this.tween({ x: this.x+gv.tile_sz, y: this.y }, 1000);
 		}
 	},
+	// destroy when it leaves the screen
 	offScreen: function() {
-		if (this._x < -1 || this._x > gv.tile_sz*54 || this._y < -1 || this._y > gv.tile_sz*30) {
+		if (this._x < -1 || this._x > gv.tile_sz*54 || this._y < -1 || this._y > gv.tile_sz*22) {
 			this.destroy();
 			task_funcs.butterflyGone();
 		}
+		// checks if task complete
 		if (task_funcs.butterflyComplete()) {Crafty.trigger('CompletedTask');}
 	}
 });
@@ -650,7 +653,9 @@ Crafty.c('Snake', {
 			.bind('UpdateFrame', this.offScreen)
 	},
 	type: function() { return 'snake'; },
+	// initial direction
 	setDir: function(dir) {this._dir = dir;},
+	// deviates from movement with a probability of 0.1
 	snakeMove: function() {
 		if (Math.random() < 0.1) {
 			var a = Math.random();
@@ -677,17 +682,13 @@ Crafty.c('Snake', {
 			this.tween({ x: this.x+gv.tile_sz, y: this.y }, this._speed);
 		}
 	},
-	pushMovement: function(dir) {
-		gv.animal.snake.movement.push(dir);
-		if (gv.animal.snake.movement.length > 5) {gv.animal.snake.movement.shift();}
-	},
-	lastMovement: function() {return gv.animal.snake.movement.slice(-1);
-	}, 
+	// eats egg and/or -0.25 to score
 	eatEgg: function() {
 		gv.resources.eggs -= 1;
 		if (gv.resources.eggs < 0) {gv.resources.eggs=0;}
 		gv.score-=.25;
 	},
+	// destroys snake and checks if task complete
 	hitSnake: function() {
 		this.destroy();
 		sounds.play_whack();
@@ -708,7 +709,7 @@ Crafty.c('Gopher', {
 	init: function() {
 		this.requires('Animal, spr_gopher_hole')
 			.attr({ w:24, h:24 })
-			.delay(this.disappear, 20000)
+			.delay(this.disappear, 15000)
 			.reel('PopOut', 2000, [
 				[0,0], [1,0], [2,0]
 			])
@@ -721,6 +722,7 @@ Crafty.c('Gopher', {
 			.animate('PopOut')
 	},
 	type: function() { return 'gopher'; },
+	// gopher goes back in hole
 	disappear: function() {
 		this.animate('PopIn');
 		this.destroy();
@@ -729,6 +731,7 @@ Crafty.c('Gopher', {
 		if (task_funcs.gopherComplete()) {Crafty.trigger('CompletedTask');}
 		else {gv.score -= 1;}
 	},
+	// gopher is hit by player
 	hitGopher: function() {
 		this.animate('AnimateHit');
 		this.destroy();
@@ -991,7 +994,7 @@ Crafty.c('Book', {
 			.bind('OpenBook', this.open);
 	},
 	open: function() {
-		window.alert('Bread: 3 wheat, 3 milk, 6 eggs\nMuffin: 1 wheat, 4 milk, 8 eggs, 10 berries\nThread: 1 wheat, 3 wool, 7 berries');
+		window.alert('Recipes\nBread: 3 wheat, 3 milk, 6 eggs\nMuffin: 1 wheat, 4 milk, 8 eggs, 10 berries\nThread: 1 wheat, 3 wool, 7 berries');
 	}
 });
 Crafty.c('BerryBush', {
@@ -1002,6 +1005,7 @@ Crafty.c('BerryBush', {
 			.bind('CollectBerries', this.collect)
 			.bind('WaterBush', this.water)
 	},
+	// collect a berry from the bush if berries on bush
 	collect: function() {
 		sounds.play_rustle();
 		if (this._on_bush > 0) {
@@ -1013,6 +1017,7 @@ Crafty.c('BerryBush', {
 			gv.bush = 0;
 		}
 	},
+	// water bush to produce more berries
 	water: function() {
 		sounds.play_water();
 		this.sprite('spr_bbush_full');
@@ -1021,7 +1026,7 @@ Crafty.c('BerryBush', {
 		gv.bush = 1;
 	}
 });
-// Baking
+// Baking in oven
 function wait_bake_bread() {eval("Crafty.e('Bread').at(Game.w()-2.8,1.8).bake();");}
 function wait_bake_muffin() {eval("Crafty.e('Muffin').at(Game.w()-2.8,1.8).bake();");}
 Crafty.c('Oven', {
@@ -1053,7 +1058,7 @@ Crafty.c('Oven', {
 		setTimeout(wait_bake_muffin, gv.recipes.muffin.time);
 	}
 });
-// Spinning
+// Spinning thread
 function wait_make_thread() {
 	eval("Crafty.e('Thread').at(Game.w()-5,2);");
 	Crafty.trigger('StopWheel');
@@ -1083,37 +1088,7 @@ Crafty.c('ChargingStation', {
 			.attr({ w:43, h:50, z:0 })
 	}
 });
-// Requests
-function update_robot_text(text) {
-	gv.robot.txt = text;
-	Crafty.trigger('LowAlert');
-};
-Crafty.c('RequestScreen', {
-	init: function() {
-		this.requires('2D, Canvas, Grid, Delay, SpriteAnimation, spr_screen')
-			.attr( {w:50, h:42, z:1 })
-			.reel('ScreenFlash', 1000, [
-				[1,0], [0,0]
-			])
-			.bind('ShowRequest', this.showRequest)
-			.bind('LowAlert', this.flash)
-			.bind('HighAlert', this.flash)
-			.bind('StopAlert', this.stopAlert)
-	},
-	flash: function() {
-		this.animate('ScreenFlash', -1);
-		this.delay(this.stopAlert, 12000);
-	},
-	stopAlert: function() {this.pauseAnimation();},
-	showRequest: function() {
-		// if (confirm(gv.robot.txt)) {
-		// } else {
-		// }
-		alert(gv.robot.txt);
-		Crafty.trigger('StopAlert');
-	}
-});
-// Hidden Chest
+// Hidden chest
 var exp;
 function wait_destroy_chest() {
 	Crafty.trigger('ChestExplosion');
@@ -1136,8 +1111,8 @@ Crafty.c('ChestExplosion', {
 Crafty.c('Chest', {
 	init: function() {
 		this.requires('2D, Canvas, Grid, spr_chest_closed')
-			.attr({ w:40, h:40, z:-1 })
-			// .attr({ w:gv.tile_sz, h:gv.tile_sz, z:-1 })
+			// .attr({ w:40, h:40, z:-1 })
+			.attr({ w:gv.tile_sz, h:gv.tile_sz, z:-1 })
 			.bind('DigChest', this.reveal)
 			.bind('OpenChest', this.open)
 			.bind('ChestExplosion', this.hide)
@@ -1153,8 +1128,8 @@ Crafty.c('Chest', {
 	open: function() {
 		if (task_funcs.chestGetOpened() == 0 && task_funcs.chestGetDestroyed() == 0){
 			var pin = prompt('Please enter the 7 digit password:');
-			if (pin == null || pin == "") {
-			} else if (pin == task_funcs.chestGetPassword()) {
+			if (pin == task_funcs.chestGetPassword()) {
+				Crafty.log(pin+' = '+task_funcs.chestGetPassword());
 				// open chest
 				this.sprite('spr_chest_open');
 				task_funcs.chestIsOpen();
@@ -1164,8 +1139,9 @@ Crafty.c('Chest', {
 				// get reward
 				sounds.play_money();
 				gv.score+=20;
+				
+				Crafty.trigger('CompletedTask');
 			}
-			Crafty.trigger('CompletedTask');
 		}
 	}
 });
@@ -1197,10 +1173,7 @@ Crafty.c('Score', {
 			.textFont({ size: '24px' })
 			.bind('UpdateFrame', this.updateScore)
 	},
-	updateScore: function() {
-		this.text('$ '+gv.score.toFixed(2));
-		// this.text('Power: '+gv.robot.power);
-	}
+	updateScore: function() {this.text('$ '+gv.score.toFixed(2));}
 });
 Crafty.c('Bucket', {
 	init: function() {
@@ -1265,12 +1238,12 @@ Crafty.c('LgTools', {
 	}
 });
 
-//TASK
+//TASKS
 Crafty.c('Task', {
 	_initial: 0,
 	init: function() {
 		this.requires('2D, DOM, Grid, Text')
-			.attr( { w:210, h:200 })
+			.attr( { w:230, h:200 })
 			.textFont({ size: '16px' })
 			// .textAlign('center')
 			.bind('UpdateQuant', this.updateQuant)
@@ -1280,7 +1253,7 @@ Crafty.c('Task', {
 	},
 	updateTask: function() {
 		// set initial quantity
-		if (typeof task_list.getCurr() != 'undefined'){
+		if (typeof task_list.getCurr() != undefined){
 			var met = task_list.getMet();
 			var resource = met[0];
 			if (resource == 'eggs') {_initial = gv.resources.eggs;}
@@ -1323,14 +1296,40 @@ Crafty.c('Task', {
 		this.updateTask();
 	}
 });
-Crafty.c('TaskTitle', {
+
+// REQUESTS
+function update_robot_text(text) {
+	gv.robot.txt = text;
+	Crafty.trigger('LowAlert');
+};
+Crafty.c('RequestScreen', {
 	init: function() {
-		this.requires('2D, DOM, Grid, Text')
-			.textFont({ size: '18px', weight: 'bold' })
-			.text('Task')
+		this.requires('2D, Canvas, Grid, Delay, SpriteAnimation, spr_screen')
+			.attr( {w:50, h:42, z:1 })
+			.reel('ScreenFlash', 1000, [
+				[1,0], [0,0]
+			])
+			.bind('ShowRequest', this.showRequest)
+			.bind('LowAlert', this.flash)
+			.bind('HighAlert', this.flash)
+			.bind('StopAlert', this.stopAlert)
+	},
+	flash: function() {
+		this.animate('ScreenFlash', -1);
+		this.delay(this.stopAlert, 12000);
+	},
+	stopAlert: function() {
+		this.pauseAnimation();
+		this.sprite('spr_screen');
+	},
+	showRequest: function() {
+		// if (confirm(gv.robot.txt)) {
+		// } else {
+		// }
+		alert(gv.robot.txt);
+		Crafty.trigger('StopAlert');
 	}
 });
-
 
 // Scenery
 Crafty.c('Blank', {

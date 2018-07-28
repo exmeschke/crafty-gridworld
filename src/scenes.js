@@ -7,12 +7,10 @@ Crafty.scene('Game', function() {
 	this.occupied = new Array(Game.w());
 	for (var i = 0; i < Game.w(); i++) {
 		this.occupied[i] = new Array(Game.h());
-		for (var j = 0; j < Game.h(); j++) {
-			this.occupied[i][j] = false;
-		}
+		for (var j = 0; j < Game.h(); j++) {this.occupied[i][j] = false;}
 	}
 	// Add player
-	this.player = Crafty.e('Player').at(24, 16);
+	this.player = Crafty.e('Player').at(30, 16);
 	// Add robot
 	this.robot = Crafty.e('Robot').at(5,10);
 	this.screen = Crafty.e('RequestScreen').at(16,5.3);
@@ -117,7 +115,7 @@ Crafty.scene('Game', function() {
 					this.occupied[x][y] = true;
 				}
 
-			// grass
+			// tufts of grass
 			} else if (y < Game.h()-6 && Math.random() < 0.05 && !this.occupied[x][y]) {
 				Crafty.e('Grass').at(x,y);
 				cc+=1;
@@ -132,18 +130,14 @@ Crafty.scene('Game', function() {
 			} else if (y < Game.h()-6 && Math.random() < 0.01 && !this.occupied[x][y]) {
 				Crafty.e('Egg').at(x,y);
 			// rocks
-			} else if (y < Game.h()-7 && Math.random() < 0.005 && !this.occupied[x][y] && rr < 4) {
+			} else if (y < Game.h()-7 && Math.random() < 0.008 && !this.occupied[x][y] && rr < 4) {
 				this.rock = Crafty.e('Rock').at(x,y);
 				rr += 1;
-				if (rr == 2) {
-					this.rock.hasPin();
-				}
+				if (rr == 2) {this.rock.hasPin();}
 			} 
 
 			// blank space at bottom
-			if (y > Game.h()-6) {
-				Crafty.e('Blank').at(x,y);
-			}
+			if (y > Game.h()-6) {Crafty.e('Blank').at(x,y);}
 		}
 	}
 
@@ -198,8 +192,7 @@ Crafty.scene('Game', function() {
 	Crafty.e('BerryLabel').at(st2+11,box_b+2).text(0);
 
 	// HUMAN TASKS
-	// Crafty.e('TaskTitle').at(7,box_b-.1);
-	this.currTask = Crafty.e('Task').at(7,box_b+.1).text('').trigger('UpdateTask');
+	this.currTask = Crafty.e('Task').at(7,box_b+.4).text('').trigger('UpdateTask');
 });
 
 
@@ -472,7 +465,10 @@ Crafty.scene('Loading', function() {
 			},
 			'assets/screens.png': {
 				tile: 244, tileh: 260,
-				map: { spr_screen: [0,0] }
+				map: { 
+					spr_screen: [0,0],  
+					spr_screen_alert: [1,0]
+				}
 			},
 			'assets/explosions/chest-explosion2.png': {
 				tile: 35, tileh: 34,

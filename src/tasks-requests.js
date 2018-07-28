@@ -30,6 +30,8 @@ function Task(num, diff, txt, met, cmd) {
     // runs command to start event
     this.runCode = function() {eval(this.command);}
 };
+// filler task
+var task_filler = new Task(0, 0, '', ['filler',1], '');
 // task list
 var task_list = {
     // current task index
@@ -61,20 +63,19 @@ var task_list = {
 };
 // manually add tasks to list
 var tasks = [];
-// tasks[0] = new Task(1, 0, 'Collect 16 eggs', ['eggs',16], '');
-// tasks[1] = new Task(1, 0, "Harvest 5 wheat (scythe)", ['berries',40], '');
-// tasks[1] = new Task(1, 0, "Gather 40 berries (water+bush)", ['berries',40], '');
-// tasks[2] = new Task(1, 0, 'Collect 2 wool (shears+sheep)', ['wool',2], '');
-// tasks[3] = new Task(1, 0, 'Collect 2 milk (empty bucket+cow)', ['milk',2], '');
-// tasks[4] = new Task(2, 1, 'Hit gophers with your hammer', ['gophers',5], 'gopher_task();');
-// tasks[5] = new Task(3, 0, 'Chase and collect butterflies', ['butterflies',8], 'butterfly_task();');
-// tasks[6] = new Task(4, 0, 'Chase and hit snakes with your hammer', ['snakes',5], 'snake_task();');
-tasks[0] = new Task(5, 0, 'Dig up and open the treasure chest burried under a tuft of grass. But be careful-ticking means it might explode!', ['chest',1], 'chest_task();');
-// tasks[8] = new Task(6, 1, 'Bake a loaf of bread (recipe in book)', ['bread',1], '');
-// tasks[9] = new Task(6, 1, 'Bake a muffin (recipe in book)', ['muffin',1], '');
-// tasks[10] = new Task(6, 1, 'Make a spool of thread (recipe in book)', ['thread',1], '');
-tasks[1] = new Task(0, 0, '', ['eggs',100], '');
-tasks[2] = new Task(0, 0, '', ['eggs',100], '');
+tasks[0] = new Task(1, 0, 'Harvest 5 wheat with your scythe.', ['wheat',5], '');
+tasks[1] = new Task(1, 0, 'Gather 40 berries (fill up your bucket and water the bush to grow berries)', ['berries',40], '');
+tasks[2] = new Task(1, 0, 'Collect 16 eggs.', ['eggs',16], '');
+tasks[3] = new Task(1, 0, 'Collect 2 wool from the sheep with your shears.', ['wool',2], '');
+tasks[4] = new Task(1, 0, 'Collect 2 milk (make sure your bucket is empty).', ['milk',2], '');
+tasks[5] = new Task(2, 1, 'Hit the gophers with your hammer before they disappear and steal $1!', ['gophers',5], 'gopher_task();');
+tasks[6] = new Task(3, 0, 'Collect butterflies for a $1 reward per butterfly!', ['butterflies',8], 'butterfly_task();');
+tasks[7] = new Task(4, 0, 'Hurry and hit the snakes with your hammer. Each snake steals an egg every 2 seconds!', ['snakes',5], 'snake_task();');
+tasks[8] = new Task(5, 0, 'Open the treasure chest burried under a tuft of grass (ticking means it might explode!)', ['chest',1], 'chest_task();');
+tasks[9] = new Task(6, 1, 'Bake a loaf of bread.', ['bread',1], '');
+tasks[10] = new Task(6, 1, 'Bake a muffin.', ['muffin',1], '');
+tasks[11] = new Task(6, 1, 'Make a spool of thread.', ['thread',1], '');
+tasks.push(task_filler);
 task_list.addTasks(tasks);
 
 // information for task specific functions
@@ -129,7 +130,7 @@ var task_funcs = {
         // number of snakes that will appear
         num: 6,
         // direction of movement
-        direction: ['right', 'down', 'right', 'left', 'down', 'left', 'down', 'left'],
+        direction: ['down', 'right', 'left', 'down', 'left', 'down'],
         // location coordinates
         loc_x: [17, 0, 52, 33, 52, 7, 52],
         loc_y: [0,  5, 11,  0, 18, 0, 7],

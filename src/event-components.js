@@ -13,7 +13,7 @@ function gopher_task() {
 		setTimeout(function () {
 			a++;
 			spawn_gopher(a);
-		}, 10000*i);
+		}, 8000*i);
 	}
 };
 
@@ -59,9 +59,8 @@ function chest_task() {
 	}, 23000);
 	setTimeout(function() {
 		update_robot_text('Did you know you can break rocks with your hammer?');
-	}, 53000);
+	}, 63000);
 };
-chest_task();
 
 // Robot requests
 // 
