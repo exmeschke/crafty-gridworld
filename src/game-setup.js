@@ -1,10 +1,7 @@
 window.onload = function() {
-	// Define game
+	// Initialize game
 	Game = {
-		map_grid: {
-			w: 54, h: 30,
-			tile: { w: 24, h: 24 }
-		},
+		map_grid: {w: 54, h: 30, tile: { w:24, h:24 }},
 		w: function() {return this.map_grid.w;},
 		h: function() {return this.map_grid.h;},
 		width: function() {return this.map_grid.w * this.map_grid.tile.w;},
@@ -40,4 +37,8 @@ sounds = {
 	play_ticking: function() {Crafty.audio.play('ticking');},
 	stop_ticking: function() {Crafty.audio.stop('ticking');},
 	play_money: function() {Crafty.audio.play('cha_ching');}
+};
+function robot_alert_sound() {
+    sounds.play_med();
+    for (var i = 0; i < 10; i++) {setTimeout(function() {sounds.play_med();}, 1000*i);}
 };

@@ -248,16 +248,16 @@ Crafty.c('Player', {
 		}
 
 		if (gv.player.movement.slice(-1) == 'up') {
-			this.attr({ x:this.x, y:this.y+this._back });
+			this.attr({ x:this.x, y:this.y+this._back-.2 });
 			Crafty.trigger('RobotUp');
 		} else if (gv.player.movement.slice(-1) == 'down') {
-			this.attr({ x:this.x, y:this.y-this._back });
+			this.attr({ x:this.x, y:this.y-this._back+.2 });
 			Crafty.trigger('RobotDown');
 		} else if (gv.player.movement.slice(-1) == 'right') {
-			this.attr({ x:this.x-this._back, y:this.y });
+			this.attr({ x:this.x-this._back+.2, y:this.y });
 			Crafty.trigger('RobotRight');
 		} else {
-			this.attr({ x:this.x+this._back, y:this.y });
+			this.attr({ x:this.x+this._back-.2, y:this.y });
 			Crafty.trigger('RobotLeft');
 		}
 	}
@@ -270,7 +270,7 @@ Crafty.c('Robot', {
 		this.requires('2D, Canvas, Grid, Collision, SpriteAnimation, spr_bot, Tween, Delay, Text')
 			.attr({ w: gv.tile_sz+2, h: gv.tile_sz+2, z:1 })
 			.delay(this.randomMove, 1500, -1)
-			.delay(this.losePower, 10000, -1)
+			.delay(this.losePower, 20000, -1)
 			.onHit('Solid', this.turnAround)
 			.onHit('ChargingStation', this.recharge)
 			.reel('AnimateLight', 1000, [
@@ -353,8 +353,10 @@ Crafty.c('Robot', {
 		if (gv.robot.power < 100) {
 			gv.robot.power += .05;
 			gv.robot.charging = 1;
+			this.sprite('spr_bot_lit');
 		} else {
 			gv.robot.power = 100;
+			this.sprite('spr_bot');
 			gv.robot.charging = 0;
 		}
 	},
@@ -396,17 +398,16 @@ Crafty.c('Robot', {
 		}
 	},
 	lowAlert: function() {
-		this.animate('AnimateLight', -1);
-		this.delay(this.stopRequest, 15000);
+		// this.animate('AnimateLight', -1);
+		// this.delay(this.stopAlert, 12000);
 	},
 	medAlert: function() {
 		robot_alert_sound();
-		this.delay(this.stopRequest, 10000);
 	},
 	highAlert: function() {
-		this.animate('AnimateLight', -1);
+		// this.animate('AnimateLight', -1);
+		// this.delay(this.stopAlert, 10000);
 		robot_alert_sound();
-		this.delay(this.stopRequest, 10000);
 	},
 	stopAlert: function() {this.pauseAnimation();}
 });
@@ -1089,10 +1090,21 @@ function update_robot_text(text) {
 };
 Crafty.c('RequestScreen', {
 	init: function() {
-		this.requires('2D, Canvas, Grid, spr_screen')
-			.attr( {w:50, h:42 })
+		this.requires('2D, Canvas, Grid, Delay, SpriteAnimation, spr_screen')
+			.attr( {w:50, h:42, z:1 })
+			.reel('ScreenFlash', 1000, [
+				[1,0], [0,0]
+			])
 			.bind('ShowRequest', this.showRequest)
+			.bind('LowAlert', this.flash)
+			.bind('HighAlert', this.flash)
+			.bind('StopAlert', this.stopAlert)
 	},
+	flash: function() {
+		this.animate('ScreenFlash', -1);
+		this.delay(this.stopAlert, 12000);
+	},
+	stopAlert: function() {this.pauseAnimation();},
 	showRequest: function() {
 		// if (confirm(gv.robot.txt)) {
 		// } else {

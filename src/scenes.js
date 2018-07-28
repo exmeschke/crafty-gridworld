@@ -15,8 +15,7 @@ Crafty.scene('Game', function() {
 	this.player = Crafty.e('Player').at(24, 16);
 	// Add robot
 	this.robot = Crafty.e('Robot').at(5,10);
-	// this.request = Crafty.e('RobotRequest').at(6,9);
-	// this.robot.attach(this.request);
+	this.screen = Crafty.e('RequestScreen').at(16,5.3);
 
 	// Add animals
 	this.sheep = Crafty.e('Sheep').at(21,3);
@@ -158,7 +157,6 @@ Crafty.scene('Game', function() {
 	this.oven = Crafty.e('Oven').at(Game.w()-3.5,1);
 	this.spinning_wheel = Crafty.e('SpinningWheel').at(Game.w()-5.5,1);
 	this.charging_station = Crafty.e('ChargingStation').at(16,3);
-	this.screen = Crafty.e('RequestScreen').at(16,5.3);
 	this.bbush = Crafty.e('BerryBush').at(Game.w()-3,22);
 
 	// Add score information
@@ -247,26 +245,22 @@ Crafty.scene('Loading', function() {
 	var assetsObj = {
 		'sprites': {
 			'assets/16x16_forest_1.gif': {
-				tile: 16,
-				tileh: 16,
-				map: {
-					spr_tree: [0,0],
-					spr_bush: [1,0],
-				}
+				tile: 16, tileh: 16,
+				map: { spr_tree: [0,0] }
 			},
 			'assets/hunter.png': {
-				tile: 16,
-				tileh: 18,
+				tile: 16, tileh: 18,
 				map: { spr_player: [0,2] }
 			},
 			'assets/bots.png': {
-				tile: 32, 
-				tileh: 36,
-				map: { spr_bot: [0,0] }
+				tile: 32, tileh: 36,
+				map: { 
+					spr_bot: [0,0],
+					spr_bot_lit: [1,0]
+				}
 			},
 			'assets/health-bar.png': {
-				tile: 202,
-				tileh: 30,
+				tile: 202, tileh: 30,
 				map: {
 					spr_health1: [0,0],
 					spr_health2: [1,0],
@@ -276,8 +270,7 @@ Crafty.scene('Loading', function() {
 				}
 			},
 			'assets/farm/plowed_soil.png': {
-				tile: 32,
-				tileh: 32,
+				tile: 32, tileh: 32,
 				map: {
 					spr_soil1: [0,2],
 					spr_soil2: [1,2],
@@ -291,18 +284,15 @@ Crafty.scene('Loading', function() {
 				}
 			},
 			'assets/farm/grass1.png': {
-				tile: 32,
-				tileh: 32,
+				tile: 32, tileh: 32,
 				map: { spr_grass: [0,0] }
 			},
 			'assets/farm/egg.png': {
-				tile: 32, 
-				tileh: 32,
+				tile: 32, tileh: 32,
 				map: { spr_egg: [0,0] }
 			},
 			'assets/farm/fence.png': {
-				tile: 32, 
-				tileh: 32,
+				tile: 32, tileh: 32,
 				map: {
 					spr_fence1: [0,0],
 					spr_fence2: [1,0],
@@ -319,28 +309,23 @@ Crafty.scene('Loading', function() {
 				}
 			},
 			'assets/farm/animals/sheep_all.png': {
-				tile: 129,
-				tileh: 128,
+				tile: 129, tileh: 128,
 				map: { spr_sheep5: [0,1] }
 			},
 			'assets/farm/animals/cow_all4.png': {
-				tile: 96,
-				tileh: 95,
+				tile: 96, tileh: 95,
 				map: { spr_cow13: [0,3] }
 			},
 			'assets/farm/animals/chicken_all.png': {
-				tile: 96,
-				tileh: 96,
+				tile: 96, tileh: 96,
 				map: { spr_chicken9: [0,2] }
 			},
 			'assets/farm/animals/snake.png': {
-				tile: 32,
-				tileh: 32,
+				tile: 32, tileh: 32,
 				map: { spr_snake5: [1,1] }
 			},
 			'assets/farm/animals/gophers.png': {
-				tile: 132,
-				tileh: 182,
+				tile: 132, tileh: 182,
 				map: { spr_gopher_hole: [0,0] }
 			},
 			'assets/farm/animals/butterflies2.png': {
@@ -349,13 +334,11 @@ Crafty.scene('Loading', function() {
 				map: { spr_butterfly: [1,1] }
 			},
 			'assets/well.png': {
-				tile: 59,
-				tileh: 49,
+				tile: 59, tileh: 49,
 				map: { spr_well: [0,0] }
 			},
 			'assets/farm/tilesets/wheat.png': {
-				tile: 32,
-				tileh: 32,
+				tile: 32, tileh: 32,
 				map: {
 					spr_wheat1: [0,5],
 					spr_wheat2: [1,5],
@@ -365,21 +348,18 @@ Crafty.scene('Loading', function() {
 				}
 			},
 			'assets/farm/tilesets/wheat-bag.png': {
-				tile: 32,
-				tileh: 32,
+				tile: 32, tileh: 32,
 				map: { spr_wheat: [0,0] }
 			},
 			'assets/farm/buckets.png': {
-				tile: 105, 
-				tileh: 120,
+				tile: 105, tileh: 120,
 				map: {
 					spr_bucket_empty: [0,0],
 					spr_bucket_full: [1,0]
 				}
 			},
 			'assets/farm/farm-tools.png': {
-				tile: 64,
-				tileh: 64,
+				tile: 64, tileh: 64,
 				map: {
 					spr_bag: [0,0],
 					spr_shovel: [0,1],
@@ -387,101 +367,85 @@ Crafty.scene('Loading', function() {
 				}
 			},
 			'assets/farm/ui/box-long.png': {
-				tile: 1225,
-				tileh: 314,
+				tile: 1225, tileh: 314,
 				map: { spr_box: [0,0] }
 			},
 			'assets/farm/ui/scroll.png': {
-				tile: 1000,
-				tileh: 274,
+				tile: 1000, tileh: 274,
 				map: { spr_scroll: [0,0] }
 			},
 			'assets/farm/ui/block.png': {
-				tile: 96,
-				tileh: 96,
+				tile: 96, tileh: 96,
 				map: { spr_block: [0,0] }
 			},
 			'assets/farm/tools.png': {
-				tile: 32,
-				tileh: 32,
+				tile: 32, tileh: 32,
 				map: {
 					spr_tools1: [1,0],
 					spr_tools2: [2,0]
 				}
 			},
 			'assets/seed_bags.png': {
-				tile: 105,
-				tileh: 97,
+				tile: 105, tileh: 97,
 				map: {
 					spr_seed_bag_empty: [0,0],
 					spr_seed_bag_full: [1,0]
 				}
 			},
 			'assets/farm/barrels.png': {
-				tile: 64,
-				tileh: 64,
+				tile: 64, tileh: 64,
 				map: { spr_barrels: [1,0] }
 			},
 			'assets/farm/tree-stumps.png': {
-				tile: 55,
-				tileh: 60,
+				tile: 55, tileh: 60,
 				map: {
 					spr_stump1: [0,0],
 					spr_stump2: [1,0]
 				}
 			},
 			'assets/book.png': {
-				tile: 31,
-				tileh: 30,
+				tile: 31, tileh: 30,
 				map: { spr_book: [0,0] }
 			},
 			'assets/farm/chests.png': {
-				tile: 32,
-				tileh: 32,
+				tile: 32, tileh: 32,
 				map: {
 					spr_chest_closed: [0,0],
 					spr_chest_open: [0,1]
 				}
 			},
 			'assets/farm/rocks.png': {
-				tile: 32,
-				tileh: 32,
+				tile: 32, tileh: 32,
 				map: {
 					spr_rock: [0,0],
 					spr_rocks: [1,0]
 				}
 			},
 			'assets/ovenn.png': {
-				tile: 64,
-				tileh: 41,
+				tile: 64, tileh: 41,
 				map: { spr_oven: [0,0] }
 			},
 			'assets/spinning-wheels.png': {
-				tile: 86,
-				tileh: 85,
+				tile: 86, tileh: 85,
 				map: { spr_spinning_wheel: [0,0] }
 			},
 			'assets/wool.png': {
-				tile: 25,
-				tileh: 12,
+				tile: 25, tileh: 12,
 				map: { spr_wool: [0,0] }
 			},
 			'assets/milk.png': {
-				tile: 174,
-				tileh: 323,
+				tile: 174, tileh: 323,
 				map: { spr_milk: [0,0] }
 			},
 			'assets/breads.png': {
-				tile: 125,
-				tileh: 93,
+				tile: 125, tileh: 93,
 				map: {
 					spr_bread: [0,0],
 					spr_ashes: [1,0]
 				}
 			},
 			'assets/muffins.png': {
-				tile: 128,
-				tileh: 123,
+				tile: 128, tileh: 123,
 				map: {
 					spr_muffin: [0,0],
 					spr_ashes: [1,0]
@@ -506,8 +470,8 @@ Crafty.scene('Loading', function() {
 				tile: 610, tileh: 750,
 				map: { spr_charging_station: [0,0] }
 			},
-			'assets/screen.png': {
-				tile: 230, tileh: 244,
+			'assets/screens.png': {
+				tile: 244, tileh: 260,
 				map: { spr_screen: [0,0] }
 			},
 			'assets/explosions/chest-explosion2.png': {

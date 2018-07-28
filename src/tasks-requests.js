@@ -77,8 +77,6 @@ tasks[1] = new Task(0, 0, '', ['eggs',100], '');
 tasks[2] = new Task(0, 0, '', ['eggs',100], '');
 task_list.addTasks(tasks);
 
-
-
 // information for task specific functions
 var task_funcs = {
     // gopher task
@@ -188,16 +186,7 @@ var task_funcs = {
 
 
 // ROBOT REQUESTS
-// don't forget to include response trigger
-function robot_request(txt) {
-    Crafty.e('RobotRequest').at(6,9).text(txt);
-};
-function robot_alert_sound() {
-    sounds.play_med();
-    for (var i = 0; i < 10; i++) {
-         setTimeout(function() {sounds.play_med();}, 1000*i);
-    }
-};
+
 
 
 
