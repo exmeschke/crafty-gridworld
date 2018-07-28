@@ -6,7 +6,6 @@ sounds = {
 	play_cow: function() {Crafty.audio.play('cow');},
 	play_sheep: function() {Crafty.audio.play('sheep');},
 	play_chicken: function() {Crafty.audio.play('chicken');},
-	play_crow: function() {Crafty.audio.play('chicken');},
 	play_stone: function() {Crafty.audio.play('stone');},
 	play_whack: function() {Crafty.audio.play('whack');},
 	play_well_water: function() {Crafty.audio.play('well_water');},
@@ -48,14 +47,8 @@ gv = {
 		chicken: {
 			movement: []
 		}, 
-		snake: {
-			speed: 500,
-			movement: []
-		},
-		crow: {
-			speed: 900,
-			movement: []
-		}
+		snake: {speed: 500},
+		butterfly: {speed: 900}
 	},
 	score: 0,
 	resources: {
@@ -121,7 +114,7 @@ Crafty.c('Player', {
 			.onHit('Obstacle', this.stopMovement)
 			.onHit('Resource', this.collectResource)
 			.onHit('Robot', this.pushRobot)
-			// .onHit('Snake', this.pushAnimal)
+			.onHit('Butterfly', this.pushAnimal)
 			.reel('PlayerMovingUp', 600, [
 				[0,0], [1,0], [2,0]
 			])
@@ -299,7 +292,6 @@ Crafty.c('Robot', {
 			.attr({ w: gv.tile_sz+2, h: gv.tile_sz+2, z:1 })
 			.delay(this.randomMove, 1500, -1)
 			.delay(this.losePower, 10000, -1)
-			.onHit('Resource', this.collectResource)
 			.onHit('Solid', this.turnAround)
 			.onHit('ChargingStation', this.recharge)
 			.reel('AnimateLight', 1000, [
@@ -316,12 +308,8 @@ Crafty.c('Robot', {
 			.bind('RobotRequest', this.request)
 			.bind('StopRequest', this.stopRequest)
 	},
-	char: function() {
-		return 'robot';
-	},
-	lastMovement: function() {
-		return gv.robot.movement.slice(-1);
-	}, 
+	char: function() {return 'robot';},
+	lastMovement: function() {return gv.robot.movement.slice(-1);}, 
 	turnAround: function() {
 		if (this.char() == 'robot') {
 			var movement = this.lastMovement();
@@ -392,13 +380,6 @@ Crafty.c('Robot', {
 		gv.robot.movement.push('right');
 		if (gv.robot.movement.length > 5) {
 			gv.robot.movement.shift();
-		}
-	},
-	collectResource: function() {
-		var hitDatas, hitData;
-		if ((hitDatas = this.hit('Resource'))) {
-			hitData = hitDatas[0];
-			hitData.obj.collect();
 		}
 	},
 	losePower: function() {
@@ -535,7 +516,6 @@ Crafty.c('Animal', {
 	randomMove: function() {
 		var ra = Math.random()
 		var animation_speed = 8;
-		// var animal_speed = 1500;
 
 		if (this.y/gv.tile_sz <= 2) {
 			this.moveDown();
@@ -677,13 +657,21 @@ Crafty.c('Snake', {
 	init: function() {
 		this.requires('Animal, spr_snake5')
 			.attr({ w:24, h:24 })
-			.delay(this.eatEgg, 5000, -1)
+			.delay(this.eatEgg, 1500, -1)
 			.delay(this.snakeMove, 600, -1)
 			.bind('UpdateFrame', this.offScreen)
 	},
 	type: function() { return 'snake'; },
 	setDir: function(dir) {this._dir = dir;},
 	snakeMove: function() {
+		if (Math.random() < 0.4) {
+			var a = Math.random();
+			if (a < 0.25){this._dir = 'up';}
+			else if (a < 0.5){this._dir = 'down';}
+			else if (a < 0.75){this._dir = 'left';}
+			else {this._dir = 'right';}
+		}
+		
 		if (this._dir == 'up') {
 			this.animate('AnimalMovingUp');
 			this.tween({ x: this.x, y: this.y-gv.tile_sz }, 500);
@@ -722,45 +710,41 @@ Crafty.c('Snake', {
 		}
 	}
 });
-Crafty.c('Crow', {
+Crafty.c('Butterfly', {
 	_dir: '',
 	init: function() {
-		this.requires('Animal, spr_crow')
-			.attr({ w:24, h:24 })
-			.delay(this.eatBerry, 5000, -1)
-			.delay(this.snakeMove, 600, -1)
-			.bind('UpdateFrame', this.offScreen)
+		this.requires('Animal, Resource, spr_butterfly')
+			.attr({ w:24, h:24, r:1 })
+			.delay(this.butterflyMove, 600, -1)
+			// .bind('UpdateFrame', this.offScreen)
 	},
-	type: function() { return 'snake'; },
+	type: function() { return 'butterfly'; },
 	setDir: function(dir) {this._dir = dir;},
-	snakeMove: function() {
+	butterflyMove: function() {
+		if (Math.random() < 0.4) {
+			var a = Math.random();
+			if (a < 0.25){this._dir = 'up';}
+			else if (a < 0.5){this._dir = 'down';}
+			else if (a < 0.75){this._dir = 'left';}
+			else {this._dir = 'right';}
+		}
+
 		if (this._dir == 'up') {
 			this.animate('AnimalMovingUp');
-			this.tween({ x: this.x, y: this.y-gv.tile_sz }, 500);
+			this.tween({ x: this.x, y: this.y-gv.tile_sz }, 1000);
 		} 
 		else if (this._dir == 'down') {
 			this.animate('AnimalMovingDown');
-			this.tween({ x: this.x, y: this.y+gv.tile_sz }, 500);
+			this.tween({ x: this.x, y: this.y+gv.tile_sz }, 1000);
 		} 
 		else if (this._dir == 'left') {
-			this.animate('AnimalMovingLeft');
-			this.tween({ x: this.x-gv.tile_sz, y: this.y }, 500);
+			this.animate('AnimalMovingRight');
+			this.tween({ x: this.x-gv.tile_sz, y: this.y }, 1000);
 		}
 		else if (this._dir == 'right') {
-			this.animate('AnimalMovingRight');
-			this.tween({ x: this.x+gv.tile_sz, y: this.y }, 500);
+			this.animate('AnimalMovingLeft');
+			this.tween({ x: this.x+gv.tile_sz, y: this.y }, 1000);
 		}
-	},
-	pushMovement: function(dir) {
-		gv.animal.snake.movement.push(dir);
-		if (gv.animal.snake.movement.length > 5) {gv.animal.snake.movement.shift();}
-	},
-	lastMovement: function() {return gv.animal.snake.movement.slice(-1);
-	}, 
-	eatBerry: function() {
-		gv.resources.berries -= 1;
-		if (gv.resources.berries < 0) {gv.resources.berries=0;}
-		gv.score-=.1;
 	},
 	offScreen: function() {
 		if (this._x < -1 || this._x > gv.tile_sz*54 || this._y < -1 || this._y > gv.tile_sz*30) {
@@ -790,9 +774,8 @@ Crafty.c('Gopher', {
 		this.destroy();
 
 		task_funcs.gopherGone();
-		if (task_funcs.gopherComplete()) {
-			if (task_funcs.gopherNext() == 1) {Crafty.trigger('CompletedTask');}
-		} else {gv.score -= 1;}
+		if (task_funcs.gopherComplete()) {Crafty.trigger('CompletedTask');}
+		else {gv.score -= 1;}
 	},
 	hitGopher: function() {
 		this.animate('AnimateHit');
@@ -800,9 +783,7 @@ Crafty.c('Gopher', {
 		sounds.play_whack();
 		
 		task_funcs.gopherHit();
-		if (task_funcs.gopherComplete()) {
-			if (task_funcs.gopherNext() == 1) {Crafty.trigger('CompletedTask');}
-		}
+		if (task_funcs.gopherComplete()) {Crafty.trigger('CompletedTask');}
 	}
 });
 
@@ -822,7 +803,8 @@ Crafty.c('Resource', {
 		else if (this.type() == 'muffin')
 			if (this.burned() == false) {Crafty.trigger('MuffinCount');}
 			else {gv.score -= this.r;}
-		else if (this.type() == 'thread') { Crafty.trigger('ThreadCount'); }
+		else if (this.type() == 'thread') {Crafty.trigger('ThreadCount');}
+		else if (this.type() == 'butterfly') {gv.score+=this.r;}
 		this.destroy();
 	}
 });

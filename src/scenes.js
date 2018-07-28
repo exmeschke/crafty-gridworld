@@ -196,7 +196,7 @@ Crafty.scene('Game', function() {
 
 	// HUMAN TASKS
 	this.currTask = Crafty.e('Task').at(7,box_b+.8).text('').trigger('UpdateTask');
-	// eval('spawn_snakes();');
+	eval('butterfly_task();');
 	// eval('gopher_task();');
 });
 
@@ -337,10 +337,10 @@ Crafty.scene('Loading', function() {
 				tileh: 182,
 				map: { spr_gopher_hole: [0,0] }
 			},
-			'assets/farm/animals/raven.png': {
-				tile: 16,
-				tileh: 16,
-				map: { spr_raven: [1,3] }
+			'assets/farm/animals/butterflies2.png': {
+				tile: 97,
+				tileh: 87,
+				map: { spr_butterfly: [1,1] }
 			},
 			'assets/well.png': {
 				tile: 59,

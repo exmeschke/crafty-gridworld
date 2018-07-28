@@ -40,8 +40,6 @@ var task_funcs = {
         hit: 0,
         // number disappear
         gone: 0
-        // whether completed or not
-        // completed: 0
     },
     // returns gopher coordinates
     gopherCoord: function(i) {return [this.gopher.loc_x[i], this.gopher.loc_y[i]];},
@@ -51,15 +49,54 @@ var task_funcs = {
     gopherGone: function() {this.gopher.gone+=1;},
     // checks whether gopher task is complete
     gopherComplete: function() {
-        if (this.gopher.hit + this.gopher.gone >= this.gopher.num) {
-            // Crafty.log(this.gopher.completed);
-            // this.gopher.completed+=1;
-            return true;
-        }
+        if (this.gopher.hit + this.gopher.gone >= this.gopher.num) {return true;}
         else {return false;}
     },
-    gopherNext: function() {
-        if (this.gopher.completed == 1) {return true;}
+    // butterfly task
+    butterfly: {
+        // number of butterflies that will appear
+        num: 8,
+        // direction of flight
+        direction: ['right', 'down', 'right', 'left', 'down', 'left', 'down', 'left'],
+        // location coordinates
+        loc_x: [0, 14, 0, 52, 46, 52, 12, 52],
+        loc_y: [10, 0, 2, 19,  0,  3,  0, 4],
+        // number hit
+        hit: 0,
+        // number disappear
+        gone: 0,
+    },
+    butterflyDir: function(i) {return this.butterfly.direction[i];},
+    butterflyCoord: function(i)  {return [this.butterfly.loc_x[i], this.butterfly.loc_y[i]];},
+    // records gopher hit
+    butterflyHit: function() {this.butterfly.hit+=1;},
+    // records gopher disappears
+    butterflyGone: function() {this.butterfly.gone+=1;},
+    // checks whether gopher task is complete
+    butterflyCmplete: function() {
+        if (this.butterfly.hit + this.butterfly.gone >= this.butterfly.num) {return true;}
+        else {return false;}
+    },
+    // snake task
+    snake: {
+        // number of snakes that will appear
+        num: 4,
+        // location coordinates
+        loc_x: [44, 32, 46, 39],
+        loc_y: [10, 20, 18,  2],
+        // number hit
+        hit: 0,
+        // number disappear
+        gone: 0,
+    },
+    snakeCoord: function(i)  {return [this.snake.loc_x[i], this.snake.loc_y[i]];},
+    // records gopher hit
+    snakeHit: function() {this.snake.hit+=1;},
+    // records gopher disappears
+    snakeGone: function() {this.snake.gone+=1;},
+    // checks whether gopher task is complete
+    snakeCmplete: function() {
+        if (this.snake.hit + this.snake.gone >= this.snake.num) {return true;}
         else {return false;}
     }
 };
@@ -87,6 +124,7 @@ tasks[0] = new Task(1, 0, "Gather 40 berries (water+bush)", ['berries',40], '');
 tasks[0] = new Task(1, 0, 'Collect 2 wool (shears+sheep)', ['wool',2], '');
 tasks[0] = new Task(1, 0, 'Collect 2 milk (empty bucket+cow)', ['milk',2], '');
 tasks[0] = new Task(2, 1, 'Hit gophers with hammer', ['gophers',5], 'gopher_task();');
+tasks[0] = new Task(3, 0, 'Chase and collect butterflies', ['butterflies',8], 'gopher_task();');
 tasks[0] = new Task(5, 0, 'Find and open the chest hidden under a tuft of grass.', ['chest',1], 'robot_notif();');
 tasks[0] = new Task(6, 1, 'Bake a loaf of bread (recipe in book)', ['bread',1], '');
 tasks[0] = new Task(6, 1, 'Bake a muffin (recipe in book)', ['muffin',1], '');
