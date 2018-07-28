@@ -13,22 +13,31 @@ The robot will periodically request the player for assistance, alerting them wit
 
 ## File content
 /root/
+
 index.html - open in browser to start game
 
 /src/
+
 game-setup.js - initializes Crafty game and defines sound effects
+
 task-requests.js - defines human task list and robot request list
-scene-components.js - defines game components and rules for interactions with environemtn
+
+scene-components.js - defines game components and rules for interactions with environment
+
 scenes.js - places objects in scene and loads sprite sheets
+
 event-components.js - javascript functions that for events related to human tasks and robot requests
 
 ## Attributions
 (animals)
 https://opengameart.org/content/lpc-style-farm-animals
+
 (farm)
 https://opengameart.org/content/lpc-farming-tilesets-magic-animations-and-ui-elements
+
 (oven)
 http://lpc.opengameart.org/
+
 (well)
 https://opengameart.org/content/objects-0
 
