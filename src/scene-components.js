@@ -38,7 +38,9 @@ gv = {
 			movement: [],
 			hasMilk: 0
 		},
-		chicken: {movement: []}
+		chicken: {movement: []},
+		snake: {eat_egg: 4000},
+		gopher: {disappear: 20000}
 	},
 	tools:{
 		// fill at well [0:empty, 1:full]
@@ -141,7 +143,10 @@ Crafty.c('Player', {
 			})
 	},
 	// resets location if off screen
-	reset: function() {this.at(30,16);},
+	reset: function() {
+		gv.score -= 5;
+		this.at(30,16);
+	},
 	// action triggered by hitting object and pressed 'X'
 	action: function() {
 		var hitDatas, hitData;
@@ -296,7 +301,10 @@ Crafty.c('Robot', {
 			.bind('MedAlert', this.medAlert)
 			.bind('HighAlert', this.highAlert)
 			.bind('StopAlert', this.stopAlert)
+			.bind('KeyDown', function(e) {if (e.key == Crafty.keys.R) {this.reset();}})
 	},
+	// resets location if off screen
+	reset: function() {this.at(5,10);},
 	char: function() {return 'robot';},
 	lastMovement: function() {return gv.robot.movement.slice(-1);},
 	// checks last movement and does opposite 
@@ -365,11 +373,10 @@ Crafty.c('Robot', {
 		if (gv.robot.power < 100) {
 			gv.robot.power += .05;
 			gv.robot.charging = 1;
-			this.sprite('spr_bot_lit');
 		} else {
 			gv.robot.power = 100;
-			this.sprite('spr_bot');
 			gv.robot.charging = 0;
+			Crafty.trigger('StopCharge');
 		}
 	},
 	// either plants, waters, or collects wheat
@@ -412,8 +419,8 @@ Crafty.c('Robot', {
 	},
 	// flashing light
 	lowAlert: function() {
-		// this.animate('AnimateLight', -1);
-		// this.delay(this.stopAlert, 12000);
+		this.animate('AnimateLight', -1);
+		this.delay(this.stopAlert, 12000);
 	},
 	// beeping
 	medAlert: function() {
@@ -421,8 +428,8 @@ Crafty.c('Robot', {
 	},
 	// flashing light + beeping
 	highAlert: function() {
-		// this.animate('AnimateLight', -1);
-		// this.delay(this.stopAlert, 10000);
+		this.animate('AnimateLight', -1);
+		this.delay(this.stopAlert, 12000);
 		robot_alert_sound();
 	},
 	stopAlert: function() {this.pauseAnimation();}
@@ -648,7 +655,7 @@ Crafty.c('Snake', {
 	init: function() {
 		this.requires('Animal, spr_snake5')
 			.attr({ w:24, h:24 })
-			.delay(this.eatEgg, 2000, -1)
+			.delay(this.eatEgg, gv.snake.eat_egg, -1)
 			.delay(this.snakeMove, this._speed, -1)
 			.bind('UpdateFrame', this.offScreen)
 	},
@@ -709,7 +716,7 @@ Crafty.c('Gopher', {
 	init: function() {
 		this.requires('Animal, spr_gopher_hole')
 			.attr({ w:24, h:24 })
-			.delay(this.disappear, 15000)
+			.delay(this.disappear, gv.gopher.disappear)
 			.reel('PopOut', 2000, [
 				[0,0], [1,0], [2,0]
 			])
@@ -1084,9 +1091,16 @@ Crafty.c('SpinningWheel', {
 });
 Crafty.c('ChargingStation', {
 	init: function() {
-		this.requires('2D, Canvas, Grid, spr_charging_station')
+		this.requires('2D, Canvas, Grid, SpriteAnimation, spr_charging_station')
 			.attr({ w:43, h:50, z:0 })
-	}
+			.bind('Recharge', this.startCharge)
+			.bind('StopCharge', this.stopCharge)
+			.reel('AnimateCharging', 1000, [
+				[1,0], [0,0]
+			])
+	},
+	startCharge: function() {this.animate('AnimateCharging');},
+	stopCharge: function() {this.pauseAnimation();}
 });
 // Hidden chest
 var exp;
@@ -1287,6 +1301,19 @@ Crafty.c('Task', {
 		else if (resource == 'thread') {_current = gv.resources.thread-_initial;}
 		else if (resource == 'berries') {_current = gv.resources.berries-_initial;}
 
+		// update text
+		var txt = task_list.getText();
+		var new_txt = '';
+		var len = txt.replace(/[0-9]/g, '').length;
+		if (txt.length - len == 1) {new_txt = txt.replace(/[0-9]/g, quantity-_current);}
+		else if (txt.length - len == 2) {
+			var index = txt.search(/\d/);
+			new_txt = txt.replace(/[0-9]/g, '');
+			var num = quantity-_current;
+			new_txt = new_txt.substr(0, index) + num + new_txt.substr(index);
+		}
+		this.text(new_txt);
+
 		if (quantity <= _current) {this.completedTask();}
 	},
 	completedTask: function() {
@@ -1310,59 +1337,34 @@ Crafty.c('RequestScreen', {
 				[1,0], [0,0]
 			])
 			.bind('ShowRequest', this.showRequest)
-			.bind('LowAlert', this.flash)
-			.bind('HighAlert', this.flash)
-			.bind('StopAlert', this.stopAlert)
+			// .bind('LowAlert', this.flash)
+			// .bind('HighAlert', this.flash)
+			// .bind('StopAlert', this.stopAlert)
 	},
-	flash: function() {
-		this.animate('ScreenFlash', -1);
-		this.delay(this.stopAlert, 12000);
-	},
-	stopAlert: function() {
-		this.pauseAnimation();
-		this.sprite('spr_screen');
-	},
+	// flash: function() {
+		// this.animate('ScreenFlash', -1);
+		// this.delay(this.stopAlert, 12000);
+	// },
+	// stopAlert: function() {
+		// this.pauseAnimation();
+		// this.sprite('spr_screen');
+	// },
 	showRequest: function() {
 		// if (confirm(gv.robot.txt)) {
 		// } else {
 		// }
 		alert(gv.robot.txt);
-		Crafty.trigger('StopAlert');
+		// Crafty.trigger('StopAlert');
 	}
 });
 
 // Scenery
-Crafty.c('Blank', {
-	init: function() {
-		this.requires('2D, Canvas, Grid, Color')
-			.color('white')
-	}
-});
-Crafty.c('Box', {
-	init: function() {
-		this.requires('2D, Canvas, Grid, spr_box')
-			.attr({ w:480, h:120, z:0 })
-	}
-});
-Crafty.c('Scroll', {
-	init: function() {
-		this.requires('2D, Canvas, Grid, spr_scroll')
-			.attr({ w:450, h:120, z:0 })
-	}
-});
-Crafty.c('SqrBlock', {
-	init: function() {
-		this.requires('2D, Canvas, Grid, spr_block')
-			.attr({ w:120, h:120, z:0 })
-	}
-});
+Crafty.c('Blank', {init: function() {this.requires('2D, Canvas, Grid, Color').color('white')}});
+Crafty.c('Box', {init: function() {this.requires('2D, Canvas, Grid, spr_box').attr({ w:480, h:120, z:0 })}});
+Crafty.c('Scroll', {init: function() {this.requires('2D, Canvas, Grid, spr_scroll').attr({ w:450, h:120, z:0 })}});
+Crafty.c('SqrBlock', {init: function() {this.requires('2D, Canvas, Grid, spr_block').attr({ w:120, h:120, z:0 })}});
 
-Crafty.c('Obstacle', {
-	init: function() {
-		this.requires('2D, Canvas, Grid, Solid, Collision')
-			.attr({ w:gv.tile_sz, h:gv.tile_sz})
-	}
-});
+Crafty.c('Obstacle', {init: function() {this.requires('2D, Canvas, Grid, Solid, Collision').attr({ w:gv.tile_sz, h:gv.tile_sz})}});
 Crafty.c('Tree', {init: function() {this.requires('Obstacle, spr_tree').attr({w:24,h:24})}});
 Crafty.c('Fence1', {init: function() {this.requires('Obstacle, spr_fence1')}});
 Crafty.c('Fence2', {init: function() {this.requires('Obstacle, spr_fence2')}});

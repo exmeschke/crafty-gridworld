@@ -1,14 +1,16 @@
-// Generates human task list and robot requests
+// Generates human task list, human availability function, robot requests / actions, and state-action information
 
 // HUMAN TASKS
-// general task definition
-//      num - the task number 
-//          [1:easy gather, 2:hard gather, 3:easy chase, 4:hard chase, 5:easy combo, 6:hard combo]
-//      diff - task difficulty [0 = low, 1 = high]
+// set which tasks in order you want in the game
+// [0:none, 1:wheat, 2:berries, 3:eggs, 4:wool, 5:milk, 6:gophers, 7:butterflies, 8:snakes, 9:chest, 10:bread, 11:muffin, 12:thread]
+var task_indices = [1,2,3,4,5,6,7,8,9,10,11,12,0];
+// human task definition
+//      num - task number [1:easy gather, 2:hard gather, 3:easy chase, 4:hard chase, 5:easy combo, 6:hard combo]
+//      diff - task difficulty [1: low, 2: high]
 //      txt - the prompt shown to player
 //      met - the conditions that need to be met to complete task
 //      cmd - the command to start the event
-function Task(num, diff, txt, met, cmd) {
+function HTask(num, diff, txt, met, cmd) {
     this.num = num;
     this.diff = diff;
     this.txt = txt;
@@ -27,17 +29,43 @@ function Task(num, diff, txt, met, cmd) {
     	this.time.end = new Date().getTime()/1000;
     	this.time.duration = this.time.end - this.time.begin;
     };
+    // getters
+    this.getTaskNumber = function() {return this.num;};
+    this.getDifficulty = function() {return this.diff;};
     // runs command to start event
     this.runCode = function() {eval(this.command);}
 };
-// filler task
-var task_filler = new Task(0, 0, '', ['filler',1], '');
-// task list
+// stores possible human tasks and generates list of task objects given list of indices
+//      indices - populates list of tasks based on task_indices defined in ln 6
+function HTaskList(indices) {
+    this.taskOptions = [];
+    this.taskOptions[0] = new HTask(0, 0, '', ['none',1], '');
+    this.taskOptions[1] = new HTask(1, 1, 'Harvest 5 wheat with your scythe.', ['wheat',5], '');
+    this.taskOptions[2] = new HTask(1, 1, 'Gather 40 berries (fill up your bucket and water the bush to grow berries)', ['berries',40], '');
+    this.taskOptions[3] = new HTask(1, 1, 'Collect 16 more eggs.', ['eggs',16], '');
+    this.taskOptions[4] = new HTask(1, 1, 'Collect 2 wool from the sheep with your shears.', ['wool',2], '');
+    this.taskOptions[5] = new HTask(1, 1, 'Collect 2 milk (make sure your bucket is empty).', ['milk',2], '');
+    this.taskOptions[6] = new HTask(2, 2, 'Hit the gophers with your hammer before they disappear and steal one dollar!', ['',0], 'gopher_task();');
+    this.taskOptions[7] = new HTask(3, 1, 'Collect butterflies for a one dollar reward per butterfly!', ['',0], 'butterfly_task();');
+    this.taskOptions[8] = new HTask(4, 2, 'Hurry and hit the snakes with your hammer. Each snake steals an egg every two seconds!', ['',0], 'snake_task();');
+    this.taskOptions[9] = new HTask(5, 1, 'Open the treasure chest burried under a tuft of grass (ticking means it might explode!)', ['',0], 'chest_task();');
+    this.taskOptions[10] = new HTask(6, 2, 'Bake a loaf of bread.', ['bread',1], '');
+    this.taskOptions[11] = new HTask(6, 2, 'Bake a muffin.', ['muffin',1], '');
+    this.taskOptions[12] = new HTask(6, 2, 'Make a spool of thread.', ['thread',1], '');
+
+    this.tasks = []
+    for (var i = 0; i < indices.length; i++) {
+        var task_num = indices[i];
+        this.tasks.push(this.taskOptions[task_num]);
+    }
+    return this.tasks;
+};
+// stores task list and task retrieval functions
 var task_list = {
     // current task index
     curr: 0,
     // holds tasks
-	list: [],
+	list: new HTaskList(task_indices),
     // adds task to end of list
 	addTask: function(task) {this.list.push(task);},
     // adds task to certain index in list
@@ -50,8 +78,8 @@ var task_list = {
 
     // runs current task command
     runCommand: function() {this.list[this.curr].runCode();},
-    // returns current task index
-    getCurr: function() {return this.curr;},
+    // returns current task
+    getCurr: function() {return this.list[this.curr];},
     // returns current task text prompt
 	getText: function() {return this.list[this.curr].txt;},
     // returns current task requirements
@@ -61,24 +89,7 @@ var task_list = {
     // sets current task end time
 	setEnd: function() {this.list[this.curr].setEnd();}
 };
-// manually add tasks to list
-var tasks = [];
-tasks[0] = new Task(1, 0, 'Harvest 5 wheat with your scythe.', ['wheat',5], '');
-tasks[1] = new Task(1, 0, 'Gather 40 berries (fill up your bucket and water the bush to grow berries)', ['berries',40], '');
-tasks[2] = new Task(1, 0, 'Collect 16 eggs.', ['eggs',16], '');
-tasks[3] = new Task(1, 0, 'Collect 2 wool from the sheep with your shears.', ['wool',2], '');
-tasks[4] = new Task(1, 0, 'Collect 2 milk (make sure your bucket is empty).', ['milk',2], '');
-tasks[5] = new Task(2, 1, 'Hit the gophers with your hammer before they disappear and steal $1!', ['gophers',5], 'gopher_task();');
-tasks[6] = new Task(3, 0, 'Collect butterflies for a $1 reward per butterfly!', ['butterflies',8], 'butterfly_task();');
-tasks[7] = new Task(4, 0, 'Hurry and hit the snakes with your hammer. Each snake steals an egg every 2 seconds!', ['snakes',5], 'snake_task();');
-tasks[8] = new Task(5, 0, 'Open the treasure chest burried under a tuft of grass (ticking means it might explode!)', ['chest',1], 'chest_task();');
-tasks[9] = new Task(6, 1, 'Bake a loaf of bread.', ['bread',1], '');
-tasks[10] = new Task(6, 1, 'Bake a muffin.', ['muffin',1], '');
-tasks[11] = new Task(6, 1, 'Make a spool of thread.', ['thread',1], '');
-tasks.push(task_filler);
-task_list.addTasks(tasks);
-
-// information for task specific functions
+// stores information for task specific functions
 var task_funcs = {
     // gopher task
     gopher: {
@@ -186,10 +197,151 @@ var task_funcs = {
 };
 
 
-// ROBOT REQUESTS
+// STATE OF HUMAN
+// tracks human receptivity and returns current receptivity
+function HReceptivityList() {
+    this.current = 0;
+    // receptivity - [0:interacting, 1:low, 2:high]
+    this.receptivity = [];
+    // availability - [0:interacting, 1, 2, 3, 4]
+    this.availability = [];
+    // interacting - [true, false]
+    this.interacting = [];
+    // difficulty - task difficulty [0:none, 1:low, 2:high]
+    this.difficulty = [];
+    // moment - moment of interruption ['break', 'middle']
+    this.moment = [];
+
+    // receptivity function 
+    this.receptivityFunc = function() {
+        var r = 0;
+        for (var i = 0; i < this.current; i++) {
+            this.receptivity[i] = this.receptivity[i];
+        }
+        this.receptivity.push(r);
+    };
+    // adds the availability information to history
+    this.addState = function(interacting, difficulty, moment) {
+        this.receptivityFunc();
+        this.current += 1;
+        this.interacting.push(interacting);
+        this.difficulty.push(difficulty);
+        this.moment.push(moment);
+
+        // already interacting with robot [0]
+        if (interacting == true) {this.availability.push(0);}
+        // not interacting
+        else if (interacting == false) {
+            // no task --> very available [4]
+            if (difficulty == 0) {this.availability.push(4);}
+            // low difficulty task
+            else if (difficulty == 1) {
+                // breakpoint --> somewhat available [3]
+                if (moment == 'break') {this.availability.push(3);}
+                // middle --> not very available [2]
+                else if (moment == 'middle') {this.availability.push(2);}
+            }
+            // high difficulty taks
+            else if (difficulty == 2) {
+                // breakpoint --> somewhat available [3]
+                if (moment == 'break') {this.availability.push(3);}
+                // middle --> unavailable [1]
+                if (moment == 'middle') {this.availability.push(1);}
+            }
+        }
+    };
+    // returns availability at time t
+    this.getAvailability = function(t) {
+        if (t >= this.current) {return -1;}
+        else {return this.availability[t];}
+    };
+    // returns current availability
+    this.getAvailability = function() {return this.availability[this.current];};
+    // saves current information
+    this.save = function() {};
+};
 
 
+// STATE OF ROBOT
+// robot request definition
+//      number - request number
+//      urgency - [0, 1:low, 2:med, 3:high]
+//      duration - [0, 1:short, 2:long]
+//      effort - [0, 1:low, 2:high]
+//      operational - [true, false]
+function RRequest(number, urgency, duration, effort, operational, text) {
+    this.number = number;
+    this.urgency = urgency;
+    this.duration = duration;
+    this.effort = effort;
+    this.operational = operational;
+    this.txt = text;
+};
+function RRequestList() {
+    this.requestOptions = [];
+    // robot not operational
+    this.requestOptions[0] = new RRequest(0,0,0,0,false,'');
+    // state 1: low urgency, short duration, low effort, robot operational
+    this.requestOptions[1] = new RRequest(1,1,1,1,true,'Baked goods can burn!');
+    this.requestOptions[2] = new RRequest(1,1,1,1,true,'Gophers steal money when they disappear.');
+    this.requestOptions[3] = new RRequest(1,1,1,1,true,'We lose money when I run out of battery!');
+    this.requestOptions[4] = new RRequest(1,1,1,1,true,'Sometimes I can give you helpful hints.');
+    // state 2: low urgency, long duration, low effort, robot operational
+    this.requestOptions[5] = new RRequest(2,1,1,2,true,"There’s a locked chest with treasure hidden somewhere under a tuft of grass. You have to be carrying your shovel to dig it up. And be careful, it will explode a minute after it's been revealed!");
+    this.requestOptions[6] = new RRequest(2,1,1,2,true,'Different resources are worth different amounts of money. It’s a good idea to make bread; you’ll get $15 per loaf! The recipe is 6 eggs, 4 milk, and 2 wheat. You can also make muffins to earn $18, with 10 berries, 8 eggs, 4 milk, and 1 wheat.');
+    this.requestOptions[7] = new RRequest(2,1,1,2,true,"Animals will occasionally pop up in your environment. Snakes are pesky. They steal an egg from you every 5 seconds. But if you'll get a one dollar reward for each one you catch! The same goes for butterflies, but they don't steal any resources.")
+    // state 3: med urgency, short duration, low effort, robot operational
+    this.requestOptions[8] = new RRequest(3,2,1,1,true,"In which direction should I take 5 steps [up, down, left, right]?");
+    // state 4: med urgency, short duration, high effort, robot operational
+    this.requestOptions[9] = new RRequest(4,2,1,2,true,'My battery is less than 15%.');
+    // state 5: med urgency, long duration, low effort, robot operational
+    this.requestOptions[10] = new RRequest(5,2,2,1,true,'Can you bring me seeds from the barrels?');
+    this.requestOptions[11] = new RRequest(5,2,2,1,true,'Can you bring me water from the well?');
+    // state 6: med urgency, long duration, high effort, robot operational
+    this.requestOptions[12] = new RRequest(6,2,2,1,true,'One of my parts is missing! Push me around the field and use me as a metal detector to find it.');
+    this.requestOptions[13] = new RRequest(6,2,2,1,true,'I need to update my software! Can you enter the password [X91R23TQ7] at the monitor next to the charging station?');
+    // state 7: high urgency, short duration, high effort, robot operational
+    this.requestOptions[14] = new RRequest(7,2,1,2,true,'My battery is less than 5%!');
+    // state 8: high urgency, long duration, high effort, robot operational
+    this.requestOptions[15] = new RRequest(8,2,2,2,true,"I'm on fire! Put it out with 3 buckets of water.");
+
+    return this.requestOptions;
+};
+// stores robot action list
+var request_list = {
+    curr: 0,
+    options: new RRequestList()
+};
 
 
+// STATE-ACTION --> HRESPONSE
+// robot action list
+function RActionList() {
+    this.current = 0;
+    // saliency - [0:none, 1:flashing light, 2:beeping, 3:both]
+    this.saliency = [];
 
+    // adds saliency information to history
+    this.addAction = function(saliency) {
+        this.current += 1;
+        this.saliency.push(saliency);
+    };
+    // returns command that triggers alert from robot
+    this.triggerSignal = function() {
+        var saliency = this.saliency[this.current];
+        if (saliency == 1) {return "Crafty.trigger('LowAlert');"}
+        else if (saliency == 2) {return "Crafty.trigger('MedAlert');"}
+        else if (saliency == 3) {return "Crafty.trigger('HighAlert');"}
+    };
+};
+// function HumanResponse() {
+
+// }
+
+// r_action, h_receptivity, h_response, next_state
+// this.r_action = r_action;
+// this.h_receptivity = h_receptivity;
+// this.h_response = 
+
+//      h_receptivity - human's receptivity [0:interacting, 1:low, 2:high]
 

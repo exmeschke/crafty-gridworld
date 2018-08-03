@@ -1,4 +1,4 @@
-// Game
+// Adds components to the game 
 Crafty.scene('Game', function() {
 	// background
 	Crafty.background('rgb(47, 130, 52)');
@@ -196,7 +196,7 @@ Crafty.scene('Game', function() {
 });
 
 
-// Loading
+// Loads the audio and sprite sheets
 Crafty.scene('Loading', function() {
 	// Background
 	Crafty.background('black');
@@ -459,9 +459,12 @@ Crafty.scene('Loading', function() {
 				tile: 32, tileh: 32,
 				map: { spr_thread: [0,0] }
 			},
-			'assets/charging-station2.png': {
-				tile: 610, tileh: 750,
-				map: { spr_charging_station: [0,0] }
+			'assets/charging_stations.png': {
+				tile: 480, tileh: 590,
+				map: { 
+					spr_charging_station: [0,0],
+					spr_charging_station_lit: [1,0]
+				}
 			},
 			'assets/screens.png': {
 				tile: 244, tileh: 260,
