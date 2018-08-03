@@ -16,7 +16,6 @@ function gopher_task() {
 		}, 8000*i);
 	}
 };
-
 // BUTTERLIES
 function spawn_butterfly(i) {
 	var coord = task_funcs.butterflyCoord(i);
@@ -33,7 +32,6 @@ function butterfly_task() {
 		}, 5000*i);
 	}
 };
-
 // SNAKES
 function spawn_snake(i) {
 	var coord = task_funcs.snakeCoord(i);
@@ -50,7 +48,6 @@ function snake_task() {
 		}, 8000*i);
 	}
 };
-
 // HIDDEN CHEST
 function chest_task() {
 	var coord = task_funcs.chestGetLocation();
@@ -63,6 +60,12 @@ function chest_task() {
 };
 
 // Robot requests
-// 
-
+// SHORT NOTIFICATION
+function request_1_notification() {
+	var text = request_list.getText();
+	setTimeout(function() {
+		update_robot_text(text);
+	}, 5000);
+}
+request_1_notification();
 

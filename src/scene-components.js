@@ -7,21 +7,27 @@ gv = {
 	// score, updated for each frame
 	score: 0,
 	// tracks player location ['up','down','left','right']
-	player: {movement: []}, 
+	player: {
+		movement: [],
+		no_movement: 0
+	}, 
 	// control current robot action
 	robot: {
 		speed: 1200,
 		movement: [],
 		// tracks robot power
-		power: 100,
+		power: 50,
 		// how often -10 power
 		battery_life: 20000,
 		// stops moving if charging == 1
 		charging: 0,
 		// [-1:none, 0:plant, 1:water, 2:pick]
 		task: -1,
+		// [0:no alert, 1:an alert]
+		alert: 0,
 		// content for text bubble 
-		txt: ''	
+		incomplete_txt: '',
+		txt: ''
 	},
 	// updated when robot moves to tile
 	field: {
@@ -140,7 +146,9 @@ Crafty.c('Player', {
 			.bind('KeyDown', function(e) {
 				if (e.key == Crafty.keys.X) {this.action();} 
 				if (e.key == Crafty.keys.R) {this.reset();}
+				if (e.key == Crafty.keys.SPACE) {Crafty.trigger('HideRequest');}
 			})
+			.bind('UpdateFrame', this.noMovement)
 	},
 	// resets location if off screen
 	reset: function() {
@@ -249,8 +257,11 @@ Crafty.c('Player', {
 	pushRobot: function() {
 		// hands item to robot to trigger robot action
 		if (Crafty.s('Keyboard').isKeyDown('X')) {
+			// if robot is alerting person, trigger show response
+			if (gv.robot.alert == 1) {
+				Crafty.trigger('ShowRequest');
 			// if seed bag full, set robot task to plant
-			if (gv.tools.seed_bag == 1) {
+			} else if (gv.tools.seed_bag == 1) {
 				Crafty.trigger('Plant');
 				Crafty.trigger('EmptySeedBag');
 			// if robot is planting and bucket is full
@@ -293,7 +304,6 @@ Crafty.c('Robot', {
 			.bind('RobotDown', this.moveDown)
 			.bind('RobotLeft', this.moveLeft)
 			.bind('RobotRight', this.moveRight)
-			.bind('Recharge', this.recharge)
 			.bind('Plant', this.plant)
 			.bind('Water', this.water)
 			.bind('Pick', this.pick)
@@ -376,7 +386,6 @@ Crafty.c('Robot', {
 		} else {
 			gv.robot.power = 100;
 			gv.robot.charging = 0;
-			Crafty.trigger('StopCharge');
 		}
 	},
 	// either plants, waters, or collects wheat
@@ -419,20 +428,64 @@ Crafty.c('Robot', {
 	},
 	// flashing light
 	lowAlert: function() {
+		gv.robot.alert = 1;
 		this.animate('AnimateLight', -1);
 		this.delay(this.stopAlert, 12000);
 	},
 	// beeping
 	medAlert: function() {
+		gv.robot.alert = 1;
 		robot_alert_sound();
 	},
 	// flashing light + beeping
 	highAlert: function() {
+		gv.robot.alert = 1;
 		this.animate('AnimateLight', -1);
 		this.delay(this.stopAlert, 12000);
 		robot_alert_sound();
 	},
-	stopAlert: function() {this.pauseAnimation();}
+	stopAlert: function() {
+		this.pauseAnimation();
+		gv.robot.alert = 0;
+	}
+});
+// Requests
+function update_robot_text(text) {
+	gv.robot.txt = text;
+	Crafty.trigger('LowAlert');
+};
+// function type_robot_text(index) {return };
+function hide_robot_text() {Crafty.trigger('HideRequest');};
+Crafty.c('RobotRequest', {
+	init: function() {
+		this.requires('2D, DOM, Grid, Color, Text')
+			.attr({ w:gv.tile_sz*52, h:gv.tile_sz*13, z:10 })
+			.textFont({ size: '20px' })
+			.css({ 'padding-top':'200px' })
+			.textAlign('center')
+			.bind('UpdateText', this.updateText)
+			.bind('ShowRequest', this.showRequest)
+			.bind('HideRequest', this.hideRequest)
+	},
+	updateText: function() {this.text(gv.robot.incomplete_txt);},
+	showRequest: function() {
+		this.color('#FFFFFF', .98)
+		var a = 0;
+		for (var i = 0; i <= gv.robot.txt.length; i++) {
+			setTimeout(function(i) {
+				gv.robot.incomplete_txt = 'Robot: '+gv.robot.txt.slice(0,a);
+				Crafty.trigger('UpdateText');
+				a += 1;
+			}, 100*i);
+		}
+
+		var type = request_list.getNumber();
+		// short notification
+		if (type == 1) {setTimeout(hide_robot_text, 10000);}
+		// long notification
+		else if (type == 2) {setTimeout(hide_robot_text, 32000);}
+	},
+	hideRequest: function() {this.color("#FFFFFF", 0).text('');}
 });
 
 
@@ -1093,14 +1146,12 @@ Crafty.c('ChargingStation', {
 	init: function() {
 		this.requires('2D, Canvas, Grid, SpriteAnimation, spr_charging_station')
 			.attr({ w:43, h:50, z:0 })
-			.bind('Recharge', this.startCharge)
-			.bind('StopCharge', this.stopCharge)
-			.reel('AnimateCharging', 1000, [
-				[1,0], [0,0]
-			])
+			.bind('UpdateFrame', this.checkCharge)
 	},
-	startCharge: function() {this.animate('AnimateCharging');},
-	stopCharge: function() {this.pauseAnimation();}
+	checkCharge: function() {
+		if (gv.robot.charging == 0) {this.sprite('spr_charging_station');}
+		else {this.sprite('spr_charging_station_lit');}
+	}
 });
 // Hidden chest
 var exp;
@@ -1324,11 +1375,7 @@ Crafty.c('Task', {
 	}
 });
 
-// REQUESTS
-function update_robot_text(text) {
-	gv.robot.txt = text;
-	Crafty.trigger('LowAlert');
-};
+// Screen
 Crafty.c('RequestScreen', {
 	init: function() {
 		this.requires('2D, Canvas, Grid, Delay, SpriteAnimation, spr_screen')
@@ -1336,7 +1383,7 @@ Crafty.c('RequestScreen', {
 			.reel('ScreenFlash', 1000, [
 				[1,0], [0,0]
 			])
-			.bind('ShowRequest', this.showRequest)
+			// .bind('ShowRequest', this.showRequest)
 			// .bind('LowAlert', this.flash)
 			// .bind('HighAlert', this.flash)
 			// .bind('StopAlert', this.stopAlert)

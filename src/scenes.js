@@ -13,6 +13,8 @@ Crafty.scene('Game', function() {
 	this.player = Crafty.e('Player').at(30, 16);
 	// Add robot
 	this.robot = Crafty.e('Robot').at(5,10);
+	this.request = Crafty.e('RobotRequest').at(1,2);
+	// this.robot.attach(this.request);
 	this.screen = Crafty.e('RequestScreen').at(16,5.3);
 
 	// Add animals

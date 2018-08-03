@@ -1,9 +1,14 @@
 // Generates human task list, human availability function, robot requests / actions, and state-action information
 
-// HUMAN TASKS
-// set which tasks in order you want in the game
+// set tasks for game
 // [0:none, 1:wheat, 2:berries, 3:eggs, 4:wool, 5:milk, 6:gophers, 7:butterflies, 8:snakes, 9:chest, 10:bread, 11:muffin, 12:thread]
 var task_indices = [1,2,3,4,5,6,7,8,9,10,11,12,0];
+// set requests for game
+// [0:none, 1-4:short notification, 5-7:long notification, 8:text response, 9:low battery, 10-11:task change, 12-13:broken robot, 14:very low battery, 15:emergency]
+var request_indices = [5];
+
+
+// HUMAN TASKS
 // human task definition
 //      num - task number [1:easy gather, 2:hard gather, 3:easy chase, 4:hard chase, 5:easy combo, 6:hard combo]
 //      diff - task difficulty [1: low, 2: high]
@@ -268,54 +273,62 @@ function HReceptivityList() {
 //      urgency - [0, 1:low, 2:med, 3:high]
 //      duration - [0, 1:short, 2:long]
 //      effort - [0, 1:low, 2:high]
-//      operational - [true, false]
-function RRequest(number, urgency, duration, effort, operational, text) {
+function RRequest(number, urgency, duration, effort, text) {
     this.number = number;
     this.urgency = urgency;
     this.duration = duration;
     this.effort = effort;
-    this.operational = operational;
     this.txt = text;
 };
-function RRequestList() {
+function RRequestList(indices) {
     this.requestOptions = [];
-    // robot not operational
-    this.requestOptions[0] = new RRequest(0,0,0,0,false,'');
+    // state 0: no request
+    this.requestOptions[0] = new RRequest(0,0,0,0,'');
     // state 1: low urgency, short duration, low effort, robot operational
-    this.requestOptions[1] = new RRequest(1,1,1,1,true,'Baked goods can burn!');
-    this.requestOptions[2] = new RRequest(1,1,1,1,true,'Gophers steal money when they disappear.');
-    this.requestOptions[3] = new RRequest(1,1,1,1,true,'We lose money when I run out of battery!');
-    this.requestOptions[4] = new RRequest(1,1,1,1,true,'Sometimes I can give you helpful hints.');
+    this.requestOptions[1] = new RRequest(1,1,1,1,'Baked goods can burn!');
+    this.requestOptions[2] = new RRequest(1,1,1,1,'Gophers steal money when they disappear.');
+    this.requestOptions[3] = new RRequest(1,1,1,1,'We lose money when I run out of battery!');
+    this.requestOptions[4] = new RRequest(1,1,1,1,'Sometimes I can give you helpful hints.');
     // state 2: low urgency, long duration, low effort, robot operational
-    this.requestOptions[5] = new RRequest(2,1,1,2,true,"There’s a locked chest with treasure hidden somewhere under a tuft of grass. You have to be carrying your shovel to dig it up. And be careful, it will explode a minute after it's been revealed!");
-    this.requestOptions[6] = new RRequest(2,1,1,2,true,'Different resources are worth different amounts of money. It’s a good idea to make bread; you’ll get $15 per loaf! The recipe is 6 eggs, 4 milk, and 2 wheat. You can also make muffins to earn $18, with 10 berries, 8 eggs, 4 milk, and 1 wheat.');
-    this.requestOptions[7] = new RRequest(2,1,1,2,true,"Animals will occasionally pop up in your environment. Snakes are pesky. They steal an egg from you every 5 seconds. But if you'll get a one dollar reward for each one you catch! The same goes for butterflies, but they don't steal any resources.")
+    this.requestOptions[5] = new RRequest(2,1,2,1,"A locked treasure chest is burried somewhere under a tuft of grass. You have to be carrying your shovel to dig it up. And be careful, it will explode a minute after it's been revealed! It's worth $20, so you'll want to figure out how to open it quickly.");
+    this.requestOptions[6] = new RRequest(2,1,2,1,'Different resources are worth different amounts of money. It’s a good idea to make bread; you’ll get $15 per loaf! The recipe is 6 eggs, 4 milk, and 2 wheat. You can also make muffins to earn $18, with 10 berries, 8 eggs, 4 milk, and 1 wheat.');
+    this.requestOptions[7] = new RRequest(2,1,2,1,"Animals will occasionally pop up in your environment. Snakes are pesky. They steal an egg from you every 5 seconds. But if you'll get a one dollar reward for each one you catch! The same goes for butterflies, but they don't steal any resources.")
     // state 3: med urgency, short duration, low effort, robot operational
-    this.requestOptions[8] = new RRequest(3,2,1,1,true,"In which direction should I take 5 steps [up, down, left, right]?");
+    this.requestOptions[8] = new RRequest(3,2,1,1,"In which direction should I take 5 steps [up, down, left, right]?");
     // state 4: med urgency, short duration, high effort, robot operational
-    this.requestOptions[9] = new RRequest(4,2,1,2,true,'My battery is less than 15%.');
+    this.requestOptions[9] = new RRequest(4,2,1,2,'My battery is less than 15%.');
     // state 5: med urgency, long duration, low effort, robot operational
-    this.requestOptions[10] = new RRequest(5,2,2,1,true,'Can you bring me seeds from the barrels?');
-    this.requestOptions[11] = new RRequest(5,2,2,1,true,'Can you bring me water from the well?');
+    this.requestOptions[10] = new RRequest(5,2,2,1,'Can you bring me seeds from the barrels?');
+    this.requestOptions[11] = new RRequest(5,2,2,1,'Can you bring me water from the well?');
     // state 6: med urgency, long duration, high effort, robot operational
-    this.requestOptions[12] = new RRequest(6,2,2,1,true,'One of my parts is missing! Push me around the field and use me as a metal detector to find it.');
-    this.requestOptions[13] = new RRequest(6,2,2,1,true,'I need to update my software! Can you enter the password [X91R23TQ7] at the monitor next to the charging station?');
+    this.requestOptions[12] = new RRequest(6,2,2,1,'One of my parts is missing! Push me around the field and use me as a metal detector to find it.');
+    this.requestOptions[13] = new RRequest(6,2,2,1,'I need to update my software! Can you enter the password [X91R23TQ7] at the monitor next to the charging station?');
     // state 7: high urgency, short duration, high effort, robot operational
-    this.requestOptions[14] = new RRequest(7,2,1,2,true,'My battery is less than 5%!');
+    this.requestOptions[14] = new RRequest(7,2,1,2,'My battery is less than 5%!');
     // state 8: high urgency, long duration, high effort, robot operational
-    this.requestOptions[15] = new RRequest(8,2,2,2,true,"I'm on fire! Put it out with 3 buckets of water.");
+    this.requestOptions[15] = new RRequest(8,2,2,2,"I'm on fire! Put it out with 3 buckets of water.");
 
-    return this.requestOptions;
+    this.requests = []
+    for (var i = 0; i < indices.length; i++) {
+        var request_num = indices[i];
+        this.requests.push(this.requestOptions[request_num]);
+    }
+    return this.requests;
 };
 // stores robot action list
 var request_list = {
+    // index for current / next task
     curr: 0,
-    options: new RRequestList()
+    // list of requests to present
+    list: new RRequestList(request_indices),
+    // getters
+    getNumber: function() {return this.list[this.curr].number;},
+    getDuration: function() {return this.list[this.curr].duration;},
+    getText: function() {return this.list[this.curr].txt;}
 };
 
 
-// STATE-ACTION --> HRESPONSE
-// robot action list
+// ROBOT ACTIONS
 function RActionList() {
     this.current = 0;
     // saliency - [0:none, 1:flashing light, 2:beeping, 3:both]
@@ -325,6 +338,7 @@ function RActionList() {
     this.addAction = function(saliency) {
         this.current += 1;
         this.saliency.push(saliency);
+        this.triggerSignal();
     };
     // returns command that triggers alert from robot
     this.triggerSignal = function() {
@@ -334,14 +348,11 @@ function RActionList() {
         else if (saliency == 3) {return "Crafty.trigger('HighAlert');"}
     };
 };
-// function HumanResponse() {
 
-// }
 
-// r_action, h_receptivity, h_response, next_state
-// this.r_action = r_action;
-// this.h_receptivity = h_receptivity;
-// this.h_response = 
+// STATE-ACTION --> HRESPONSE
+// robot action list
 
-//      h_receptivity - human's receptivity [0:interacting, 1:low, 2:high]
+
+
 
