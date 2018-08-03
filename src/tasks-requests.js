@@ -3,16 +3,16 @@
 // set tasks for game
 // [0:none, 1:wheat, 2:berries, 3:eggs, 4:wool, 5:milk, 6:gophers, 7:butterflies, 8:snakes, 9:chest, 10:bread, 11:muffin, 12:thread]
 // var task_indices = [1,2,3,4,5,6,7,8,9,10,11,12,0];
-var task_indices = [10,11,12,0];
+var task_indices = [1,0,11,12,0];
 // set requests for game
 // [0:none, 1-4:short notification, 5-7:long notification, 8:text response, 9:low battery, 10-11:task change, 12-13:broken robot, 14:very low battery, 15:emergency]
-var request_indices = [9];
+var request_indices = [8];
 
 
 // HUMAN TASKS
 // human task definition
 //      num - task number [1:easy gather, 2:hard gather, 3:easy chase, 4:hard chase, 5:easy combo, 6:hard combo]
-//      diff - task difficulty [1: low, 2: high]
+//      diff - task difficulty [0:none, 1:low, 2:high]
 //      txt - the prompt shown to player
 //      met - the conditions that need to be met to complete task
 //      cmd - the command to start the event
@@ -35,9 +35,6 @@ function HTask(num, diff, txt, met, cmd) {
     	this.time.end = new Date().getTime()/1000;
     	this.time.duration = this.time.end - this.time.begin;
     };
-    // getters
-    this.getTaskNumber = function() {return this.num;};
-    this.getDifficulty = function() {return this.diff;};
     // runs command to start event
     this.runCode = function() {eval(this.command);}
 };
@@ -81,18 +78,16 @@ var task_list = {
 
     // indicates next task
     nextTask: function() {this.curr = this.curr+1;},
-
     // runs current task command
     runCommand: function() {this.list[this.curr].runCode();},
-    // returns current task
+
+    // getters 
     getCurr: function() {return this.list[this.curr];},
-    // returns current task text prompt
+    getDiff: function() {return this.list[this.curr].diff;},
 	getText: function() {return this.list[this.curr].txt;},
-    // returns current task requirements
 	getMet: function() {return this.list[this.curr].met;},
-    // sets current task start time
+    // setters
 	setStart: function() {this.list[this.curr].setStart();},
-    // sets current task end time
 	setEnd: function() {this.list[this.curr].setEnd();}
 };
 // stores information for task specific functions
@@ -205,67 +200,75 @@ var task_funcs = {
 
 // STATE OF HUMAN
 // tracks human receptivity and returns current receptivity
-function HReceptivityList() {
-    this.current = 0;
+function HReceptivity() {
     // receptivity - [0:interacting, 1:low, 2:high]
     this.receptivity = [];
     // availability - [0:interacting, 1, 2, 3, 4]
-    this.availability = [];
+    this.availability = -1;
     // interacting - [true, false]
-    this.interacting = [];
+    this.interacting = false;
     // difficulty - task difficulty [0:none, 1:low, 2:high]
-    this.difficulty = [];
+    this.difficulty = -1;
     // moment - moment of interruption ['break', 'middle']
-    this.moment = [];
+    this.moment = '';
 
     // receptivity function 
     this.receptivityFunc = function() {
+        // summed receptivity
         var r = 0;
-        for (var i = 0; i < this.current; i++) {
+        // loop through all receptivity, apply function to each and add to r
+        for (var i = 0; i < this.curr; i++) {
             this.receptivity[i] = this.receptivity[i];
+            r += this.receptivity[i];
         }
+        // add current receptivity to history
         this.receptivity.push(r);
+        // return current receptivity
+        return r;
     };
-    // adds the availability information to history
-    this.addState = function(interacting, difficulty, moment) {
-        this.receptivityFunc();
-        this.current += 1;
-        this.interacting.push(interacting);
-        this.difficulty.push(difficulty);
-        this.moment.push(moment);
+    // updates current information
+    this.updateState = function(interacting, difficulty, moment) {
+        var r = this.receptivityFunc();
+        this.interacting = interacting;
+        this.difficulty = difficulty;
+        this.moment = moment;
 
         // already interacting with robot [0]
-        if (interacting == true) {this.availability.push(0);}
+        if (interacting == true) {this.availability = 0;}
         // not interacting
         else if (interacting == false) {
             // no task --> very available [4]
-            if (difficulty == 0) {this.availability.push(4);}
+            if (difficulty == 0) {this.availability = 4;}
             // low difficulty task
             else if (difficulty == 1) {
                 // breakpoint --> somewhat available [3]
-                if (moment == 'break') {this.availability.push(3);}
+                if (moment == 'break') {this.availability = 3;}
                 // middle --> not very available [2]
-                else if (moment == 'middle') {this.availability.push(2);}
+                else if (moment == 'middle') {this.availability = 2;}
             }
             // high difficulty taks
             else if (difficulty == 2) {
                 // breakpoint --> somewhat available [3]
-                if (moment == 'break') {this.availability.push(3);}
+                if (moment == 'break') {this.availability = 3;}
                 // middle --> unavailable [1]
-                if (moment == 'middle') {this.availability.push(1);}
+                if (moment == 'middle') {this.availability = 1;}
             }
         }
+        return r;
     };
-    // returns availability at time t
-    this.getAvailability = function(t) {
-        if (t >= this.current) {return -1;}
-        else {return this.availability[t];}
-    };
-    // returns current availability
-    this.getAvailability = function() {return this.availability[this.current];};
-    // saves current information
-    this.save = function() {};
+    // returns current receptivity
+    this.getReceptivity = function() {return this.receptivityFunc();};
 };
+// stores receptivity list and receptivity update functions
+var receptivity = {
+    list: new HReceptivity(),
+    // update state information
+    updateState: function(interacting, difficulty, moment) {
+        this.list.updateState(interacting, difficulty, moment);
+    },
+    // returns most recent receptivity
+    getReceptivity: function() {this.list.getReceptivity();}
+};  
 
 
 // STATE OF ROBOT
@@ -274,40 +277,46 @@ function HReceptivityList() {
 //      urgency - [0, 1:low, 2:med, 3:high]
 //      duration - [0, 1:short, 2:long]
 //      effort - [0, 1:low, 2:high]
-function RRequest(number, urgency, duration, effort, text) {
+//      text - text to show to player
+//      requiresResponse - [true, false]
+function RRequest(number, urgency, duration, effort, resp, text) {
     this.number = number;
     this.urgency = urgency;
     this.duration = duration;
     this.effort = effort;
     this.txt = text;
+    this.requiresResponse = resp;
+
+    this.receivedResponse = false;
+    this.receivedResponse = function() {this.receivedResponse = true;}
 };
 function RRequestList(indices) {
     this.requestOptions = [];
     // state 0: no request
-    this.requestOptions[0] = new RRequest(0,0,0,0,'');
-    // state 1: low urgency, short duration, low effort, robot operational
-    this.requestOptions[1] = new RRequest(1,1,1,1,'Baked goods can burn!');
-    this.requestOptions[2] = new RRequest(1,1,1,1,'Gophers steal money when they disappear.');
-    this.requestOptions[3] = new RRequest(1,1,1,1,'We lose money when I run out of battery!');
-    this.requestOptions[4] = new RRequest(1,1,1,1,'Sometimes I can give you helpful hints.');
-    // state 2: low urgency, long duration, low effort, robot operational
-    this.requestOptions[5] = new RRequest(2,1,2,1,"A locked treasure chest is burried somewhere under a tuft of grass. You have to be carrying your shovel to dig it up. And be careful, it will explode a minute after it's been revealed! It's worth $20, so you'll want to figure out how to open it quickly.");
-    this.requestOptions[6] = new RRequest(2,1,2,1,'Different resources are worth different amounts of money. It’s a good idea to make bread; you’ll get $15 per loaf! The recipe is 6 eggs, 4 milk, and 2 wheat. You can also make muffins to earn $18, with 10 berries, 8 eggs, 4 milk, and 1 wheat.');
-    this.requestOptions[7] = new RRequest(2,1,2,1,"Animals will occasionally pop up in your environment. Snakes are pesky. They steal an egg from you every 5 seconds. But if you'll get a one dollar reward for each one you catch! The same goes for butterflies, but they don't steal any resources.")
-    // state 3: med urgency, short duration, low effort, robot operational
-    this.requestOptions[8] = new RRequest(3,2,1,1,"In which direction should I take 5 steps [up, down, left, right]?");
-    // state 4: med urgency, short duration, high effort, robot operational
-    this.requestOptions[9] = new RRequest(4,2,1,2,'My battery is less than 15%.');
-    // state 5: med urgency, long duration, low effort, robot operational
-    this.requestOptions[10] = new RRequest(5,2,2,1,'Can you bring me seeds from the barrels?');
-    this.requestOptions[11] = new RRequest(5,2,2,1,'Can you bring me water from the well?');
-    // state 6: med urgency, long duration, high effort, robot operational
-    this.requestOptions[12] = new RRequest(6,2,2,1,'One of my parts is missing! Push me around the field and use me as a metal detector to find it.');
-    this.requestOptions[13] = new RRequest(6,2,2,1,'I need to update my software! Can you enter the password [X91R23TQ7] at the monitor next to the charging station?');
-    // state 7: high urgency, short duration, high effort, robot operational
-    this.requestOptions[14] = new RRequest(7,2,1,2,'My battery is less than 5%!');
-    // state 8: high urgency, long duration, high effort, robot operational
-    this.requestOptions[15] = new RRequest(8,2,2,2,"I'm on fire! Put it out with 3 buckets of water.");
+    this.requestOptions[0] = new RRequest(0,0,0,0,false,'');
+    // state 1: low urgency, short duration, low effort, no response
+    this.requestOptions[1] = new RRequest(1,1,1,1,false,'Baked goods can burn!');
+    this.requestOptions[2] = new RRequest(1,1,1,1,false,'Gophers steal money when they disappear.');
+    this.requestOptions[3] = new RRequest(1,1,1,1,false,'We lose money when I run out of battery!');
+    this.requestOptions[4] = new RRequest(1,1,1,1,false,'Sometimes I can give you helpful hints.');
+    // state 2: low urgency, long duration, low effort, no response
+    this.requestOptions[5] = new RRequest(2,1,2,1,false,"A locked treasure chest is burried somewhere under a tuft of grass. You have to be carrying your shovel to dig it up. And be careful, it will explode a minute after it's been revealed! It's worth $20, so you'll want to figure out how to open it quickly.");
+    this.requestOptions[6] = new RRequest(2,1,2,1,false,'Different resources are worth different amounts of money. It’s a good idea to make bread; you’ll get $15 per loaf! The recipe is 6 eggs, 4 milk, and 2 wheat. You can also make muffins to earn $18, with 10 berries, 8 eggs, 4 milk, and 1 wheat.');
+    this.requestOptions[7] = new RRequest(2,1,2,1,false,"Animals will occasionally pop up in your environment. Snakes are pesky. They steal an egg from you every 5 seconds. But if you'll get a one dollar reward for each one you catch! The same goes for butterflies, but they don't steal any resources.")
+    // state 3: med urgency, short duration, low effort, requires response
+    this.requestOptions[8] = new RRequest(3,2,1,1,true,"In which direction should I take 5 steps [up, down, left, right]? Type your response at the monitor.");
+    // state 4: med urgency, short duration, high effort, requires response
+    this.requestOptions[9] = new RRequest(4,2,1,2,true,'My battery is less than 15%.');
+    // state 5: med urgency, long duration, low effort, requires response
+    this.requestOptions[10] = new RRequest(5,2,2,1,true,'Can you bring me seeds from the barrels?');
+    this.requestOptions[11] = new RRequest(5,2,2,1,true,'Can you bring me water from the well?');
+    // state 6: med urgency, long duration, high effort, requires response
+    this.requestOptions[12] = new RRequest(6,2,2,1,true,'One of my parts is missing! Push me around the field and use me as a metal detector to find it.');
+    this.requestOptions[13] = new RRequest(6,2,2,1,true,'I need to update my software! Can you enter the password [X91R23TQ7] at the monitor next to the charging station?');
+    // state 7: high urgency, short duration, high effort, requires response
+    this.requestOptions[14] = new RRequest(7,2,1,2,true,'My battery is less than 5%!');
+    // state 8: high urgency, long duration, high effort, requires response
+    this.requestOptions[15] = new RRequest(8,2,2,2,true,"I'm on fire! Put it out with 3 buckets of water.");
 
     this.requests = []
     for (var i = 0; i < indices.length; i++) {
@@ -326,12 +335,22 @@ var request_list = {
     getNumber: function() {return this.list[this.curr].number;},
     getDuration: function() {return this.list[this.curr].duration;},
     getText: function() {return this.list[this.curr].txt;},
+    getRequiresResponse: function() {return this.list[this.curr].requiresResponse;},
     getAction: function() {
         var rand = Math.random();
         if (rand < 0.33) {return 1;}
         else if (rand < 0.66) {return 2;}
         else {return 3;}
-    }
+    },
+    // indicates request was sent
+    sentRequest: function() {
+        // gets current information
+        // receptivity_list.getInteracting();
+        // task_list.getDifficulty();
+
+    },
+    // indicates alert was checked, different trigger for each request
+    checkedAlert: function() {this.list[this.curr].receivedResponse();}
 };
 
 
