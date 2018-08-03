@@ -38,7 +38,3 @@ sounds = {
 	stop_ticking: function() {Crafty.audio.stop('ticking');},
 	play_money: function() {Crafty.audio.play('cha_ching');}
 };
-function robot_alert_sound() {
-    sounds.play_med();
-    for (var i = 0; i < 10; i++) {setTimeout(function() {sounds.play_med();}, 1000*i);}
-};

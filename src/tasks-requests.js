@@ -324,13 +324,20 @@ var request_list = {
     // getters
     getNumber: function() {return this.list[this.curr].number;},
     getDuration: function() {return this.list[this.curr].duration;},
-    getText: function() {return this.list[this.curr].txt;}
+    getText: function() {return this.list[this.curr].txt;},
+    getAction: function() {
+        var rand = Math.random();
+        if (rand < 0.2) {return 1;}
+        else if (rand < 0.66) {return 2;}
+        else {return 2;}
+    }
 };
 
 
 // ROBOT ACTIONS
 function RActionList() {
     this.current = 0;
+    this.sound = 0;
     // saliency - [0:none, 1:flashing light, 2:beeping, 3:both]
     this.saliency = [];
 
@@ -347,6 +354,11 @@ function RActionList() {
         else if (saliency == 2) {return "Crafty.trigger('MedAlert');"}
         else if (saliency == 3) {return "Crafty.trigger('HighAlert');"}
     };
+    // alert sound
+    this.startRobotAlert = function() {
+        
+    };
+    this.stopRobotAlert = function() {this.sound = false;};
 };
 
 

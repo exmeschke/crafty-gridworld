@@ -60,12 +60,20 @@ function chest_task() {
 };
 
 // Robot requests
-// SHORT NOTIFICATION
-function request_1_notification() {
-	var text = request_list.getText();
+function set_request(time) {
 	setTimeout(function() {
-		update_robot_text(text);
-	}, 5000);
-}
-request_1_notification();
+		var text = request_list.getText();
+		var action = request_list.getAction();
+		Crafty.log(text, action);
+		update_robot_text(text,action);
+	}, time);
+};
+function requests() {
+	set_request(5000);
+	// for (var i = 0; i < 2; i++) {
+	// 	var a = i*60000 + 5000;
+	// 	set_request(a);
+	// }
+};
+requests();
 

@@ -289,6 +289,14 @@ Crafty.c('Player', {
 
 
 // Robot character
+function robot_alert_sound(){
+	sounds.play_med();
+	for (var i = 0; i < 10; i++) {
+	    setTimeout(function() {
+	    	sounds.play_med();
+	    }, 1000*i);
+	}
+}
 Crafty.c('Robot', {
 	init: function() {
 		this.requires('2D, Canvas, Grid, Collision, SpriteAnimation, spr_bot, Tween, Delay, Text')
@@ -430,7 +438,7 @@ Crafty.c('Robot', {
 	lowAlert: function() {
 		gv.robot.alert = 1;
 		this.animate('AnimateLight', -1);
-		this.delay(this.stopAlert, 12000);
+		this.delay(this.stopAlert, 15000);
 	},
 	// beeping
 	medAlert: function() {
@@ -441,18 +449,23 @@ Crafty.c('Robot', {
 	highAlert: function() {
 		gv.robot.alert = 1;
 		this.animate('AnimateLight', -1);
-		this.delay(this.stopAlert, 12000);
+		this.delay(this.stopAlert, 15000);
 		robot_alert_sound();
 	},
 	stopAlert: function() {
+		Crafty.audio.stop('alert_med');
 		this.pauseAnimation();
+		this.sprite('spr_bot');
 		gv.robot.alert = 0;
 	}
 });
 // Requests
-function update_robot_text(text) {
+function update_robot_text(text, action) {
 	gv.robot.txt = text;
-	Crafty.trigger('LowAlert');
+	if (action == 0) {}
+	else if (action == 1) {Crafty.trigger('LowAlert');}
+	else if (action == 2) {Crafty.trigger('MedAlert');}
+	else if (action == 3) {Crafty.trigger('HighAlert');}	
 };
 // function type_robot_text(index) {return };
 function hide_robot_text() {Crafty.trigger('HideRequest');};
@@ -461,7 +474,7 @@ Crafty.c('RobotRequest', {
 		this.requires('2D, DOM, Grid, Color, Text')
 			.attr({ w:gv.tile_sz*52, h:gv.tile_sz*13, z:10 })
 			.textFont({ size: '20px' })
-			.css({ 'padding-top':'200px' })
+			.css({ 'font-family':'Courier', 'padding-top':'200px' })
 			.textAlign('center')
 			.bind('UpdateText', this.updateText)
 			.bind('ShowRequest', this.showRequest)
@@ -469,11 +482,12 @@ Crafty.c('RobotRequest', {
 	},
 	updateText: function() {this.text(gv.robot.incomplete_txt);},
 	showRequest: function() {
-		this.color('#FFFFFF', .98)
+		Crafty.trigger('StopAlert');
+		this.color('#D7E0DA', .98);
 		var a = 0;
 		for (var i = 0; i <= gv.robot.txt.length; i++) {
 			setTimeout(function(i) {
-				gv.robot.incomplete_txt = 'Robot: '+gv.robot.txt.slice(0,a);
+				gv.robot.incomplete_txt = gv.robot.txt.slice(0,a);
 				Crafty.trigger('UpdateText');
 				a += 1;
 			}, 100*i);
