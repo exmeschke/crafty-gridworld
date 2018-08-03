@@ -2,10 +2,11 @@
 
 // set tasks for game
 // [0:none, 1:wheat, 2:berries, 3:eggs, 4:wool, 5:milk, 6:gophers, 7:butterflies, 8:snakes, 9:chest, 10:bread, 11:muffin, 12:thread]
-var task_indices = [1,2,3,4,5,6,7,8,9,10,11,12,0];
+// var task_indices = [1,2,3,4,5,6,7,8,9,10,11,12,0];
+var task_indices = [10,11,12,0];
 // set requests for game
 // [0:none, 1-4:short notification, 5-7:long notification, 8:text response, 9:low battery, 10-11:task change, 12-13:broken robot, 14:very low battery, 15:emergency]
-var request_indices = [5];
+var request_indices = [9];
 
 
 // HUMAN TASKS
@@ -327,44 +328,40 @@ var request_list = {
     getText: function() {return this.list[this.curr].txt;},
     getAction: function() {
         var rand = Math.random();
-        if (rand < 0.2) {return 1;}
+        if (rand < 0.33) {return 1;}
         else if (rand < 0.66) {return 2;}
-        else {return 2;}
+        else {return 3;}
     }
 };
 
 
-// ROBOT ACTIONS
-function RActionList() {
-    this.current = 0;
-    this.sound = 0;
-    // saliency - [0:none, 1:flashing light, 2:beeping, 3:both]
-    this.saliency = [];
 
-    // adds saliency information to history
-    this.addAction = function(saliency) {
-        this.current += 1;
-        this.saliency.push(saliency);
-        this.triggerSignal();
-    };
-    // returns command that triggers alert from robot
-    this.triggerSignal = function() {
-        var saliency = this.saliency[this.current];
-        if (saliency == 1) {return "Crafty.trigger('LowAlert');"}
-        else if (saliency == 2) {return "Crafty.trigger('MedAlert');"}
-        else if (saliency == 3) {return "Crafty.trigger('HighAlert');"}
-    };
-    // alert sound
-    this.startRobotAlert = function() {
-        
-    };
-    this.stopRobotAlert = function() {this.sound = false;};
-};
-
-
-// STATE-ACTION --> HRESPONSE
+// STATE+ACTION --> HRESPONSE
 // robot action list
 
+
+
+// ROBOT ACTIONS
+// function RActionList() {
+//     this.current = 0;
+//     this.sound = 0;
+//     // saliency - [0:none, 1:flashing light, 2:beeping, 3:both]
+//     this.saliency = [];
+
+//     // adds saliency information to history
+//     this.addAction = function(saliency) {
+//         this.current += 1;
+//         this.saliency.push(saliency);
+//         this.triggerSignal();
+//     };
+//     // returns command that triggers alert from robot
+//     this.triggerSignal = function() {
+//         var saliency = this.saliency[this.current];
+//         if (saliency == 1) {return "Crafty.trigger('LowAlert');"}
+//         else if (saliency == 2) {return "Crafty.trigger('MedAlert');"}
+//         else if (saliency == 3) {return "Crafty.trigger('HighAlert');"}
+//     };
+// };
 
 
 

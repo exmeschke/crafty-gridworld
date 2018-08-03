@@ -13,12 +13,14 @@ gv = {
 	}, 
 	// control current robot action
 	robot: {
-		speed: 1200,
+		speed: [0, 2400, 1200],
 		movement: [],
 		// tracks robot power
 		power: 50,
 		// how often -10 power
 		battery_life: 20000,
+		// [0:not operational, 1:slow, 2:normal]
+		status: 2,
 		// stops moving if charging == 1
 		charging: 0,
 		// [-1:none, 0:plant, 1:water, 2:pick]
@@ -289,19 +291,24 @@ Crafty.c('Player', {
 
 
 // Robot character
-function robot_alert_sound(){
+function robot_alert_sound() {
 	sounds.play_med();
-	for (var i = 0; i < 10; i++) {
+	for (var i = 0; i < 12; i++) {
 	    setTimeout(function() {
 	    	sounds.play_med();
 	    }, 1000*i);
 	}
 }
+function set_robot_speed() {
+	gv.robot.status = 1;
+	Crafty.trigger('SetSpeed');
+}	
 Crafty.c('Robot', {
+	_speed: 1500,
 	init: function() {
 		this.requires('2D, Canvas, Grid, Collision, SpriteAnimation, spr_bot, Tween, Delay, Text')
 			.attr({ w: gv.tile_sz+2, h: gv.tile_sz+2, z:1 })
-			.delay(this.randomMove, 1500, -1)
+			.delay(this.randomMove, this._speed, -1)
 			.delay(this.losePower, gv.robot.battery_life, -1)
 			.onHit('Solid', this.turnAround)
 			.onHit('ChargingStation', this.recharge)
@@ -319,11 +326,23 @@ Crafty.c('Robot', {
 			.bind('MedAlert', this.medAlert)
 			.bind('HighAlert', this.highAlert)
 			.bind('StopAlert', this.stopAlert)
+			.bind('SetSpeed', this.setSpeed)
 			.bind('KeyDown', function(e) {if (e.key == Crafty.keys.R) {this.reset();}})
 	},
+	char: function() {return 'robot';},
 	// resets location if off screen
 	reset: function() {this.at(5,10);},
-	char: function() {return 'robot';},
+	// changes speed depending on status
+	setSpeed: function() {
+		this.cancelDelay(this.randomMove);
+		// not operational
+		if (gv.robot.status == 0) {this._speed = 0;}
+		// slow moving
+		else if (gv.robot.status == 1) {this._speed = 3000;}
+		// working normaly
+		else if (gv.robot.status == 2) {this._speed = 1500;}
+		this.delay(this.randomMove, this._speed, -1);
+	},
 	lastMovement: function() {return gv.robot.movement.slice(-1);},
 	// checks last movement and does opposite 
 	turnAround: function() {
@@ -339,42 +358,44 @@ Crafty.c('Robot', {
 			this.tendPlants();
 		}
 
-		if (this.x/gv.tile_sz < 2) {this.moveRight();}
-		else if (this.y/gv.tile_sz < 2) {this.moveDown();}
-		else if (this.y/gv.tile_sz > 15) {this.moveUp();}
-		else if (this.x/gv.tile_sz > 16) {this.moveLeft();}
-		else {
-			if (gv.robot.power > 0 && gv.robot.charging == 0) {
-				var ra = Math.random()
-				if (ra < 0.25) {this.moveUp();}
-				else if (ra < 0.50) {this.moveDown();}
-				else if (ra < 0.75) {this.moveLeft();}
-				else {this.moveRight();}
+		if (gv.robot.status != 0) {
+			if (this.x/gv.tile_sz < 2) {this.moveRight();}
+			else if (this.y/gv.tile_sz < 2) {this.moveDown();}
+			else if (this.y/gv.tile_sz > 15) {this.moveUp();}
+			else if (this.x/gv.tile_sz > 16) {this.moveLeft();}
+			else {
+				if (gv.robot.power > 0 && gv.robot.charging == 0) {
+					var ra = Math.random()
+					if (ra < 0.25) {this.moveUp();}
+					else if (ra < 0.50) {this.moveDown();}
+					else if (ra < 0.75) {this.moveLeft();}
+					else {this.moveRight();}
+				}
 			}
 		}
 	},
 	moveUp: function() {
 		gv.robot.charging = 0;
-		this.tween({ x: this.x, y: this.y-gv.tile_sz }, gv.robot.speed)
+		this.tween({ x: this.x, y: this.y-gv.tile_sz }, gv.robot.speed[gv.robot.status])
 		gv.robot.movement.push('up');
 		if (gv.robot.movement.length > 5) {gv.robot.movement.shift();}
 	},
 	moveDown: function() {
 		gv.robot.charging = 0;
-		this.tween({ x: this.x, y: this.y+gv.tile_sz }, gv.robot.speed)
+		this.tween({ x: this.x, y: this.y+gv.tile_sz }, gv.robot.speed[gv.robot.status])
 		gv.robot.movement.push('down');
 		if (gv.robot.movement.length > 5) {gv.robot.movement.shift();}
 	},
 	moveLeft: function() {
 		gv.robot.charging = 0;
-		this.tween({ x: this.x-gv.tile_sz, y: this.y }, gv.robot.speed)
+		this.tween({ x: this.x-gv.tile_sz, y: this.y }, gv.robot.speed[gv.robot.status])
 		gv.robot.movement.push('left');
 		gv.robot.movement.push('left');
 		if (gv.robot.movement.length > 5) {gv.robot.movement.shift();}
 	}, 
 	moveRight: function() {
 		gv.robot.charging = 0;
-		this.tween({ x: this.x+gv.tile_sz, y: this.y }, gv.robot.speed)
+		this.tween({ x: this.x+gv.tile_sz, y: this.y }, gv.robot.speed[gv.robot.status])
 		gv.robot.movement.push('right');
 		gv.robot.movement.push('right');
 		if (gv.robot.movement.length > 5) {gv.robot.movement.shift();}
@@ -467,7 +488,6 @@ function update_robot_text(text, action) {
 	else if (action == 2) {Crafty.trigger('MedAlert');}
 	else if (action == 3) {Crafty.trigger('HighAlert');}	
 };
-// function type_robot_text(index) {return };
 function hide_robot_text() {Crafty.trigger('HideRequest');};
 Crafty.c('RobotRequest', {
 	init: function() {
@@ -493,11 +513,11 @@ Crafty.c('RobotRequest', {
 			}, 100*i);
 		}
 
-		var type = request_list.getNumber();
+		var dur = request_list.getDuration();
 		// short notification
-		if (type == 1) {setTimeout(hide_robot_text, 10000);}
+		if (dur == 1) {setTimeout(hide_robot_text, 10000);}
 		// long notification
-		else if (type == 2) {setTimeout(hide_robot_text, 32000);}
+		else if (dur == 2) {setTimeout(hide_robot_text, 32000);}
 	},
 	hideRequest: function() {this.color("#FFFFFF", 0).text('');}
 });
@@ -1101,8 +1121,6 @@ Crafty.c('BerryBush', {
 	}
 });
 // Baking in oven
-function wait_bake_bread() {eval("Crafty.e('Bread').at(Game.w()-2.8,1.8).bake();");}
-function wait_bake_muffin() {eval("Crafty.e('Muffin').at(Game.w()-2.8,1.8).bake();");}
 Crafty.c('Oven', {
 	init: function() {
 		this.requires('2D, Canvas, Grid, SpriteAnimation, spr_oven')
@@ -1376,7 +1394,7 @@ Crafty.c('Task', {
 			new_txt = txt.replace(/[0-9]/g, '');
 			var num = quantity-_current;
 			new_txt = new_txt.substr(0, index) + num + new_txt.substr(index);
-		}
+		} else {new_txt = txt;}
 		this.text(new_txt);
 
 		if (quantity <= _current) {this.completedTask();}
