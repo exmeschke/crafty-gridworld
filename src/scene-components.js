@@ -24,9 +24,9 @@ gv = {
 		direction: '',
 		num_moved: 0,
 		// tracks robot power
-		power: 50,
-		// how often -10 power
-		battery_life: 20000,
+		power: 20,
+		// how often -1 power
+		battery_life: 2000,
 		// [0:not operational, 1:slow, 2:normal]
 		status: 2,
 		// stops moving if charging == 1
@@ -312,7 +312,15 @@ function robot_alert_sound() {
 function set_robot_speed() {
 	gv.robot.status = 1;
 	Crafty.trigger('SetSpeed');
-}	
+}
+function set_request(time) {
+	setTimeout(function() {
+		var text = request_list.getText();
+		var action = request_list.getAction();
+		Crafty.log(text, action);
+		update_robot_text(text,action);
+	}, time);
+};
 Crafty.c('Robot', {
 	_speed: 1500,
 	init: function() {
@@ -338,6 +346,7 @@ Crafty.c('Robot', {
 			.bind('StopAlert', this.stopAlert)
 			.bind('SetSpeed', this.setSpeed)
 			.bind('KeyDown', function(e) {if (e.key == Crafty.keys.R) {this.reset();}})
+			.bind('LowBatteryAlert', this.lowBattery)
 	},
 	char: function() {return 'robot';},
 	// resets location if off screen
@@ -383,6 +392,8 @@ Crafty.c('Robot', {
 						else if (ra < 0.50) {this.moveDown();}
 						else if (ra < 0.75) {this.moveLeft();}
 						else {this.moveRight();}
+					} else if (gv.robot.power == 0) {
+						gv.score -= .25;
 					}
 				}
 			// not random
@@ -426,11 +437,20 @@ Crafty.c('Robot', {
 		gv.robot.movement.push('right');
 		if (gv.robot.movement.length > 5) {gv.robot.movement.shift();}
 	},
-	// -10 robot power
+	// -10 robot power 
 	losePower: function() {
 		if (gv.robot.charging == 0) {
-			if (gv.robot.power >= 10) {gv.robot.power -= 10;}
-			else {gv.robot.power = 0;}
+			var power = Math.round(gv.robot.power);
+			if (power == 20) {
+				Crafty.trigger('LowBatteryAlert');
+				gv.robot.power -= 1;
+			}
+			else if (power == 5) {
+				Crafty.trigger('LowBatteryAlert');
+				gv.robot.power -= 1;
+			}
+			else if (power > 0) {gv.robot.power -= 1;}
+			else {power = 0;}
 		}
 	},
 	// adds to robot power
@@ -441,6 +461,21 @@ Crafty.c('Robot', {
 		} else {
 			gv.robot.power = 100;
 			gv.robot.charging = 0;
+		}
+	},
+	// sets low battery alert / request
+	lowBattery: function() {
+		if (gv.robot.alert == 0) {
+			// low battery -- 9
+			if (gv.robot.power > 14) {
+				request_list.addRequest(9);
+				set_request(500);
+			}
+			// very low battery -- 14
+			else if (gv.robot.power < 6) {
+				request_list.addRequest(14);
+				set_request(500);
+			}
 		}
 	},
 	// either plants, waters, or collects wheat
@@ -533,7 +568,7 @@ Crafty.c('RobotRequest', {
 	showRequest: function() {
 		// indicates player responded
 		gv.player.interacting = true;
-		request_list.checkedAlert();
+		// request_list.checkedAlert();
 		// stops alert
 		Crafty.trigger('StopAlert');
 		// shows popup
@@ -1470,7 +1505,7 @@ Crafty.c('Task', {
 		// update human state information
 		gv.player.difficulty = task_list.getDiff();
 		receptivity.updateState(gv.player.interacting, gv.player.difficulty, gv.player.moment);
-		Crafty.log('state: ', gv.player.interacting, gv.player.difficulty, gv.player.moment);
+		// Crafty.log('state: ', gv.player.interacting, gv.player.difficulty, gv.player.moment);
 		// check if task is complete
 		if (quantity <= _current || this._filler >= 2) {this.completedTask();}
 	},

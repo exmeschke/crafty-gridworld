@@ -71,8 +71,8 @@ function set_request(time) {
 		update_robot_text(text,action);
 	}, time);
 };
-function requests() {
-	set_request(5000);
+// function requests() {
+	// set_request(5000);
 
 	// setTimeout(function() {
 	// 	var status = 1;
@@ -82,6 +82,6 @@ function requests() {
 	// 	var a = i*60000 + 5000;
 	// 	set_request(a);
 	// }
-};
-requests();
+// };
+// requests();
 

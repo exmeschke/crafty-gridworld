@@ -7,6 +7,7 @@ var task_indices = [1,0,11,12,0];
 // set requests for game
 // [0:none, 1-4:short notification, 5-7:long notification, 8:text response, 9:low battery, 10-11:task change, 12-13:broken robot, 14:very low battery, 15:emergency]
 var request_indices = [8];
+var all_requests = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15];
 
 
 // HUMAN TASKS
@@ -288,7 +289,7 @@ function RRequest(number, urgency, duration, effort, resp, text) {
     this.requiresResponse = resp;
 
     this.receivedResponse = false;
-    this.receivedResponse = function() {this.receivedResponse = true;}
+    this.receivedResponse = function() {this.receivedResponse = true;};
 };
 function RRequestList(indices) {
     this.requestOptions = [];
@@ -302,11 +303,11 @@ function RRequestList(indices) {
     // state 2: low urgency, long duration, low effort, no response
     this.requestOptions[5] = new RRequest(2,1,2,1,false,"A locked treasure chest is burried somewhere under a tuft of grass. You have to be carrying your shovel to dig it up. And be careful, it will explode a minute after it's been revealed! It's worth $20, so you'll want to figure out how to open it quickly.");
     this.requestOptions[6] = new RRequest(2,1,2,1,false,'Different resources are worth different amounts of money. It’s a good idea to make bread; you’ll get $15 per loaf! The recipe is 6 eggs, 4 milk, and 2 wheat. You can also make muffins to earn $18, with 10 berries, 8 eggs, 4 milk, and 1 wheat.');
-    this.requestOptions[7] = new RRequest(2,1,2,1,false,"Animals will occasionally pop up in your environment. Snakes are pesky. They steal an egg from you every 5 seconds. But if you'll get a one dollar reward for each one you catch! The same goes for butterflies, but they don't steal any resources.")
+    this.requestOptions[7] = new RRequest(2,1,2,1,false,"Animals will occasionally pop up in your environment. Snakes are pesky. They steal an egg from you every 5 seconds. But you'll get a one dollar reward for each one you catch! The same goes for butterflies, but they don't steal any resources.")
     // state 3: med urgency, short duration, low effort, requires response
     this.requestOptions[8] = new RRequest(3,2,1,1,true,"In which direction should I take 5 steps [up, down, left, right]? Type your response at the monitor.");
     // state 4: med urgency, short duration, high effort, requires response
-    this.requestOptions[9] = new RRequest(4,2,1,2,true,'My battery is less than 15%.');
+    this.requestOptions[9] = new RRequest(4,2,1,2,true,'My battery is less than 20%.');
     // state 5: med urgency, long duration, low effort, requires response
     this.requestOptions[10] = new RRequest(5,2,2,1,true,'Can you bring me seeds from the barrels?');
     this.requestOptions[11] = new RRequest(5,2,2,1,true,'Can you bring me water from the well?');
@@ -316,7 +317,7 @@ function RRequestList(indices) {
     // state 7: high urgency, short duration, high effort, requires response
     this.requestOptions[14] = new RRequest(7,2,1,2,true,'My battery is less than 5%!');
     // state 8: high urgency, long duration, high effort, requires response
-    this.requestOptions[15] = new RRequest(8,2,2,2,true,"I'm on fire! Put it out with 3 buckets of water.");
+    this.requestOptions[15] = new RRequest(8,2,2,2,true,"I'm on fire! Put it out with 3 buckets of water. Then enter the password [5214] at the monitor to debug the issue.");
 
     this.requests = []
     for (var i = 0; i < indices.length; i++) {
@@ -329,8 +330,16 @@ function RRequestList(indices) {
 var request_list = {
     // index for current / next task
     curr: 0,
+    // request options
+    possible: new RRequestList(all_requests),
     // list of requests to present
     list: new RRequestList(request_indices),
+    // add request to list
+    addRequest: function(request_num) {
+        if (this.list[this.curr] != this.possible[request_num]) {
+            this.list.splice(this.curr, 0, this.possible[request_num]);
+        }
+    },
     // getters
     getNumber: function() {return this.list[this.curr].number;},
     getDuration: function() {return this.list[this.curr].duration;},
@@ -347,40 +356,15 @@ var request_list = {
         // gets current information
         // receptivity_list.getInteracting();
         // task_list.getDifficulty();
-
     },
     // indicates alert was checked, different trigger for each request
     checkedAlert: function() {this.list[this.curr].receivedResponse();}
 };
 
-
-
 // STATE+ACTION --> HRESPONSE
 // robot action list
 
 
-
-// ROBOT ACTIONS
-// function RActionList() {
-//     this.current = 0;
-//     this.sound = 0;
-//     // saliency - [0:none, 1:flashing light, 2:beeping, 3:both]
-//     this.saliency = [];
-
-//     // adds saliency information to history
-//     this.addAction = function(saliency) {
-//         this.current += 1;
-//         this.saliency.push(saliency);
-//         this.triggerSignal();
-//     };
-//     // returns command that triggers alert from robot
-//     this.triggerSignal = function() {
-//         var saliency = this.saliency[this.current];
-//         if (saliency == 1) {return "Crafty.trigger('LowAlert');"}
-//         else if (saliency == 2) {return "Crafty.trigger('MedAlert');"}
-//         else if (saliency == 3) {return "Crafty.trigger('HighAlert');"}
-//     };
-// };
 
 
 
