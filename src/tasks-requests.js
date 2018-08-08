@@ -3,10 +3,10 @@
 // set tasks for game
 // [0:none, 1:wheat, 2:berries, 3:eggs, 4:wool, 5:milk, 6:gophers, 7:butterflies, 8:snakes, 9:chest, 10:bread, 11:muffin, 12:thread]
 // var task_indices = [1,2,3,4,5,6,7,8,9,10,11,12,0];
-var task_indices = [1,0,11,12,0];
+var task_indices = [1,0,2,3,0,5,11,12,0];
 // set requests for game
 // [0:none, 1-4:short notification, 5-7:long notification, 8:text response, 9:low battery, 10-11:task change, 12-13:broken robot, 14:very low battery, 15:emergency]
-var request_indices = [8];
+var request_indices = [];
 var all_requests = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15];
 
 
@@ -255,10 +255,14 @@ function HReceptivity() {
                 if (moment == 'middle') {this.availability = 1;}
             }
         }
-        return r;
+        // return r;
+        Crafty.log(this.availability, this.interacting, this.difficulty, this.moment);
     };
     // returns current receptivity
-    this.getReceptivity = function() {return this.receptivityFunc();};
+    this.getReceptivity = function() {
+        // return this.receptivityFunc();
+        return this.availability;
+    };
 };
 // stores receptivity list and receptivity update functions
 var receptivity = {
@@ -291,13 +295,13 @@ function RRequest(number, urgency, duration, effort, resp, text) {
     this.receivedResponse = false;
     this.receivedResponse = function() {this.receivedResponse = true;};
 };
-function RRequestList(indices) {
+function RRequestList(indices) {    
     this.requestOptions = [];
     // state 0: no request
     this.requestOptions[0] = new RRequest(0,0,0,0,false,'');
     // state 1: low urgency, short duration, low effort, no response
     this.requestOptions[1] = new RRequest(1,1,1,1,false,'Baked goods can burn!');
-    this.requestOptions[2] = new RRequest(1,1,1,1,false,'Gophers steal money when they disappear.');
+    this.requestOptions[2] = new RRequest(1,1,1,1,false,"Debug any issues by entering [X5214] at the monitor.");
     this.requestOptions[3] = new RRequest(1,1,1,1,false,'We lose money when I run out of battery!');
     this.requestOptions[4] = new RRequest(1,1,1,1,false,'Sometimes I can give you helpful hints.');
     // state 2: low urgency, long duration, low effort, no response
@@ -309,15 +313,15 @@ function RRequestList(indices) {
     // state 4: med urgency, short duration, high effort, requires response
     this.requestOptions[9] = new RRequest(4,2,1,2,true,'My battery is less than 20%.');
     // state 5: med urgency, long duration, low effort, requires response
-    this.requestOptions[10] = new RRequest(5,2,2,1,true,'Can you bring me seeds from the barrels?');
-    this.requestOptions[11] = new RRequest(5,2,2,1,true,'Can you bring me water from the well?');
+    this.requestOptions[10] = new RRequest(5,2,2,1,true,'I want to start planting. Can you bring me seeds from the barrels?');
+    this.requestOptions[11] = new RRequest(5,2,2,1,true,'I need to water the plants. Can you bring me water from the well?');
     // state 6: med urgency, long duration, high effort, requires response
     this.requestOptions[12] = new RRequest(6,2,2,1,true,'One of my parts is missing! Push me around the field and use me as a metal detector to find it.');
     this.requestOptions[13] = new RRequest(6,2,2,1,true,'I need to update my software! Can you enter the password [X91R23TQ7] at the monitor next to the charging station?');
     // state 7: high urgency, short duration, high effort, requires response
     this.requestOptions[14] = new RRequest(7,2,1,2,true,'My battery is less than 5%!');
     // state 8: high urgency, long duration, high effort, requires response
-    this.requestOptions[15] = new RRequest(8,2,2,2,true,"I'm on fire! Put it out with 3 buckets of water. Then enter the password [5214] at the monitor to debug the issue.");
+    this.requestOptions[15] = new RRequest(8,2,2,2,true,"Something's short circuited--I'm about to catch on fire! Put it out with 3 buckets of water. Then enter the password [X5214] at the monitor to debug the issue.");
 
     this.requests = []
     for (var i = 0; i < indices.length; i++) {
@@ -336,7 +340,7 @@ var request_list = {
     list: new RRequestList(request_indices),
     // add request to list
     addRequest: function(request_num) {
-        if (this.list[this.curr] != this.possible[request_num]) {
+        if (this.list[this.curr] != this.possible[request_num] && request_num != -1) {
             this.list.splice(this.curr, 0, this.possible[request_num]);
         }
     },
@@ -346,6 +350,8 @@ var request_list = {
     getText: function() {return this.list[this.curr].txt;},
     getRequiresResponse: function() {return this.list[this.curr].requiresResponse;},
     getAction: function() {
+        // var rand
+        // if ()
         var rand = Math.random();
         if (rand < 0.33) {return 1;}
         else if (rand < 0.66) {return 2;}
@@ -354,15 +360,13 @@ var request_list = {
     // indicates request was sent
     sentRequest: function() {
         // gets current information
-        // receptivity_list.getInteracting();
-        // task_list.getDifficulty();
+        Crafty.log(receptivity.getReceptivity());
     },
     // indicates alert was checked, different trigger for each request
-    checkedAlert: function() {this.list[this.curr].receivedResponse();}
+    receivedResponse: function() {this.list[this.curr].receivedResponse();}
 };
 
 // STATE+ACTION --> HRESPONSE
-// robot action list
 
 
 

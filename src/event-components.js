@@ -62,26 +62,3 @@ function chest_task() {
 function wait_bake_bread() {eval("Crafty.e('Bread').at(Game.w()-2.8,1.8).bake();");}
 function wait_bake_muffin() {eval("Crafty.e('Muffin').at(Game.w()-2.8,1.8).bake();");}
 
-// Robot requests
-function set_request(time) {
-	setTimeout(function() {
-		var text = request_list.getText();
-		var action = request_list.getAction();
-		Crafty.log(text, action);
-		update_robot_text(text,action);
-	}, time);
-};
-// function requests() {
-	// set_request(5000);
-
-	// setTimeout(function() {
-	// 	var status = 1;
-	// 	set_robot_speed(status);
-	// }, 15000)
-	// for (var i = 0; i < 2; i++) {
-	// 	var a = i*60000 + 5000;
-	// 	set_request(a);
-	// }
-// };
-// requests();
-

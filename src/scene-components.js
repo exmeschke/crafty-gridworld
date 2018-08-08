@@ -24,7 +24,7 @@ gv = {
 		direction: '',
 		num_moved: 0,
 		// tracks robot power
-		power: 20,
+		power: 100,
 		// how often -1 power
 		battery_life: 2000,
 		// [0:not operational, 1:slow, 2:normal]
@@ -37,7 +37,12 @@ gv = {
 		alert: 0,
 		// content for text bubble 
 		incomplete_txt: '',
-		txt: ''
+		txt: '',
+		// tracks time since last request
+		time: -1,
+		// counts buckets if on fire
+		// [-1:no fire, 0-3:on fire]
+		fire: -1
 	},
 	// updated when robot moves to tile
 	field: {
@@ -245,10 +250,11 @@ Crafty.c('Player', {
 				Crafty.trigger('MakeThread');
 			} else {sounds.play_low();}
 		} else {
-			// default plays tone and empties bucket
-			sounds.play_low();
-			Crafty.trigger('EmptyBucket');
-			// Crafty.trigger('ShowRequest');
+			// default plays tone
+			if (gv.robot.fire == -1) {
+				sounds.play_low();
+				Crafty.trigger('EmptyBucket');
+			}
 		}
 	},
 	// prevents from moving through obstacles
@@ -268,16 +274,21 @@ Crafty.c('Player', {
 		// hands item to robot to trigger robot action
 		if (Crafty.s('Keyboard').isKeyDown('X')) {
 			// if robot is alerting person, trigger show response
-			if (gv.robot.alert == 1) {
-				Crafty.trigger('ShowRequest');
+			if (gv.robot.alert == 1) {Crafty.trigger('ShowRequest');} 
+			// if bucket is full
+			else if (gv.tools.bucket == 1) {
+				Crafty.trigger('Water');
+				Crafty.trigger('EmptyBucket');
+				if (request_list.getNumber() == 5) {
+					gv.player.interacting = false;
+				}
 			// if seed bag full, set robot task to plant
 			} else if (gv.tools.seed_bag == 1) {
 				Crafty.trigger('Plant');
 				Crafty.trigger('EmptySeedBag');
-			// if robot is planting and bucket is full
-			} else if (gv.robot.task == 0 && gv.tools.bucket == 1) {
-				Crafty.trigger('Water');
-				Crafty.trigger('EmptyBucket');
+				if (request_list.getNumber() == 5) {
+					gv.player.interacting = false;
+				}
 			}
 		}
 		// slow down player and trigger robot movement
@@ -299,40 +310,54 @@ Crafty.c('Player', {
 
 
 // Robot character
-var stopAlert = false;
 function robot_alert_sound() {
 	sounds.play_med();
 	for (var i = 0; i < 20; i++) {
 	    setTimeout(function() {
-	    	if (stopAlert == true) return;
-	    	else sounds.play_med();
+	    	if (gv.robot.alert == 0) {return;}
+	    	else {sounds.play_med();}
 	    }, 1000*i);
 	}
-}
-function set_robot_speed() {
-	gv.robot.status = 1;
+};
+function set_robot_speed(status) {
+	gv.robot.status = status;
 	Crafty.trigger('SetSpeed');
-}
+};
 function set_request(time) {
-	setTimeout(function() {
-		var text = request_list.getText();
-		var action = request_list.getAction();
-		Crafty.log(text, action);
-		update_robot_text(text,action);
-	}, time);
+	if (time != -1) {
+		// record that response was sent
+		request_list.sentRequest();
+		// set trigger for new request
+		setTimeout(function() {
+			var text = request_list.getText();
+			var action = request_list.getAction();
+			Crafty.log(text, action);
+			update_robot_text(text,action);
+		}, time);
+	}
 };
 Crafty.c('Robot', {
 	_speed: 1500,
 	init: function() {
 		this.requires('2D, Canvas, Grid, Collision, SpriteAnimation, spr_bot, Tween, Delay, Text')
 			.attr({ w: gv.tile_sz+2, h: gv.tile_sz+2, z:1 })
+			// delay events
 			.delay(this.randomMove, this._speed, -1)
 			.delay(this.losePower, gv.robot.battery_life, -1)
+			.delay(this.alertFire, 900000, -1) // 15 minutes = 900000
+			.delay(this.alertPlants, 420000, -1) // 7 minutes = 420000
+			.delay(this.alertNotification, 60000, -1) // 4 minutes = 240000
+			// on hit events
 			.onHit('Solid', this.turnAround)
 			.onHit('ChargingStation', this.recharge)
+			// animations
 			.reel('AnimateLight', 1000, [
 				[1,0], [0,0]
 			])
+			.reel('AnimateFire', 1000, [
+				[1,1], [2,1], [3,1]
+			])
+			// binded events
 			.bind('RobotUp', this.moveUp)
 			.bind('RobotDown', this.moveDown)
 			.bind('RobotLeft', this.moveLeft)
@@ -346,7 +371,8 @@ Crafty.c('Robot', {
 			.bind('StopAlert', this.stopAlert)
 			.bind('SetSpeed', this.setSpeed)
 			.bind('KeyDown', function(e) {if (e.key == Crafty.keys.R) {this.reset();}})
-			.bind('LowBatteryAlert', this.lowBattery)
+			// check for requests
+			.delay(this.triggerRequest, 1000, -1)
 	},
 	char: function() {return 'robot';},
 	// resets location if off screen
@@ -373,6 +399,9 @@ Crafty.c('Robot', {
 	},
 	// does random movement
 	randomMove: function() {
+		// check if on fire
+		if (gv.robot.fire != -1) {gv.score -= 0.25;}
+		// if not broken
 		if (gv.robot.status != 0) {
 			// complete task
 			if (this.x/gv.tile_sz < 15 && this.y/gv.tile_sz < 15 && this.x/gv.tile_sz > 1 && this.y/gv.tile_sz > 1) {
@@ -427,30 +456,19 @@ Crafty.c('Robot', {
 		gv.robot.charging = 0;
 		this.tween({ x: this.x-gv.tile_sz, y: this.y }, gv.robot.speed[gv.robot.status])
 		gv.robot.movement.push('left');
-		gv.robot.movement.push('left');
 		if (gv.robot.movement.length > 5) {gv.robot.movement.shift();}
 	}, 
 	moveRight: function() {
 		gv.robot.charging = 0;
 		this.tween({ x: this.x+gv.tile_sz, y: this.y }, gv.robot.speed[gv.robot.status])
 		gv.robot.movement.push('right');
-		gv.robot.movement.push('right');
 		if (gv.robot.movement.length > 5) {gv.robot.movement.shift();}
 	},
 	// -10 robot power 
 	losePower: function() {
 		if (gv.robot.charging == 0) {
-			var power = Math.round(gv.robot.power);
-			if (power == 20) {
-				Crafty.trigger('LowBatteryAlert');
-				gv.robot.power -= 1;
-			}
-			else if (power == 5) {
-				Crafty.trigger('LowBatteryAlert');
-				gv.robot.power -= 1;
-			}
-			else if (power > 0) {gv.robot.power -= 1;}
-			else {power = 0;}
+			if (gv.robot.power > 0) {gv.robot.power -= 1;}
+			else {gv.robot.power = 0;}
 		}
 	},
 	// adds to robot power
@@ -463,26 +481,15 @@ Crafty.c('Robot', {
 			gv.robot.charging = 0;
 		}
 	},
-	// sets low battery alert / request
-	lowBattery: function() {
-		if (gv.robot.alert == 0) {
-			// low battery -- 9
-			if (gv.robot.power > 14) {
-				request_list.addRequest(9);
-				set_request(500);
-			}
-			// very low battery -- 14
-			else if (gv.robot.power < 6) {
-				request_list.addRequest(14);
-				set_request(500);
-			}
-		}
-	},
 	// either plants, waters, or collects wheat
 	tendPlants: function() {
-		if (gv.robot.task == 0) {this.plant();}
-		else if (gv.robot.task == 1) {this.water();}
-		else if (gv.robot.task == 2) {this.pick();}
+		// not on fire
+		if (gv.robot.fire == -1) {
+			if (gv.robot.task == 0) {this.plant();}
+			else if (gv.robot.task == 1) {this.water();}
+			else if (gv.robot.task == 2) {this.pick();}
+		// on fire
+		} else {this.burn();}
 	},
 	plant: function() {
 		gv.robot.task = 0;
@@ -495,15 +502,22 @@ Crafty.c('Robot', {
 		if (gv.field.seed_loc_y.indexOf(y) == -1) {gv.field.seed_loc_y.push(y);}
 	},
 	water: function() {
-		gv.robot.task = 1;
+		// if robot not on fire
+		if (gv.robot.fire == -1) {
+			gv.robot.task = 1;
 
-		var x = Math.round(this.x/gv.tile_sz);
-		var y = Math.round(this.y/gv.tile_sz);
+			var x = Math.round(this.x/gv.tile_sz);
+			var y = Math.round(this.y/gv.tile_sz);
 
-		if (gv.field.seed_loc_x.indexOf(x) != -1 && gv.field.seed_loc_y.indexOf(y) != -1) {
-			Crafty.e('Wheat4').at(x, y);
-			if (gv.field.wheat_loc_x.indexOf(x) == -1) {gv.field.wheat_loc_x.push(x);}
-			if (gv.field.wheat_loc_y.indexOf(y) == -1) {gv.field.wheat_loc_y.push(y);}
+			if (gv.field.seed_loc_x.indexOf(x) != -1 && gv.field.seed_loc_y.indexOf(y) != -1) {
+				Crafty.e('Wheat4').at(x, y);
+				if (gv.field.wheat_loc_x.indexOf(x) == -1) {gv.field.wheat_loc_x.push(x);}
+				if (gv.field.wheat_loc_y.indexOf(y) == -1) {gv.field.wheat_loc_y.push(y);}
+			}
+		// if robot on fire
+		} else {
+			gv.robot.fire += 1;
+			if (gv.robot.fire == 3) {this.offFire();}
 		}
 	}, 
 	pick: function() {
@@ -514,6 +528,14 @@ Crafty.c('Robot', {
 
 		if (gv.field.wheat_loc_x.indexOf(x) != -1 && gv.field.wheat_loc_y.indexOf(y) != -1) {
 			Crafty.e('Soil5').at(x, y);
+		}
+	},
+	burn: function() {
+		var x = Math.round(this.x/gv.tile_sz);
+		var y = Math.round(this.y/gv.tile_sz);
+
+		if (gv.field.wheat_loc_x.indexOf(x) != -1 && gv.field.wheat_loc_y.indexOf(y) != -1) {
+			Crafty.e('Soil5').at(x,y);
 		}
 	},
 	// flashing light
@@ -535,10 +557,102 @@ Crafty.c('Robot', {
 		robot_alert_sound();
 	},
 	stopAlert: function() {
-		stopAlert = true;
+		gv.robot.alert = 0;
+		if (gv.robot.fire == -1) {
+			this.pauseAnimation();
+			this.sprite('spr_bot');
+		}
+	},
+	// triggers requests
+	triggerRequest: function() {		
+		// variables for new request
+		var request_num = -1;
+		var time = -1;
+		// if not currently alerting about something
+		if (gv.robot.alert == 0 && gv.player.interacting == false) {
+			gv.robot.time += 1;
+			// - on fire 
+			// - very low battery
+			var power = Math.round(gv.robot.power);
+			if (power == 5) {
+				gv.robot.alert = 1;
+				request_num = 14;
+				time = 500;
+			} 
+			// - low battery
+			if (power == 20) {
+				gv.robot.alert = 1;
+				request_num = 9;
+				time = 500;
+			}
+			// - switch task
+		}
+		// trigger
+		if (request_num != -1 && time != -1) {
+			request_list.addRequest(request_num);
+			set_request(time);
+			gv.robot.time = 0;
+		}
+	},
+	alertNotification: function() {
+		if (gv.robot.charging == 0 && gv.robot.status != 0) {
+			var request_num = -1;
+			var rand = Math.random();
+			// short notification
+			if (rand < 0.33) {
+				rand = Math.random();
+				if (rand < 0.25) {request_num = 1;}
+				else if (rand < 0.5) {request_num = 2;}
+				else if (rand < 0.75) {request_num = 3;}
+				else {request_num = 4;}
+			// long notification
+			} else if (rand < 0.66) {
+				rand = Math.random();
+				if (rand < 0.33) {request_num = 5;}
+				else if (rand < 0.66) {request_num = 6;}
+				else {request_num = 7;}
+			} else {
+				request_num = 8;
+			}
+			// trigger
+			request_list.addRequest(request_num);
+			set_request(500);
+		}
+	},
+	alertPlants: function() {
+		if (gv.robot.charging == 0 && gv.robot.status != 0) {
+			var request_num = -1;
+			// switch to planting
+			if (gv.robot.task == -1 || gv.robot.task == 1) {
+				request_num = 10;
+			// switch to watering
+			} else if (gv.robot.task == 0) {
+				request_num = 11;
+			}
+			// trigger
+			request_list.addRequest(request_num);
+			set_request(500);
+		}
+	},
+	alertFindPart: function() {
+		request_list.addRequest(12);
+		set_request(500);
+	},
+	alertFire: function() {
+		request_list.addRequest(15);
+		set_request(500);
+		this.delay(this.onFire, 20000);
+	},
+	onFire: function() {
+		gv.robot.fire = 0;
+		this.animate('AnimateFire', -1);
+	},
+	offFire: function() {
 		this.pauseAnimation();
 		this.sprite('spr_bot');
-		gv.robot.alert = 0;
+		gv.robot.fire = -1;
+		// moves slowly
+		set_robot_speed(1);
 	}
 });
 // Requests
@@ -568,7 +682,7 @@ Crafty.c('RobotRequest', {
 	showRequest: function() {
 		// indicates player responded
 		gv.player.interacting = true;
-		// request_list.checkedAlert();
+		request_list.receivedResponse();
 		// stops alert
 		Crafty.trigger('StopAlert');
 		// shows popup
@@ -585,16 +699,10 @@ Crafty.c('RobotRequest', {
 	},
 	hideRequest: function() {
 		this.color("#FFFFFF", 0).text('');
-		this.delay(this.expire, 10000);
-		stopAlert = false;
-
+		gv.robot.txt = '';
 		// if no response required, player no longer interacting
 		var requiresResponse = request_list.getRequiresResponse();
 		if (requiresResponse == false) {gv.player.interacting = false;}
-	},
-	expire: function() {
-		gv.robot.txt = '';
-		gv.player.interacting = false;
 	}
 });
 // Monitor
@@ -610,12 +718,21 @@ Crafty.c('RequestScreen', {
 	receiveResponse: function() {
 		// collects response
 		var resp = prompt('Enter response here: ');
-		if (resp == 'up') {gv.robot.direction = 'up';}
-		else if (resp == 'down') {gv.robot.direction = 'down';}
-		else if (resp == 'left') {gv.robot.direction = 'left';}
-		else if (resp == 'right') {gv.robot.direction = 'right';}
-		// update player information
-		gv.player.interacting = false;
+		if (resp == 'up' || resp == 'down' || resp == 'left' || resp == 'right') {
+			gv.player.interacting = false;
+			gv.robot.direction = resp;
+		}
+		// correct passwords
+		else if (resp == 'X91R23TQ7') {
+			gv.player.interacting = false;
+			sounds.play_correct();
+			set_robot_speed(2);
+		}
+		else if (resp == 'X5214') {
+			gv.player.interacting = false;
+			sounds.play_correct();
+			set_robot_speed(2);
+		}
 	}
 });
 

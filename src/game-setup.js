@@ -36,5 +36,6 @@ sounds = {
 	play_ding25: function() {Crafty.audio.play('oven25');},
 	play_ticking: function() {Crafty.audio.play('ticking');},
 	stop_ticking: function() {Crafty.audio.stop('ticking');},
-	play_money: function() {Crafty.audio.play('cha_ching');}
+	play_money: function() {Crafty.audio.play('cha_ching');},
+	play_correct: function() {Crafty.audio.play('correct-beep');}
 };

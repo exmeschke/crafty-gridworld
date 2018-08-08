@@ -228,7 +228,8 @@ Crafty.scene('Loading', function() {
 		oven: ['assets/sounds/oven-ding.wav'],
 		oven25: ['assets/sounds/oven-ding25.wav'],
 		ticking: ['assets/sounds/ticking-countdown.wav'],
-		cha_ching: ['assets/sounds/cha-ching.wav']
+		cha_ching: ['assets/sounds/cha-ching.wav'],
+		correct: ['assets/sounds/correct-beep.wav']
 	});
 
 	// Load sprites (images)
@@ -247,11 +248,12 @@ Crafty.scene('Loading', function() {
 				tile: 16, tileh: 18,
 				map: { spr_player: [0,2] }
 			},
-			'assets/bots.png': {
-				tile: 32, tileh: 36,
+			'assets/bots-fire.png': {
+				tile: 128, tileh: 144,
 				map: { 
 					spr_bot: [0,0],
-					spr_bot_lit: [1,0]
+					spr_bot_lit: [1,0],
+					spr_bot_fire: [0,1]
 				}
 			},
 			'assets/health-bar.png': {
