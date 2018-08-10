@@ -344,14 +344,36 @@ var request_list = {
             this.list.splice(this.curr, 0, this.possible[request_num]);
         }
     },
-    // getters
+    // getters -- returns current in list
     getNumber: function() {return this.list[this.curr].number;},
     getDuration: function() {return this.list[this.curr].duration;},
     getText: function() {return this.list[this.curr].txt;},
     getRequiresResponse: function() {return this.list[this.curr].requiresResponse;},
+    // epsilon is the exploration rate, returns 0,1,2,3 for the action
     getAction: function() {
-        // var rand
-        // if ()
+        // // find the highest Q value action
+        // var maxAction = 0;
+        // for (var j = 1; j < actions; j++) {
+        //     if (Q_table[state_curr][j] > Q_table[state_curr][maxAction]) {
+        //         maxAction = j;
+        //     }
+        // }
+        // // determine whether to explore to optimize
+        // var rand = Math.random();
+        // if (rand < epsilon) { // explore
+        //     var non_maxAction = [];
+        //     for (j = 0; j < actions; j++) { // determine options
+        //         if (j != maxAction) {
+        //             non_maxAction.push(j);
+        //         }
+        //     }
+        //     // choose random from non max actions
+        //     var exploreAction = getRandomInt(3);
+        //     return non_optact[exploreAction];
+        // } else {
+        //     // go with best action
+        //     return maxAction;
+        // }
         var rand = Math.random();
         if (rand < 0.33) {return 1;}
         else if (rand < 0.66) {return 2;}
@@ -360,15 +382,11 @@ var request_list = {
     // indicates request was sent
     sentRequest: function() {
         // gets current information
-        Crafty.log(receptivity.getReceptivity());
+        // Crafty.log(receptivity.getReceptivity());
     },
     // indicates alert was checked, different trigger for each request
     receivedResponse: function() {this.list[this.curr].receivedResponse();}
 };
-
-// STATE+ACTION --> HRESPONSE
-
-
 
 
 
