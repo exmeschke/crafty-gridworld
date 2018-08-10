@@ -23,9 +23,9 @@ sounds = {
 	play_low: function() {Crafty.audio.play('alert_low');},
 	play_med: function() {Crafty.audio.play('alert_med');},
 	play_high: function() {Crafty.audio.play('alert_high');},
-	play_radar_low: function() {Crafty.audio.play('radar_low');},
-	play_radar_med: function() {Crafty.audio.play('radar_med');},
-	play_radar_high: function() {Crafty.audio.play('radar_high');},
+	play_radar_low: function() {Crafty.audio.play('beep_low');},
+	play_radar_med: function() {Crafty.audio.play('beep_med');},
+	play_radar_high: function() {Crafty.audio.play('beep_high');},
 	play_cow: function() {Crafty.audio.play('cow');},
 	play_sheep: function() {Crafty.audio.play('sheep');},
 	play_chicken: function() {Crafty.audio.play('chicken');},
@@ -40,5 +40,6 @@ sounds = {
 	play_ticking: function() {Crafty.audio.play('ticking');},
 	stop_ticking: function() {Crafty.audio.stop('ticking');},
 	play_money: function() {Crafty.audio.play('cha_ching');},
-	play_correct: function() {Crafty.audio.play('correct-beep');}
+	play_correct: function() {Crafty.audio.play('correct_beep');},
+	play_error: function() {Crafty.audio.play('robot_error');}
 };

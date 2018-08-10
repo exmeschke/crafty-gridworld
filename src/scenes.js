@@ -212,9 +212,9 @@ Crafty.scene('Loading', function() {
 		alert_low: ['assets/sounds/low.mp3'],
 		alert_med: ['assets/sounds/med.mp3'],
 		alert_high: ['assets/sounds/high.mp3'],
-		radar_low: ['assets/sounds/radar-low.wav'],
-		radar_med: ['assets/sounds/radar-med.wav'],
-		radar_high: ['assets/sounds/radar-high.wav'],
+		beep_low: ['assets/sounds/beep-low.wav'],
+		beep_med: ['assets/sounds/beep-med.wav'],
+		beep_high: ['assets/sounds/beep-high.wav'],
 		sheep: ['assets/sounds/sheep.wav'],
 		cow: ['assets/sounds/cow.mp3'],
 		chicken: ['assets/sounds/chickenn.wav'],
@@ -225,14 +225,12 @@ Crafty.scene('Loading', function() {
 		water: ['assets/sounds/water.wav'],
 		grain: ['assets/sounds/grain2.wav'],
 		rustle: ['assets/sounds/rustle.wav'],
-		radar_low: ['assets/sounds/radar-low.wav'],
-		radar_med: ['assets/sounds/radar-med.wav'],
-		radar_high: ['assets/sounds/radar-high.wav'],
 		oven: ['assets/sounds/oven-ding.wav'],
 		oven25: ['assets/sounds/oven-ding25.wav'],
 		ticking: ['assets/sounds/ticking-countdown.wav'],
 		cha_ching: ['assets/sounds/cha-ching.wav'],
-		correct: ['assets/sounds/correct-beep.wav']
+		correct_beep: ['assets/sounds/correct-beep.wav'],
+		robot_error: ['assets/sounds/robot-error.wav']
 	});
 
 	// Load sprites (images)

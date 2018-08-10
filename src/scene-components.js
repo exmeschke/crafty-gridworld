@@ -16,6 +16,7 @@ gv = {
 	}, 
 	// track status of robot
 	robot: {
+		status: 2, // [0:not operational, 1:slow, 2:normal]
 		// REQUEST - general
 		is_alerting: false, // currently is alerting w/beep, blink, or both
 		txt: '', // content for text bubble 
@@ -33,6 +34,7 @@ gv = {
 		seed_loc_x: [],  seed_loc_y: [],
 		wheat_loc_x: [], wheat_loc_y: []
 	},
+	// animal actions
 	animal: {
 		speed: 1500,
 		sheep: {
@@ -48,14 +50,10 @@ gv = {
 		gopher: {disappear: 20000}
 	},
 	tools:{
-		// fill at well [0:empty, 1:full]
-		bucket: 0,
-		// fill at barrels [0:empty, 1:full]
-		seed_bag: 0,
-		// switch at stump [0:hammer on stump, 1:shears on stump]
-		tools: 0,
-		// switch on ground [0:shovel on ground, 1:scythe on ground]
-		lgtools: 0
+		bucket: 0, // fill at well [0:empty, 1:full]
+		seed_bag: 0, // fill at barrels [0:empty, 1:full]
+		tools: 0, // switch at stump [0:hammer on stump, 1:shears on stump]
+		lgtools: 0 // switch on ground [0:shovel on ground, 1:scythe on ground]
 	},
 	// has berries [0:no, 1:yes]
 	bush: 0,

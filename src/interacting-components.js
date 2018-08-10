@@ -56,8 +56,8 @@ Crafty.c('Player', {
 		this.at(30,16);
 	},
 	setSpeed: function() {
-		if (this._status == 2) {this._back = 1.6;}
-		else if (this._status == 1) {this._back = 2;}
+		if (gv.robot.status == 2) {this._back = 1.6;}
+		else if (gv.robot.status == 1) {this._back = 2;}
 	},
 	// action triggered by hitting object and pressed 'X'
 	action: function() {
@@ -301,7 +301,6 @@ Crafty.c('Task', {
 	}
 });
 
-
 // ROBOT CHARACTER
 function robot_alert_sound() {
 	sounds.play_med();
@@ -313,7 +312,7 @@ function robot_alert_sound() {
 	}
 };
 function set_robot_speed(status) {
-	this._status = status;
+	gv.robot.status = status;
 	Crafty.trigger('SetSpeed');
 };
 function set_request(time) {
@@ -333,7 +332,6 @@ Crafty.c('Robot', {
 	_power: 100,
 	_battery_life: 2000, // how often lose power
 	_is_charging: false, // stops moving if charging == true
-	_status: 2, // [0:not operational, 1:slow, 2:normal]
 	_movement: [], // records last 5 moves
 	_do_move: 1500, // how often move
 	_speed: [0, 2400, 1200], // different speeds depending on status
@@ -345,10 +343,10 @@ Crafty.c('Robot', {
 			// delay events
 			.delay(this.randomMove, this._do_move, -1)
 			.delay(this.losePower, this._battery_life, -1)
-			// .delay(this.alertFire, 900000, -1) // 15 minutes = 900000
-			// .delay(this.alertPlants, 420000, -1) // 7 minutes = 420000
-			// .delay(this.alertNotification, 60000, -1) // 4 minutes = 240000
-			.delay(this.alertCognitive, 5000) // alertFindPart
+			.delay(this.alertFire, 900000, -1) // 15 minutes = 900000
+			.delay(this.alertPlants, 420000, -1) // 7 minutes = 420000
+			.delay(this.alertNotification, 60000, -1) // 4 minutes = 240000
+			.delay(this.alertCognitive, 660000, -1) // 11 minutes = 660000
 			// on hit events
 			.onHit('Solid', this.turnAround)
 			.onHit('ChargingStation', this.recharge)
@@ -383,11 +381,11 @@ Crafty.c('Robot', {
 	setSpeed: function() {
 		this.cancelDelay(this.randomMove);
 		// not operational
-		if (this._status == 0) {this._do_move = 0;}
+		if (gv.robot.status == 0) {this._do_move = 0;}
 		// slow moving
-		else if (this._status == 1) {this._do_move = 3000;}
+		else if (gv.robot.status == 1) {this._do_move = 3000;}
 		// working normally
-		else if (this._status == 2) {this._do_move = 1500;}
+		else if (gv.robot.status == 2) {this._do_move = 1500;}
 		this.delay(this.randomMove, this._do_move, -1);
 	},
 	lastMovement: function() {return this._movement.slice(-1);},
@@ -404,7 +402,7 @@ Crafty.c('Robot', {
 		// check if on fire
 		if (gv.robot.fire != -1) {gv.score -= 0.25;}
 		// if not broken
-		if (this._status != 0) {
+		if (gv.robot.status != 0) {
 			// complete task
 			if (this.x/gv.tile_sz < 15 && this.y/gv.tile_sz < 15 && this.x/gv.tile_sz > 1 && this.y/gv.tile_sz > 1) {
 				this.tendPlants();
@@ -444,25 +442,25 @@ Crafty.c('Robot', {
 	},
 	moveUp: function() {
 		this._is_charging = false;
-		this.tween({ x: this.x, y: this.y-gv.tile_sz }, this._speed[this._status])
+		this.tween({ x: this.x, y: this.y-gv.tile_sz }, this._speed[gv.robot.status])
 		this._movement.push('up');
 		if (this._movement.length > 5) {this._movement.shift();}
 	},
 	moveDown: function() {
 		this._is_charging = false;
-		this.tween({ x: this.x, y: this.y+gv.tile_sz }, this._speed[this._status])
+		this.tween({ x: this.x, y: this.y+gv.tile_sz }, this._speed[gv.robot.status])
 		this._movement.push('down');
 		if (this._movement.length > 5) {this._movement.shift();}
 	},
 	moveLeft: function() {
 		this._is_charging = false;
-		this.tween({ x: this.x-gv.tile_sz, y: this.y }, this._speed[this._status])
+		this.tween({ x: this.x-gv.tile_sz, y: this.y }, this._speed[gv.robot.status])
 		this._movement.push('left');
 		if (this._movement.length > 5) {this._movement.shift();}
 	}, 
 	moveRight: function() {
 		this._is_charging = false;
-		this.tween({ x: this.x+gv.tile_sz, y: this.y }, this._speed[this._status])
+		this.tween({ x: this.x+gv.tile_sz, y: this.y }, this._speed[gv.robot.status])
 		this._movement.push('right');
 		if (this._movement.length > 5) {this._movement.shift();}
 	},
@@ -595,7 +593,7 @@ Crafty.c('Robot', {
 		}
 	},
 	alertNotification: function() {
-		if (this._is_charging == false && this._status != 0) {
+		if (this._is_charging == false && gv.robot.status != 0) {
 			gv.robot.is_alerting = true;
 			var request_num = -1;
 			var rand = Math.random();
@@ -621,7 +619,7 @@ Crafty.c('Robot', {
 		}
 	},
 	alertPlants: function() {
-		if (this._is_charging == false && this._status != 0) {
+		if (this._is_charging == false && gv.robot.status != 0) {
 			gv.robot.is_alerting = true;
 			var request_num = -1;
 			// switch to planting
@@ -638,11 +636,17 @@ Crafty.c('Robot', {
 	},
 	alertCognitive: function() {
 		gv.robot.is_alerting = true;
-		request_list.addRequest(12);
-		set_request(500);
-		// request specific 
-		gv.robot.part.loc_x = Math.floor(Math.random() * (16 - 2)) + 2;
-		gv.robot.part.loc_y = Math.floor(Math.random() * (15 - 2)) + 2;
+		var rand = Math.random();
+		if (rand < 0.5) { // missing part request
+			request_list.addRequest(12);
+			set_request(500);
+			// location of missing part
+			gv.robot.part.loc_x = Math.floor(Math.random() * (16 - 2)) + 2;
+			gv.robot.part.loc_y = Math.floor(Math.random() * (15 - 2)) + 2;
+		} else { // software update task
+			request_list.addRequest(13);
+			set_request(500);
+		}
 		set_robot_speed(1);
 	},
 	alertFire: function() {
@@ -735,7 +739,7 @@ Crafty.c('RequestScreen', {
 			}
 			gv.robot.direction = resp;
 		}
-		else if (resp == 'X91R23TQ7') { // password for high cognitive load request
+		else if (resp == 'X91R23Q7') { // password for high cognitive load request
 			if (request_list.getNumber() == 6) {
 				gv.player.interacting = false;
 				sounds.play_correct();

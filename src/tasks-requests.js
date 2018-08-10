@@ -317,7 +317,7 @@ function RRequestList(indices) {
     this.requestOptions[11] = new RRequest(5,2,2,1,true,'I need to water the plants. Can you bring me water from the well?');
     // state 6: med urgency, long duration, high effort, requires response
     this.requestOptions[12] = new RRequest(6,2,2,1,true,'One of my parts is missing! Push me around the field and use me as a metal detector to find it.');
-    this.requestOptions[13] = new RRequest(6,2,2,1,true,'I need to update my software! Can you enter the password [X91R23TQ7] at the monitor next to the charging station?');
+    this.requestOptions[13] = new RRequest(6,2,2,1,true,'Enter the password [X91R23Q7] at the monitor to update my software!');
     // state 7: high urgency, short duration, high effort, requires response
     this.requestOptions[14] = new RRequest(7,2,1,2,true,'My battery is less than 5%!');
     // state 8: high urgency, long duration, high effort, requires response
