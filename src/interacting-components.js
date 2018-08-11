@@ -64,12 +64,26 @@ Crafty.c('Player', {
 		var hitDatas, hitData;
 		if ((hitDatas = this.hit('Well'))) {
 			Crafty.trigger('FillBucket');
+			// update player moment if in need full water bucket in task
+			if (task_list.getText().includes('well')){
+				gv.player.moment = 'middle';
+			}
 		} else if ((hitDatas = this.hit('Barrel'))) {
 			Crafty.trigger('FillSeedBag');
 		} else if ((hitDatas = this.hit('Stump'))) {
 			Crafty.trigger('SwitchTools');
+			// update player moment if in need shears or hammer in task
+			// var task_text = task+list.getText();
+			// if (task_text.includes('shears') || task_text.includes('hammer')){
+			// 	gv.player.moment = 'middle';
+			// }
 		} else if ((hitDatas = this.hit('GroundTools'))) {
 			Crafty.trigger('SwitchLgTools');
+			// update player moment if in need scythe or shovel in task
+			// var task_text = task+list.getText();
+			// if (task_text.includes('scythe') || task_text.includes('shovel')){
+			// 	gv.player.moment = 'middle';
+			// }
 		} else if ((hitDatas = this.hit('Book'))) { 
 			Crafty.trigger('OpenBook');
 		} else if ((hitDatas = this.hit('RequestScreen'))) {
@@ -244,8 +258,8 @@ Crafty.c('Task', {
 			else if (resource == 'berries') {_initial = gv.resources.berries;}
 			// update task text
 			this.text(task_list.getText());
-			// update player moment
-			gv.player.moment = 'middle';
+			// set player moment to break
+			gv.player.moment = 'break';
 			// set clock
 			task_list.setStart();
 			// sets events in motion
@@ -258,28 +272,31 @@ Crafty.c('Task', {
 		var met = task_list.getMet();
 		var resource = met[0];
 		var quantity = met[1];
-		var _current = this._quant;
-		if (resource == 'eggs') {_current = gv.resources.eggs-_initial;}
-		else if (resource == 'wheat') {_current = gv.resources.wheat-_initial;}
-		else if (resource == 'wool') {_current = gv.resources.wool-_initial;}
-		else if (resource == 'milk') {_current = gv.resources.milk-_initial;}
-		else if (resource == 'bread') {_current = gv.resources.bread-_initial;}
-		else if (resource == 'muffin') {_current = gv.resources.muffin-_initial;}
-		else if (resource == 'thread') {_current = gv.resources.thread-_initial;}
-		else if (resource == 'berries') {_current = gv.resources.berries-_initial;}
+		var curr_quant = 0;
+		// check resource quantity
+		if (resource == 'eggs') {curr_quant = gv.resources.eggs-_initial;}
+		else if (resource == 'wheat') {curr_quant = gv.resources.wheat-_initial;}
+		else if (resource == 'wool') {curr_quant = gv.resources.wool-_initial;}
+		else if (resource == 'milk') {curr_quant = gv.resources.milk-_initial;}
+		else if (resource == 'bread') {curr_quant = gv.resources.bread-_initial;}
+		else if (resource == 'muffin') {curr_quant = gv.resources.muffin-_initial;}
+		else if (resource == 'thread') {curr_quant = gv.resources.thread-_initial;}
+		else if (resource == 'berries') {curr_quant = gv.resources.berries-_initial;}
 		else if (resource == 'none') {
 			gv.player.moment = 'break';
-			this._filler += 0.001;
+			this._filler += 0.005;
 		}
-		// update text letter by letter
+		// if started task, update player moment
+		if (curr_quant != this._initial) {gv.player.moment = 'middle';}
+		// dynamically update quantity needed to complete task
 		var txt = task_list.getText();
 		var new_txt = '';
 		var len = txt.replace(/[0-9]/g, '').length;
-		if (txt.length - len == 1) {new_txt = txt.replace(/[0-9]/g, quantity-_current);}
+		if (txt.length - len == 1) {new_txt = txt.replace(/[0-9]/g, quantity-curr_quant);}
 		else if (txt.length - len == 2) {
 			var index = txt.search(/\d/);
 			new_txt = txt.replace(/[0-9]/g, '');
-			var num = quantity-_current;
+			var num = quantity-curr_quant;
 			new_txt = new_txt.substr(0, index) + num + new_txt.substr(index);
 		} else {new_txt = txt;}
 		this.text(new_txt);
@@ -288,7 +305,7 @@ Crafty.c('Task', {
 		receptivity.updateState(gv.player.interacting, gv.player.difficulty, gv.player.moment);
 		// Crafty.log('state: ', gv.player.interacting, gv.player.difficulty, gv.player.moment);
 		// check if task is complete
-		if (quantity <= _current || this._filler >= 2) {this.completedTask();}
+		if (quantity <= curr_quant || this._filler >= 2) {this.completedTask();}
 	},
 	// task completed
 	completedTask: function() {
@@ -345,18 +362,14 @@ Crafty.c('Robot', {
 			.delay(this.losePower, this._battery_life, -1)
 			.delay(this.alertFire, 900000, -1) // 15 minutes = 900000
 			.delay(this.alertPlants, 420000, -1) // 7 minutes = 420000
-			.delay(this.alertNotification, 60000, -1) // 4 minutes = 240000
+			.delay(this.alertNotification, 240000, -1) // 4 minutes = 240000
 			.delay(this.alertCognitive, 660000, -1) // 11 minutes = 660000
 			// on hit events
 			.onHit('Solid', this.turnAround)
 			.onHit('ChargingStation', this.recharge)
 			// animations
-			.reel('AnimateLight', 1000, [
-				[1,0], [0,0]
-			])
-			.reel('AnimateFire', 1000, [
-				[1,1], [2,1], [3,1]
-			])
+			.reel('AnimateLight', 1000, [ [1,0], [0,0] ])
+			.reel('AnimateFire', 1000, [ [1,1], [2,1], [3,1] ])
 			// binded events
 			.bind('RobotUp', this.moveUp)
 			.bind('RobotDown', this.moveDown)
@@ -371,8 +384,6 @@ Crafty.c('Robot', {
 			.bind('StopAlert', this.stopAlert)
 			.bind('SetSpeed', this.setSpeed)
 			.bind('KeyDown', function(e) {if (e.key == Crafty.keys.R) {this.reset();}})
-			// check for requests
-			.delay(this.triggerRequest, 1000, -1)
 	},
 	char: function() {return 'robot';},
 	// resets location if off screen
@@ -464,11 +475,25 @@ Crafty.c('Robot', {
 		this._movement.push('right');
 		if (this._movement.length > 5) {this._movement.shift();}
 	},
-	// -10 robot power 
+	// -1 robot power 
 	losePower: function() {
-		if (this._is_charging == false) {
+		// only lose power if robot not alerting and player not interacting
+		if (this._is_charging == false && gv.robot.is_alerting == false && gv.player.interacting == false) {
+			// check if lose power
 			if (this._power > 0) {this._power -= 1;}
 			else {this._power = 0;}
+
+			// check if low power
+			var power = Math.round(this._power);
+			if (power == 5 || power == 6) { // very low power
+				gv.robot.is_alerting = true;
+				request_list.addRequest(14);
+				set_request(500);
+			} else if (power == 20 || power == 21) {
+				gv.robot.is_alerting = true;
+				request_list.addRequest(9);
+				set_request(500);
+			}
 		}
 	},
 	// adds to robot power
@@ -563,35 +588,7 @@ Crafty.c('Robot', {
 			this.sprite('spr_bot');
 		}
 	},
-	// triggers requests
-	triggerRequest: function() {		
-		// variables for new request
-		var request_num = -1;
-		var time = -1;
-		// if not currently alerting about something
-		if (gv.robot.is_alerting == false && gv.player.interacting == false) {
-			// - on fire 
-			// - very low battery
-			var power = Math.round(this._power);
-			if (power == 5) {
-				gv.robot.is_alerting = true;
-				request_num = 14;
-				time = 500;
-			} 
-			// - low battery
-			if (power == 20) {
-				gv.robot.is_alerting = true;
-				request_num = 9;
-				time = 500;
-			}
-			// - switch task
-		}
-		// trigger
-		if (request_num != -1 && time != -1) {
-			request_list.addRequest(request_num);
-			set_request(time);
-		}
-	},
+	// trigger requests
 	alertNotification: function() {
 		if (this._is_charging == false && gv.robot.status != 0) {
 			gv.robot.is_alerting = true;
@@ -710,7 +707,7 @@ Crafty.c('RobotRequest', {
 				a += 1;
 			}, 100*i);
 		}
-		setTimeout(hide_robot_text, (gv.robot.txt.length+20)*100);
+		setTimeout(hide_robot_text, (gv.robot.txt.length+40)*100);
 	},
 	hideRequest: function() {
 		this.color("#FFFFFF", 0).text('');
@@ -724,9 +721,7 @@ Crafty.c('RequestScreen', {
 	init: function() {
 		this.requires('2D, Canvas, Grid, Delay, SpriteAnimation, spr_screen')
 			.attr( {w:50, h:42, z:1 })
-			.reel('ScreenFlash', 1000, [
-				[1,0], [0,0]
-			])
+			.reel('ScreenFlash', 1000, [ [1,0], [0,0] ])
 			.bind('ReceiveResponse', this.receiveResponse)
 	},
 	receiveResponse: function() {

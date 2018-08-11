@@ -3,7 +3,7 @@
 // set tasks for game
 // [0:none, 1:wheat, 2:berries, 3:eggs, 4:wool, 5:milk, 6:gophers, 7:butterflies, 8:snakes, 9:chest, 10:bread, 11:muffin, 12:thread]
 // var task_indices = [1,2,3,4,5,6,7,8,9,10,11,12,0];
-var task_indices = [1,0,2,3,0,5,11,12,0];
+var task_indices = [1,0,2,3,4,0,5,6,7,8,0,9,0,10,11,12,0];
 // set requests for game
 // [0:none, 1-4:short notification, 5-7:long notification, 8:text response, 9:low battery, 10-11:task change, 12-13:broken robot, 14:very low battery, 15:emergency]
 var request_indices = [];
@@ -45,14 +45,14 @@ function HTaskList(indices) {
     this.taskOptions = [];
     this.taskOptions[0] = new HTask(0, 0, '', ['none',1], '');
     this.taskOptions[1] = new HTask(1, 1, 'Harvest 5 wheat with your scythe.', ['wheat',5], '');
-    this.taskOptions[2] = new HTask(1, 1, 'Gather 40 berries (fill up your bucket and water the bush to grow berries)', ['berries',40], '');
+    this.taskOptions[2] = new HTask(1, 1, 'Gather 40 berries (fill up your bucket at the well and water the bush to grow berries)', ['berries',40], '');
     this.taskOptions[3] = new HTask(1, 1, 'Collect 16 more eggs.', ['eggs',16], '');
     this.taskOptions[4] = new HTask(1, 1, 'Collect 2 wool from the sheep with your shears.', ['wool',2], '');
     this.taskOptions[5] = new HTask(1, 1, 'Collect 2 milk (make sure your bucket is empty).', ['milk',2], '');
     this.taskOptions[6] = new HTask(2, 2, 'Hit the gophers with your hammer before they disappear and steal one dollar!', ['',0], 'gopher_task();');
     this.taskOptions[7] = new HTask(3, 1, 'Collect butterflies for a one dollar reward per butterfly!', ['',0], 'butterfly_task();');
     this.taskOptions[8] = new HTask(4, 2, 'Hurry and hit the snakes with your hammer. Each snake steals an egg every two seconds!', ['',0], 'snake_task();');
-    this.taskOptions[9] = new HTask(5, 1, 'Open the treasure chest burried under a tuft of grass (ticking means it might explode!)', ['',0], 'chest_task();');
+    this.taskOptions[9] = new HTask(5, 1, 'Grab you shovel and open the treasure chest burried under a tuft of grass (ticking means it might explode!)', ['',0], 'chest_task();');
     this.taskOptions[10] = new HTask(6, 2, 'Bake a loaf of bread.', ['bread',1], '');
     this.taskOptions[11] = new HTask(6, 2, 'Bake a muffin.', ['muffin',1], '');
     this.taskOptions[12] = new HTask(6, 2, 'Make a spool of thread.', ['thread',1], '');
@@ -200,36 +200,87 @@ var task_funcs = {
 
 
 // STATE OF HUMAN
-// tracks human receptivity and returns current receptivity
-function HReceptivity() {
-    // receptivity - [0:interacting, 1:low, 2:high]
-    this.receptivity = [];
-    // availability - [0:interacting, 1, 2, 3, 4]
-    this.availability = -1;
-    // interacting - [true, false]
-    this.interacting = false;
-    // difficulty - task difficulty [0:none, 1:low, 2:high]
-    this.difficulty = -1;
-    // moment - moment of interruption ['break', 'middle']
-    this.moment = '';
+// definition for receptivity
+function HReceptivity (availability, requestNum) {
+    // value of human receptivity
+    this.val = 0;
+    // availability at time of alert
+    this.availability = availability;
+    // request number
+    this.requestNum = requestNum;
 
-    // receptivity function 
-    this.receptivityFunc = function() {
-        // summed receptivity
-        var r = 0;
-        // loop through all receptivity, apply function to each and add to r
-        for (var i = 0; i < this.curr; i++) {
-            this.receptivity[i] = this.receptivity[i];
-            r += this.receptivity[i];
-        }
-        // add current receptivity to history
-        this.receptivity.push(r);
-        // return current receptivity
-        return r;
+    // time = 0
+    this.timeSent = new Date().getTime()/1000;
+    // time = current
+    this.timeCurr = 0;
+    // time since request sent
+    this.timeSince = 0;
+
+    // initialize value
+    this.updateValue();
+
+    // helper functions
+    // updates how much time has passed
+    this.timePassed = function() {
+        this.timeCurr = new Date().getTime()/1000;
+        this.timeSince = this.timeCurr - this.timeSent;
     };
-    // updates current information
-    this.updateState = function(interacting, difficulty, moment) {
-        var r = this.receptivityFunc();
+    // updates value based on availability, request duration, and time
+    this.updateValue = function() {
+        var factor = -1; // TBD
+        Math.exp(factor * (this.timePassed())) * (this.availability);
+    };
+    // returns current value
+    this.getValue = function() {return this.val;};
+};
+// tracks receptivity 
+var receptivity = {
+    // tracks number of requests sent
+    curr: 0,
+    // receptivity - [0:interacting, 1:low, 2:high]
+    receptivity: [],
+
+    // CURRENT VARIABLES
+    // request number - [0:8]
+    request_num: -1,
+    // availability - [0:interacting, 1, 2, 3, 4]
+    availability: -1,
+    // interacting - [true, false]
+    interacting: false,
+    // difficulty - task difficulty [0:none, 1:low, 2:high]
+    difficulty: -1,
+    // moment - moment of interruption ['break', 'middle']
+    moment: '',
+
+    // another request sent - update count, request number, and store receptivity
+    sentRequest: function(request_num) {
+        this.curr += 1;
+        this.request_num = request_num;
+        this.receptivityFunc();
+    },
+    // returns most recent receptivity
+    getReceptivity: function() {this.receptivity[-1];},
+
+    // implements receptivity function and adds new receptivity to end of list
+    receptivityFunc: function() {
+        // most recent receptivity
+        var r_curr = new HReceptivity(this.availability, this.request_num);
+        // summed receptivity
+        var r_sum = 0;
+
+        // loop through receptivity for each request, apply function, and add to r_sum
+        for (var i = 0; i < this.curr; i++) {
+            // gets updated receptivity
+            var r_i = this.receptivity[i].updateValue();
+            // adds to sum
+            r_sum += r_i.getValue();
+        }
+        // push current receptivity to log of receptivity
+        this.receptivity.push(r_sum);
+    },
+    // updates current information - always up to date in Task.checkTasK();
+    updateState: function(interacting, difficulty, moment) {
+        // save current information
         this.interacting = interacting;
         this.difficulty = difficulty;
         this.moment = moment;
@@ -255,24 +306,8 @@ function HReceptivity() {
                 if (moment == 'middle') {this.availability = 1;}
             }
         }
-        // return r;
-        Crafty.log(this.availability, this.interacting, this.difficulty, this.moment);
-    };
-    // returns current receptivity
-    this.getReceptivity = function() {
-        // return this.receptivityFunc();
-        return this.availability;
-    };
-};
-// stores receptivity list and receptivity update functions
-var receptivity = {
-    list: new HReceptivity(),
-    // update state information
-    updateState: function(interacting, difficulty, moment) {
-        this.list.updateState(interacting, difficulty, moment);
-    },
-    // returns most recent receptivity
-    getReceptivity: function() {this.list.getReceptivity();}
+        Crafty.log('A',this.availability, 'I',this.interacting, 'D',this.difficulty, 'M',this.moment);
+    }
 };  
 
 
@@ -295,6 +330,7 @@ function RRequest(number, urgency, duration, effort, resp, text) {
     this.receivedResponse = false;
     this.receivedResponse = function() {this.receivedResponse = true;};
 };
+// stores all possible requests in list, returns list of desired request indices
 function RRequestList(indices) {    
     this.requestOptions = [];
     // state 0: no request
@@ -305,9 +341,9 @@ function RRequestList(indices) {
     this.requestOptions[3] = new RRequest(1,1,1,1,false,'We lose money when I run out of battery!');
     this.requestOptions[4] = new RRequest(1,1,1,1,false,'Sometimes I can give you helpful hints.');
     // state 2: low urgency, long duration, low effort, no response
-    this.requestOptions[5] = new RRequest(2,1,2,1,false,"A locked treasure chest is burried somewhere under a tuft of grass. You have to be carrying your shovel to dig it up. And be careful, it will explode a minute after it's been revealed! It's worth $20, so you'll want to figure out how to open it quickly.");
-    this.requestOptions[6] = new RRequest(2,1,2,1,false,'Different resources are worth different amounts of money. It’s a good idea to make bread; you’ll get $15 per loaf! The recipe is 6 eggs, 4 milk, and 2 wheat. You can also make muffins to earn $18, with 10 berries, 8 eggs, 4 milk, and 1 wheat.');
-    this.requestOptions[7] = new RRequest(2,1,2,1,false,"Animals will occasionally pop up in your environment. Snakes are pesky. They steal an egg from you every 5 seconds. But you'll get a one dollar reward for each one you catch! The same goes for butterflies, but they don't steal any resources.")
+    this.requestOptions[5] = new RRequest(2,1,2,1,false,'A locked treasure chest is burried somewhere under a tuft of grass. You have to be carrying your shovel to dig it up. And be careful, it will explode a minute after it is revealed! If you open it, you get $20, so you need to figure out how to open it quickly.');
+    this.requestOptions[6] = new RRequest(2,1,2,1,false,'Different resources are worth different amounts of money. Try to make bread; you get $15 per loaf! The recipe is 6 eggs, 4 milk, and 2 wheat. You can also make muffins to earn $18, with 10 berries, 8 eggs, 4 milk, and 1 wheat. If you forget the recipes, open the book near the well.');
+    this.requestOptions[7] = new RRequest(2,1,2,1,false,'Animals will occasionally pop up in your environment. Gophers and snakes are pesky. Gophers will steal $1 if they disappear and snakes will steal an egg from you every 5 seconds. But you get a one dollar reward for each one you catch! The same goes for butterflies, but they do not steal any of your resources.')
     // state 3: med urgency, short duration, low effort, requires response
     this.requestOptions[8] = new RRequest(3,2,1,1,true,"In which direction should I take 5 steps [up, down, left, right]? Type your response at the monitor.");
     // state 4: med urgency, short duration, high effort, requires response
@@ -336,19 +372,31 @@ var request_list = {
     curr: 0,
     // request options
     possible: new RRequestList(all_requests),
-    // list of requests to present
-    list: new RRequestList(request_indices),
-    // add request to list
+    // list of requests sent (empty at beginning)
+    sent: new RRequestList(request_indices),
+    
+    // add request to beginning of sent
     addRequest: function(request_num) {
-        if (this.list[this.curr] != this.possible[request_num] && request_num != -1) {
-            this.list.splice(this.curr, 0, this.possible[request_num]);
+        if (this.sent[this.curr] != this.possible[request_num] && request_num != -1) {
+            this.sent.push(this.possible[request_num]);
+            // this.sent.splice(this.curr, 0, this.possible[request_num]);
         }
     },
-    // getters -- returns current in list
-    getNumber: function() {return this.list[this.curr].number;},
-    getDuration: function() {return this.list[this.curr].duration;},
-    getText: function() {return this.list[this.curr].txt;},
-    getRequiresResponse: function() {return this.list[this.curr].requiresResponse;},
+    // indicates request was sent
+    sentRequest: function() {
+        // update current request number for both request record...
+        this.curr += 1;
+        // and receptivity record
+        receptivity.sentRequest(this.sent[-1].number);        
+    },
+    // indicates request was checked / responded to
+    receivedResponse: function() {this.sent[this.curr].receivedResponse();},
+
+    // getters -- returns current in sent list
+    getNumber: function() {return this.sent[this.curr].number;},
+    getDuration: function() {return this.sent[this.curr].duration;},
+    getText: function() {return this.sent[this.curr].txt;},
+    getRequiresResponse: function() {return this.sent[this.curr].requiresResponse;},
     // epsilon is the exploration rate, returns 0,1,2,3 for the action
     getAction: function() {
         // // find the highest Q value action
@@ -378,14 +426,7 @@ var request_list = {
         if (rand < 0.33) {return 1;}
         else if (rand < 0.66) {return 2;}
         else {return 3;}
-    },
-    // indicates request was sent
-    sentRequest: function() {
-        // gets current information
-        // Crafty.log(receptivity.getReceptivity());
-    },
-    // indicates alert was checked, different trigger for each request
-    receivedResponse: function() {this.list[this.curr].receivedResponse();}
+    }
 };
 
 
