@@ -1,209 +1,9 @@
-// Adds components to the game 
-Crafty.scene('Game', function() {
-	// background
-	Crafty.background('rgb(47, 130, 52)');
-
-	// A 2D array of occupied tiles
-	this.occupied = new Array(Game.w());
-	for (var i = 0; i < Game.w(); i++) {
-		this.occupied[i] = new Array(Game.h());
-		for (var j = 0; j < Game.h(); j++) {this.occupied[i][j] = false;}
-	}
-	// Add player
-	this.player = Crafty.e('Player').at(30, 16);
-	// Add robot
-	this.robot = Crafty.e('Robot').at(5,10);
-	this.request = Crafty.e('RobotRequest').at(1,2);
-	// this.robot.attach(this.request);
-	this.screen = Crafty.e('RequestScreen').at(16,5.3);
-
-	// Add animals
-	this.sheep = Crafty.e('Sheep').at(21,3);
-	this.cow = Crafty.e('Cow').at(32,4);
-	this.chicken1 = Crafty.e('Chicken').at(46,6);
-	this.chicken1.delay(this.chicken1.layEgg, 30000, -1);
-	this.chicken2 = Crafty.e('Chicken').at(38,20);
-	this.chicken2.delay(this.chicken2.layEgg, 35000, -1);
-
-	var cc = 0;
-	var rr = 0;
-	// Add scenery
-	for (var x = 0; x < Game.w(); x++){
-		for (var y = 0; y < Game.h(); y++){
-			var at_edge = ((x == 0 && y < Game.h()-6) || (x == Game.w() - 1 && y < Game.h()-6) || y == 0 || y == Game.h() - 6);
-			var field_s = (Game.w()/3)-2;
-
-			// trees at edge
-			if (at_edge) {
-				Crafty.e('Tree').at(x,y);
-				this.occupied[x][y] = true;
-
-			// growing field
-			} else if (x < field_s && y <= field_s) {
-				if (x == 1) {
-					if (y == 1){
-						Crafty.e('Soil1').at(x,y);
-						this.occupied[x][y] = true;
-					} else if (y == field_s){
-						Crafty.e('Soil7').at(x,y);
-						this.occupied[x][y] = true;
-					} else {
-						Crafty.e('Soil4').at(x,y);
-						this.occupied[x][y] = true;
-					}
-				} else if (x == field_s-1) {
-					if (y == 1){
-						Crafty.e('Soil3').at(x,y);
-						this.occupied[x][y] = true;
-					} else if (y == field_s) {
-						Crafty.e('Soil9').at(x,y);
-						this.occupied[x][y] = true;
-					} else {
-						Crafty.e('Soil6').at(x,y);
-						this.occupied[x][y] = true;
-					}
-				} else if (y == 1) { 
-					Crafty.e('Soil2').at(x,y);
-					this.occupied[x][y] = true;
-				} else if (y == field_s) {
-					Crafty.e('Soil8').at(x,y);
-					this.occupied[x][y] = true;
-				} else {
-					Crafty.e('Soil5').at(x,y);
-					this.occupied[x][y] = true;
-					if (y == 2 && (x > 3 && x < 12)) {
-						Crafty.e('Wheat4').at(x,y);
-					}
-				}
-
-			// animal pens
-			var a = 3;
-			var b = 10;
-			var c = 21;
-			} else if (y == 1) {
-				if (x == field_s) {
-					// Crafty.e('Fence8').at(x,y);
-				} else if (x == field_s+c) {
-					Crafty.e('Fence9').at(x,y);
-					this.occupied[x][y] = true;
-				} else if (x == field_s+a) {
-					Crafty.e('Fence7').at(x,y);
-					this.occupied[x][y] = true;
-				} else if (x > field_s+a && x < field_s+c) {
-					Crafty.e('Fence2').at(x,y);
-					this.occupied[x][y] = true;
-				}
-			} else if (y == (Game.h()/5)+5) {
-				if (x == field_s+b) {
-					Crafty.e('Fence11').at(x,y);
-					this.occupied[x][y] = true;
-				} else if (x == field_s+c) {
-					Crafty.e('Fence12').at(x,y);
-					this.occupied[x][y] = true;
-				} else if (x == field_s+a) {
-					Crafty.e('Fence10').at(x,y);
-					this.occupied[x][y] = true;
-				} else if (x > field_s+a && x < field_s+c) {
-					if (x < field_s+6 || x == field_s+12 || x == field_s+13) {
-					} else{
-						Crafty.e('Fence2').at(x,y);
-						this.occupied[x][y] = true;
-					}
-					
-				}
-			} else if (x == field_s+a || x == field_s+b || x == field_s+c) {
-				if (y > 1 && y < (Game.h()/5)+5) {
-					Crafty.e('Fence4').at(x,y);
-					this.occupied[x][y] = true;
-				}
-
-			// tufts of grass
-			} else if (y < Game.h()-6 && Math.random() < 0.05 && !this.occupied[x][y]) {
-				Crafty.e('Grass').at(x,y);
-				cc+=1;
-				// place treasure chest here
-				if (cc == 30) {
-					this.chest = Crafty.e('Chest').at(x,y);
-					this.explosion = Crafty.e('ChestExplosion').at(x,y);
-					// sets password and location
-					task_funcs.chestInitialize(x,y);
-				}
-			// eggs
-			} else if (y < Game.h()-6 && Math.random() < 0.01 && !this.occupied[x][y]) {
-				Crafty.e('Egg').at(x,y);
-			// rocks
-			} else if (y < Game.h()-7 && Math.random() < 0.008 && !this.occupied[x][y] && rr < 4) {
-				this.rock = Crafty.e('Rock').at(x,y);
-				rr += 1;
-				if (rr == 2) {this.rock.hasPin();}
-			} 
-
-			// blank space at bottom
-			if (y > Game.h()-6) {Crafty.e('Blank').at(x,y);}
-		}
-	}
-
-	// Add machinery
-	var scene_b = Game.h()-7.8;
-	this.well = Crafty.e('Well').at(1,scene_b);
-	this.bag = Crafty.e('Barrel').at(3,scene_b+.1);
-	this.stump = Crafty.e('Stump').at(5,scene_b+.3);
-	this.grtools = Crafty.e('GroundTools').at(6.5,scene_b+.2);
-	this.book = Crafty.e('Book').at(7.8,scene_b+.7);
-	this.oven = Crafty.e('Oven').at(Game.w()-3.5,1);
-	this.spinning_wheel = Crafty.e('SpinningWheel').at(Game.w()-5.5,1);
-	this.charging_station = Crafty.e('ChargingStation').at(16,3);
-	this.bbush = Crafty.e('BerryBush').at(Game.w()-3,22);
-
-	// Add score information
-	var box_b = Game.h()-3.8;
-	this.scroll = Crafty.e('Scroll').at(0,Game.h()-5);
-	this.score = Crafty.e('Score').at(3,box_b+1).text('$ 0.00');
-	// this.power = Crafty.e('RobotPower').at(8,box_b+1.2);
-
-	// Add lower panels
-	for (var x = 0; x < 4; x++) {
-		Crafty.e('SqrBlock').at(19+(x*5),Game.h()-5);
-	}
-	this.box = Crafty.e('Box').at(39,Game.h()-5).attr({ w:360 });
-
-	// Add tools 
-	var st = 20.2;
-	this.bucket = Crafty.e('Bucket').at(st,box_b);
-	this.seed_bag = Crafty.e('SeedBag').at(st+5,box_b);
-	this.tools = Crafty.e('Tools').at(st+10,box_b);
-	this.lg_tools = Crafty.e('LgTools').at(st+15,box_b);
-
-	// Add resources and counts
-	var st2 = 40.2;
-	this.egg = Crafty.e('Egg').at(st2,box_b-.5).attr({ w:30, h:30 });
-	Crafty.e('EggLabel').at(st2+1.5,box_b).text(0);
-	this.berry = Crafty.e('Wheat').at(st2,box_b+1.7).attr({ w:30, h:30 });
-	Crafty.e('WheatLabel').at(st2+1.5,box_b+2).text(0);
-	this.wool = Crafty.e('Wool').at(st2+3,box_b-.3).attr({ w:30, h:25 });
-	Crafty.e('WoolLabel').at(st2+4.5,box_b).text(0);
-	this.milk = Crafty.e('Milk').at(st2+3.2,box_b+1.5).attr({ w:20, h:40 });
-	Crafty.e('MilkLabel').at(st2+4.5,box_b+2).text(0);
-	this.bread = Crafty.e('Bread').at(st2+6,box_b-.4).attr({ w:40, h:30 });
-	Crafty.e('BreadLabel').at(st2+8,box_b).text(0);
-	this.muffin = Crafty.e('Muffin').at(st2+6.1,box_b+1.5).attr({ w:30, h:30 });
-	Crafty.e('MuffinLabel').at(st2+8,box_b+2).text(0);
-	this.thread = Crafty.e('Thread').at(st2+9.2,box_b-.5).attr({ w:40, h:40 });
-	Crafty.e('ThreadLabel').at(st2+11,box_b).text(0);
-	this.berry = Crafty.e('Berries').at(st2+9.3,box_b+1.8).attr({ w:30, h:20 });
-	Crafty.e('BerryLabel').at(st2+11,box_b+2).text(0);
-
-	// HUMAN TASKS
-	this.currTask = Crafty.e('Task').at(7,box_b+.4).text('').trigger('UpdateTask');
-});
-
-
-// Loads the audio and sprite sheets
+// 1. Loads the audio and sprite sheets
 Crafty.scene('Loading', function() {
 	// Background
-	Crafty.background('black');
+	Crafty.background('white');
 	Crafty.e('2D, DOM, Color, Text')
-		.text('Loading...')
+		.text("Try to make as much money as possible! Use the arrow keys to move and 'X' to trigger actions.")
 		.attr({ x:0, y:Game.height()/2-24, w:Game.width() })
 		.css($text_css);
 
@@ -488,8 +288,225 @@ Crafty.scene('Loading', function() {
 	Crafty.load(assetsObj);
 
 	// Start game
-	Crafty.scene('Game');
+	setTimeout(function() {eval("Crafty.scene('Game');");}, 2000);
 });
+
+// 2. Adds components to the game 
+Crafty.scene('Game', function() {
+	// background
+	Crafty.background('rgb(47, 130, 52)');
+
+	// A 2D array of occupied tiles
+	this.occupied = new Array(Game.w());
+	for (var i = 0; i < Game.w(); i++) {
+		this.occupied[i] = new Array(Game.h());
+		for (var j = 0; j < Game.h(); j++) {this.occupied[i][j] = false;}
+	}
+	// Add player
+	this.player = Crafty.e('Player').at(30, 16);
+	// Add robot
+	this.robot = Crafty.e('Robot').at(5,10);
+	this.request = Crafty.e('RobotRequest').at(1,2);
+	// this.robot.attach(this.request);
+	this.screen = Crafty.e('RequestScreen').at(16,5.3);
+
+	// Add animals
+	this.sheep = Crafty.e('Sheep').at(21,3);
+	this.cow = Crafty.e('Cow').at(32,4);
+	this.chicken1 = Crafty.e('Chicken').at(46,6);
+	this.chicken1.delay(this.chicken1.layEgg, 30000, -1);
+	this.chicken2 = Crafty.e('Chicken').at(38,20);
+	this.chicken2.delay(this.chicken2.layEgg, 35000, -1);
+
+	var cc = 0;
+	var rr = 0;
+	// Add scenery
+	for (var x = 0; x < Game.w(); x++){
+		for (var y = 0; y < Game.h(); y++){
+			var at_edge = ((x == 0 && y < Game.h()-6) || (x == Game.w() - 1 && y < Game.h()-6) || y == 0 || y == Game.h() - 6);
+			var field_s = (Game.w()/3)-2;
+
+			// trees at edge
+			if (at_edge) {
+				Crafty.e('Tree').at(x,y);
+				this.occupied[x][y] = true;
+
+			// growing field
+			} else if (x < field_s && y <= field_s) {
+				if (x == 1) {
+					if (y == 1){
+						Crafty.e('Soil1').at(x,y);
+						this.occupied[x][y] = true;
+					} else if (y == field_s){
+						Crafty.e('Soil7').at(x,y);
+						this.occupied[x][y] = true;
+					} else {
+						Crafty.e('Soil4').at(x,y);
+						this.occupied[x][y] = true;
+					}
+				} else if (x == field_s-1) {
+					if (y == 1){
+						Crafty.e('Soil3').at(x,y);
+						this.occupied[x][y] = true;
+					} else if (y == field_s) {
+						Crafty.e('Soil9').at(x,y);
+						this.occupied[x][y] = true;
+					} else {
+						Crafty.e('Soil6').at(x,y);
+						this.occupied[x][y] = true;
+					}
+				} else if (y == 1) { 
+					Crafty.e('Soil2').at(x,y);
+					this.occupied[x][y] = true;
+				} else if (y == field_s) {
+					Crafty.e('Soil8').at(x,y);
+					this.occupied[x][y] = true;
+				} else {
+					Crafty.e('Soil5').at(x,y);
+					this.occupied[x][y] = true;
+					if (y == 2 && (x > 3 && x < 12)) {
+						Crafty.e('Wheat4').at(x,y);
+					}
+				}
+
+			// animal pens
+			var a = 3;
+			var b = 10;
+			var c = 21;
+			} else if (y == 1) {
+				if (x == field_s) {
+					// Crafty.e('Fence8').at(x,y);
+				} else if (x == field_s+c) {
+					Crafty.e('Fence9').at(x,y);
+					this.occupied[x][y] = true;
+				} else if (x == field_s+a) {
+					Crafty.e('Fence7').at(x,y);
+					this.occupied[x][y] = true;
+				} else if (x > field_s+a && x < field_s+c) {
+					Crafty.e('Fence2').at(x,y);
+					this.occupied[x][y] = true;
+				}
+			} else if (y == (Game.h()/5)+5) {
+				if (x == field_s+b) {
+					Crafty.e('Fence11').at(x,y);
+					this.occupied[x][y] = true;
+				} else if (x == field_s+c) {
+					Crafty.e('Fence12').at(x,y);
+					this.occupied[x][y] = true;
+				} else if (x == field_s+a) {
+					Crafty.e('Fence10').at(x,y);
+					this.occupied[x][y] = true;
+				} else if (x > field_s+a && x < field_s+c) {
+					if (x < field_s+6 || x == field_s+12 || x == field_s+13) {
+					} else{
+						Crafty.e('Fence2').at(x,y);
+						this.occupied[x][y] = true;
+					}
+					
+				}
+			} else if (x == field_s+a || x == field_s+b || x == field_s+c) {
+				if (y > 1 && y < (Game.h()/5)+5) {
+					Crafty.e('Fence4').at(x,y);
+					this.occupied[x][y] = true;
+				}
+
+			// tufts of grass
+			} else if (y < Game.h()-6 && Math.random() < 0.05 && !this.occupied[x][y]) {
+				Crafty.e('Grass').at(x,y);
+				cc+=1;
+				// place treasure chest here
+				if (cc == 30) {
+					this.chest = Crafty.e('Chest').at(x,y);
+					this.explosion = Crafty.e('ChestExplosion').at(x,y);
+					// sets password and location
+					task_funcs.chestInitialize(x,y);
+				}
+			// eggs
+			} else if (y < Game.h()-6 && Math.random() < 0.01 && !this.occupied[x][y]) {
+				Crafty.e('Egg').at(x,y);
+			// rocks
+			} else if (y < Game.h()-7 && Math.random() < 0.008 && !this.occupied[x][y] && rr < 4) {
+				this.rock = Crafty.e('Rock').at(x,y);
+				rr += 1;
+				if (rr == 2) {this.rock.hasPin();}
+			} 
+
+			// blank space at bottom
+			if (y > Game.h()-6) {Crafty.e('Blank').at(x,y);}
+		}
+	}
+
+	// Add machinery
+	var scene_b = Game.h()-7.8;
+	this.well = Crafty.e('Well').at(1,scene_b);
+	this.bag = Crafty.e('Barrel').at(3,scene_b+.1);
+	this.stump = Crafty.e('Stump').at(5,scene_b+.3);
+	this.grtools = Crafty.e('GroundTools').at(6.5,scene_b+.2);
+	this.book = Crafty.e('Book').at(7.8,scene_b+.7);
+	this.oven = Crafty.e('Oven').at(Game.w()-3.5,1);
+	this.spinning_wheel = Crafty.e('SpinningWheel').at(Game.w()-5.5,1);
+	this.charging_station = Crafty.e('ChargingStation').at(16,3);
+	this.bbush = Crafty.e('BerryBush').at(Game.w()-3,22);
+
+	// Add score information
+	var box_b = Game.h()-3.8;
+	this.scroll = Crafty.e('Scroll').at(0,Game.h()-5);
+	this.score = Crafty.e('Score').at(3,box_b+1).text('$ 0.00');
+	// this.power = Crafty.e('RobotPower').at(8,box_b+1.2);
+
+	// Add lower panels
+	for (var x = 0; x < 4; x++) {
+		Crafty.e('SqrBlock').at(19+(x*5),Game.h()-5);
+	}
+	this.box = Crafty.e('Box').at(39,Game.h()-5).attr({ w:360 });
+
+	// Add tools 
+	var st = 20.2;
+	this.bucket = Crafty.e('Bucket').at(st,box_b);
+	this.seed_bag = Crafty.e('SeedBag').at(st+5,box_b);
+	this.tools = Crafty.e('Tools').at(st+10,box_b);
+	this.lg_tools = Crafty.e('LgTools').at(st+15,box_b);
+
+	// Add resources and counts
+	var st2 = 40.2;
+	this.egg = Crafty.e('Egg').at(st2,box_b-.5).attr({ w:30, h:30 });
+	Crafty.e('EggLabel').at(st2+1.5,box_b).text(0);
+	this.berry = Crafty.e('Wheat').at(st2,box_b+1.7).attr({ w:30, h:30 });
+	Crafty.e('WheatLabel').at(st2+1.5,box_b+2).text(0);
+	this.wool = Crafty.e('Wool').at(st2+3,box_b-.3).attr({ w:30, h:25 });
+	Crafty.e('WoolLabel').at(st2+4.5,box_b).text(0);
+	this.milk = Crafty.e('Milk').at(st2+3.2,box_b+1.5).attr({ w:20, h:40 });
+	Crafty.e('MilkLabel').at(st2+4.5,box_b+2).text(0);
+	this.bread = Crafty.e('Bread').at(st2+6,box_b-.4).attr({ w:40, h:30 });
+	Crafty.e('BreadLabel').at(st2+8,box_b).text(0);
+	this.muffin = Crafty.e('Muffin').at(st2+6.1,box_b+1.5).attr({ w:30, h:30 });
+	Crafty.e('MuffinLabel').at(st2+8,box_b+2).text(0);
+	this.thread = Crafty.e('Thread').at(st2+9.2,box_b-.5).attr({ w:40, h:40 });
+	Crafty.e('ThreadLabel').at(st2+11,box_b).text(0);
+	this.berry = Crafty.e('Berries').at(st2+9.3,box_b+1.8).attr({ w:30, h:20 });
+	Crafty.e('BerryLabel').at(st2+11,box_b+2).text(0);
+
+	// HUMAN TASKS
+	this.currTask = Crafty.e('Task').at(7,box_b+.4).text('').trigger('UpdateTask');
+
+	// End game
+	setTimeout(function() {eval("Crafty.scene('EndGame');");}, 2400000); // 40 minutes in ms
+});
+
+// 3. End game screen
+Crafty.scene('EndGame', function() {
+	// Get final score
+	var score = gv.score;
+
+	// Background
+	Crafty.background('white');
+	Crafty.e('2D, DOM, Color, Text')
+		.text('Congrats, you made '+score+' dollars!')
+		.attr({ x:0, y:Game.height()/2-24, w:Game.width() })
+		.css($text_css);
+});
+
+
 
 
 

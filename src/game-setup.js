@@ -17,7 +17,7 @@ window.onload = function() {
 	game.start();
 }
 // Text
-$text_css = { 'font-size': '24px', 'font-family': 'Arial', 'color': 'white', 'text-align': 'center' }
+$text_css = { 'font-size': '24px', 'font-family': 'Arial', 'color': 'black', 'text-align': 'center' }
 // Sounds
 sounds = {
 	play_low: function() {Crafty.audio.play('alert_low');},
