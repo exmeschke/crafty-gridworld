@@ -3,7 +3,7 @@
 // SET FOR GAME
 // tasks
 // [0:none, 1:wheat, 2:berries, 3:eggs, 4:wool, 5:milk, 6:gophers, 7:butterflies, 8:snakes, 9:chest, 10:bread, 11:muffin, 12:thread]
-var task_indices = [1,0,2,3,4,0,5,6,7,8,0,9,0,10,11,12,0];
+var task_indices = [6,0];
 // requests
 // [0:none, 1-4:short notification, 5-7:long notification, 8:text response, 9:low battery, 10-11:task change, 12-13:broken robot, 14:very low battery, 15:emergency]
 var request_indices = [];
@@ -111,9 +111,13 @@ var task_funcs = {
     gopherHit: function() {this.gopher.hit+=1;},
     // records gopher disappears
     gopherGone: function() {this.gopher.gone+=1;},
-    // checks whether gopher task is complete
+    // checks whether gopher task is complete, resets if so
     gopherComplete: function() {
-        if (this.gopher.hit + this.gopher.gone >= this.gopher.num) {return true;}
+        if (this.gopher.hit + this.gopher.gone >= this.gopher.num) {
+            this.gopher.hit = 0;
+            this.gopher.gone = 0;
+            return true;
+        }
         else {return false;}
     },
     // butterfly task
@@ -135,7 +139,11 @@ var task_funcs = {
     butterflyHit: function() {this.butterfly.hit+=1;},
     butterflyGone: function() {this.butterfly.gone+=1;},
     butterflyComplete: function() {
-        if (this.butterfly.hit + this.butterfly.gone >= this.butterfly.num) {return true;}
+        if (this.butterfly.hit + this.butterfly.gone >= this.butterfly.num) {
+            this.butterfly.hit = 0;
+            this.butterfly.gone = 0;
+            return true;
+        }
         else {return false;}
     },
     // snake task
@@ -157,7 +165,11 @@ var task_funcs = {
     snakeHit: function() {this.snake.hit+=1;},
     snakeGone: function() {this.snake.gone+=1;},
     snakeComplete: function() {
-        if (this.snake.hit + this.snake.gone >= this.snake.num) {return true;}
+        if (this.snake.hit + this.snake.gone >= this.snake.num) {
+            this.snake.hit = 0;
+            this.snake.gone = 0;
+            return true;
+        }
         else {return false;}
     },
     // chest task
@@ -292,7 +304,6 @@ var receptivity = {
                 if (moment == 'middle') {this.availability = 1;}
             }
         }
-        Crafty.log('A',this.availability, 'I',this.interacting, 'D',this.difficulty, 'M',this.moment);
     },
     // RETURNS
     // implements receptivity function
@@ -309,7 +320,8 @@ var receptivity = {
             r_sum += r_i.getValue();
         }
         return r_sum;
-    }
+    },
+    printState: function() {Crafty.log(this.availability, this.interacting, this.difficulty, this.moment);}
 };  
 
 

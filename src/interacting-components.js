@@ -223,6 +223,7 @@ Crafty.c('Player', {
 	}
 });
 
+
 //TASKS
 Crafty.c('Task', {
 	_initial: 0, // initial quantity of task related resource
@@ -299,9 +300,11 @@ Crafty.c('Task', {
 		// update human state information
 		gv.player.difficulty = task_list.getDiff();
 		receptivity.updateState(gv.player.interacting, gv.player.difficulty, gv.player.moment);
-		// Crafty.log('state: ', gv.player.interacting, gv.player.difficulty, gv.player.moment);
-		// check if task is complete
-		if (quantity <= curr_quant || this._filler >= 2) {this.completedTask();}
+		// receptivity.printState();
+		// check if task is complete if not gopher, snake, or butterfly task
+		if (resource != '') {
+			if (quantity <= curr_quant || this._filler >= 2) {this.completedTask();}
+		}
 	},
 	// task completed
 	completedTask: function() {

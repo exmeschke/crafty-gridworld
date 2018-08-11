@@ -38,15 +38,8 @@ gv = {
 	// animal actions
 	animal: {
 		speed: 1500,
-		sheep: {
-			movement: [],
-			hasWool: 0
-		},
-		cow: {
-			movement: [],
-			hasMilk: 0
-		},
-		chicken: {movement: []},
+		sheep: {hasWool: 0},
+		cow: {hasMilk: 0},
 		snake: {eat_egg: 4000},
 		gopher: {disappear: 20000}
 	},
@@ -188,6 +181,7 @@ Crafty.c('Animal', {
 	}
 });
 Crafty.c('Sheep', {
+	_movement: [],
 	init: function() {
 		this.requires('Animal, spr_sheep5')
 			.crop(35, 38, 55, 50)
@@ -199,10 +193,10 @@ Crafty.c('Sheep', {
 			.onHit('Solid', this.turnAround)
 	},
 	pushMovement: function(dir) {
-		gv.animal.sheep.movement.push(dir);
-		if (gv.animal.sheep.movement.length > 5) {gv.animal.sheep.movement.shift();}
+		this._movement.push(dir);
+		if (this._movement.length > 5) {this._movement.shift();}
 	},
-	lastMovement: function() {return gv.animal.sheep.movement.slice(-1);},
+	lastMovement: function() {return this._movement.slice(-1);},
 	// baas if has wool
 	hasWool: function() {
 		sounds.play_sheep();
@@ -215,6 +209,7 @@ Crafty.c('Sheep', {
 	}
 });
 Crafty.c('Cow', {
+	_movement: [],
 	init: function() {
 		this.requires('Animal, spr_cow13')
 			.attr({ w:60, h:60 })
@@ -224,10 +219,10 @@ Crafty.c('Cow', {
 			.bind('Milked', this.milked)
 	},
 	pushMovement: function(dir) {
-		gv.animal.cow.movement.push(dir);
-		if (gv.animal.cow.movement.length > 5) {gv.animal.cow.movement.shift();}
+		this._movement.push(dir);
+		if (this._movement.length > 5) {this._movement.shift();}
 	},
-	lastMovement: function() {return gv.animal.cow.movement.slice(-1);},
+	lastMovement: function() {return this._movement.slice(-1);},
 	// moos if has milk
 	hasMilk: function() {
 		sounds.play_cow();
@@ -240,6 +235,7 @@ Crafty.c('Cow', {
 	}
 });
 Crafty.c('Chicken', {
+	_movement: [],
 	init: function() {
 		this.requires('Animal, Obstacle, spr_chicken9')
 			.attr({ w:24, h:24 })
@@ -249,10 +245,10 @@ Crafty.c('Chicken', {
 			.onHit('SpinningWheel', this.turnAround)
 	},
 	pushMovement: function(dir) {
-		gv.animal.chicken.movement.push(dir);
-		if (gv.animal.chicken.movement.length > 5) {gv.animal.chicken.movement.shift();}
+		this._movement.push(dir);
+		if (this._movement.length > 5) {this._movement.shift();}
 	},
-	lastMovement: function() {return gv.animal.chicken.movement.slice(-1);},
+	lastMovement: function() {return this._movement.slice(-1);},
 	// lays an egg in current square 
 	layEgg: function() {
 		var x = this.x/gv.tile_sz;
@@ -316,7 +312,7 @@ Crafty.c('Snake', {
 	init: function() {
 		this.requires('Animal, spr_snake5')
 			.attr({ w:24, h:24 })
-			.delay(this.eatEgg, gv.snake.eat_egg, -1)
+			.delay(this.eatEgg, gv.animal.snake.eat_egg, -1)
 			.delay(this.snakeMove, this._speed, -1)
 			.bind('UpdateFrame', this.offScreen)
 	},
@@ -377,7 +373,7 @@ Crafty.c('Gopher', {
 	init: function() {
 		this.requires('Animal, spr_gopher_hole')
 			.attr({ w:24, h:24 })
-			.delay(this.disappear, gv.gopher.disappear)
+			.delay(this.disappear, gv.animal.gopher.disappear)
 			.reel('PopOut', 2000, [
 				[0,0], [1,0], [2,0]
 			])
