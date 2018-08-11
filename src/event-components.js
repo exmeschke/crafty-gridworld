@@ -13,7 +13,7 @@ function gopher_task() {
 		setTimeout(function () {
 			a++;
 			spawn_gopher(a);
-		}, 8000*i);
+		}, 10000*i);
 	}
 };
 // BUTTERLIES
@@ -29,7 +29,7 @@ function butterfly_task() {
 		setTimeout(function() {
 			a++;
 			spawn_butterfly(a);
-		}, 5000*i);
+		}, 8000*i);
 	}
 };
 // SNAKES
@@ -45,7 +45,7 @@ function snake_task() {
 		setTimeout(function() {
 			a++;
 			spawn_snake(a);
-		}, 8000*i);
+		}, 9000*i);
 	}
 };
 // HIDDEN CHEST
@@ -58,7 +58,5 @@ function chest_task() {
 		update_robot_text('Did you know you can break rocks with your hammer?');
 	}, 63000);
 };
-// BAKING
-function wait_bake_bread() {eval("Crafty.e('Bread').at(Game.w()-2.8,1.8).bake();");}
-function wait_bake_muffin() {eval("Crafty.e('Muffin').at(Game.w()-2.8,1.8).bake();");}
+
 

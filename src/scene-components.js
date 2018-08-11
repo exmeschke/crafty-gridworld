@@ -18,6 +18,7 @@ gv = {
 	robot: {
 		status: 2, // [0:not operational, 1:slow, 2:normal]
 		// REQUEST - general
+		alert_len: 20, // number of beeps and/or blinks
 		is_alerting: false, // currently is alerting w/beep, blink, or both
 		txt: '', // content for text bubble 
 		incomplete_txt: '',
@@ -675,9 +676,7 @@ Crafty.c('BerryBush', {
 	// collect a berry from the bush if berries on bush
 	collect: function() {
 		sounds.play_rustle();
-		if (this._on_bush > 0) {
-			Crafty.trigger('BerryCount');
-		}
+		if (this._on_bush > 0) {Crafty.trigger('BerryCount');}
 		this._on_bush -= 1;
 		if (this._on_bush == 0) {
 			this.sprite('spr_bbush_empty');
@@ -694,13 +693,13 @@ Crafty.c('BerryBush', {
 	}
 });
 // Baking in oven
+function wait_bake_bread() {eval("Crafty.e('Bread').at(Game.w()-2.8,1.8).bake();");}
+function wait_bake_muffin() {eval("Crafty.e('Muffin').at(Game.w()-2.8,1.8).bake();");}
 Crafty.c('Oven', {
 	init: function() {
 		this.requires('2D, Canvas, Grid, SpriteAnimation, spr_oven')
 			.attr({ w:50, h:40 })
-			.reel('OvenFire', 500, [
-				[0,0], [1,0], [2,0], [3,0]
-			])
+			.reel('OvenFire', 500, [[0,0], [1,0], [2,0], [3,0]])
 			.animate('OvenFire', -1)
 			.bind('BakeBread', this.bakeBread)
 			.bind('BakeMuffin', this.bakeMuffin)
@@ -718,7 +717,7 @@ Crafty.c('Oven', {
 		gv.resources.milk-=gv.recipes.muffin.milk;
 		gv.resources.eggs-=gv.recipes.muffin.eggs;
 		gv.resources.berries-=gv.recipes.muffin.berries;
-		gv.score-=(gv.recipes.muffin.wheat*2 + gv.recipes.muffin.milk*2 + gv.recipes.muffin.eggs*.25 + gv.recipes.muffin.berries*.1);
+		gv.score-=(gv.recipes.muffin.wheat*1 + gv.recipes.muffin.milk*2 + gv.recipes.muffin.eggs*.25 + gv.recipes.muffin.berries*.1);
 		sounds.play_ding();
 		setTimeout(wait_bake_muffin, gv.recipes.muffin.time);
 	}
@@ -781,7 +780,6 @@ Crafty.c('ChestExplosion', {
 Crafty.c('Chest', {
 	init: function() {
 		this.requires('2D, Canvas, Grid, spr_chest_closed')
-			// .attr({ w:40, h:40, z:-1 })
 			.attr({ w:gv.tile_sz, h:gv.tile_sz, z:-1 })
 			.bind('DigChest', this.reveal)
 			.bind('OpenChest', this.open)
@@ -809,7 +807,7 @@ Crafty.c('Chest', {
 				// get reward
 				sounds.play_money();
 				gv.score+=20;
-				
+				// trigger task complete
 				Crafty.trigger('CompletedTask');
 			}
 		}
@@ -882,9 +880,9 @@ Crafty.c('Tools', {
 			.bind('SwitchTools', this.switchTools);
 	}, 
 	switchTools: function() {
-		if (gv.tools.tools == 0){ // hammer
+		if (gv.tools.tools == 0){ // holding hammer
 			this.sprite('spr_tools2');
-		} else if (gv.tools.tools == 1) { // shears
+		} else if (gv.tools.tools == 1) { // holding shears
 			this.sprite('spr_tools1');
 		}
 	}
@@ -896,9 +894,9 @@ Crafty.c('LgTools', {
 			.bind('SwitchLgTools', this.switchTools);
 	}, 
 	switchTools: function() {
-		if (gv.tools.lgtools == 0){ // shovel
+		if (gv.tools.lgtools == 0){ // holding scythe
 			this.sprite('spr_scythe');
-		} else if (gv.tools.lgtools == 1) { // scythe
+		} else if (gv.tools.lgtools == 1) { // holding shovel
 			this.sprite('spr_shovel');
 		}
 	}

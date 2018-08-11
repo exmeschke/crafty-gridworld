@@ -1,29 +1,24 @@
 // PLAYER CHARACTER
 Crafty.c('Player', {
-	_movement: [],
-	_back: 1.6,
+	_movement: [], // tracks 5 most recent moves 
+	_back: 1.6, // keeps player from moving through solid objects
 	init: function() {
 		this.requires('2D, Canvas, Grid, Fourway, Keyboard, Collision, Delay, spr_player, SpriteAnimation')
 			.attr({ w:gv.tile_sz, h:gv.tile_sz, z:5 })
-			.fourway(80) //80
+			// on hit events
 			.onHit('Obstacle', this.stopMovement)
 			.onHit('Resource', function() {
 				var hitDatas, hitData;
 				if ((hitDatas = this.hit('Resource'))) {hitDatas[0].obj.collect();}
 			})
 			.onHit('Robot', this.pushRobot)
-			.reel('PlayerMovingUp', 600, [
-				[0,0], [1,0], [2,0]
-			])
-			.reel('PlayerMovingRight', 500, [
-				[0,1], [1,1], [2,1]
-			])
-			.reel('PlayerMovingDown', 600, [
-				[0,2], [1,2], [2,2]
-			])
-			.reel('PlayerMovingLeft', 500, [
-				[0,3], [1,3], [2,3]
-			])
+			// animations
+			.reel('PlayerMovingUp', 600, [[0,0], [1,0], [2,0]])
+			.reel('PlayerMovingRight', 500, [[0,1], [1,1], [2,1]])
+			.reel('PlayerMovingDown', 600, [[0,2], [1,2], [2,2]])
+			.reel('PlayerMovingLeft', 500, [[0,3], [1,3], [2,3]])
+			// movment
+			.fourway(80)
 			.bind('NewDirection', function(data) {
 				var animation_speed = 20;
 				if (data.x > 0) {
@@ -43,11 +38,13 @@ Crafty.c('Player', {
 				}
 				if (this._movement.length > 5) {this._movement.shift();}
 			})
+			// actions
 			.bind('KeyDown', function(e) {
 				if (e.key == Crafty.keys.X) {this.action();} 
 				if (e.key == Crafty.keys.R) {this.reset();}
 				if (e.key == Crafty.keys.SPACE) {Crafty.trigger('HideRequest');}
 			})
+			// triggered events
 			.bind('SetSpeed', this.setSpeed)
 	},
 	// resets location if off screen
@@ -55,6 +52,7 @@ Crafty.c('Player', {
 		gv.score -= 5;
 		this.at(30,16);
 	},
+	// changes speed of player pushing robot depending on robot speed
 	setSpeed: function() {
 		if (gv.robot.status == 2) {this._back = 1.6;}
 		else if (gv.robot.status == 1) {this._back = 2;}
@@ -180,16 +178,14 @@ Crafty.c('Player', {
 			else if (gv.tools.bucket == 1) {
 				Crafty.trigger('Water');
 				Crafty.trigger('EmptyBucket');
-				if (request_list.getNumber() == 5) {
-					gv.player.interacting = false;
-				}
+				// if request is to give water to robot, trigger completed
+				if (request_list.getNumber() == 5) {gv.player.interacting = false;}
 			// if seed bag full, set robot task to plant
 			} else if (gv.tools.seed_bag == 1) {
 				Crafty.trigger('Plant');
 				Crafty.trigger('EmptySeedBag');
-				if (request_list.getNumber() == 5) {
-					gv.player.interacting = false;
-				}
+				// if request is to give seeds to robot, trigger completed
+				if (request_list.getNumber() == 5) {gv.player.interacting = false;}
 			}
 		}
 		// check if over lost part 
@@ -229,8 +225,8 @@ Crafty.c('Player', {
 
 //TASKS
 Crafty.c('Task', {
-	_initial: 0,
-	_filler: 0.0,
+	_initial: 0, // initial quantity of task related resource
+	_filler: 0.0, // tracks how much time for filler task (no task)
 	init: function() {
 		this.requires('2D, DOM, Grid, Text')
 			.attr( { w:230, h:200 })
@@ -241,13 +237,13 @@ Crafty.c('Task', {
 			.bind('UpdateTask', this.updateTask)
 			.bind('UpdateFrame', this.checkTask)
 	},
-	// updates task information
+	// updates task information if there is a task
 	updateTask: function() {
-		// set initial quantity
 		if (typeof task_list.getCurr() != undefined){
 			// get task requirements
 			var met = task_list.getMet();
 			var resource = met[0];
+			// records current quantity
 			if (resource == 'eggs') {_initial = gv.resources.eggs;}
 			else if (resource == 'wheat') {_initial = gv.resources.wheat;}
 			else if (resource == 'wool') {_initial = gv.resources.wool;}
@@ -309,50 +305,62 @@ Crafty.c('Task', {
 	},
 	// task completed
 	completedTask: function() {
+		// stop clock
 		task_list.setEnd();
+		// update current task index
 		task_list.nextTask();
+		// reset private variables
 		this._quant = 0;
 		this._filler = 0.0;
-		gv.player.moment = 'middle';
+		// next task
 		this.updateTask();
 	}
 });
 
 // ROBOT CHARACTER
+// sound for robot alert
 function robot_alert_sound() {
 	sounds.play_med();
-	for (var i = 0; i < 20; i++) {
+	for (var i = 0; i < gv.robot.alert_len; i++) {
 	    setTimeout(function() {
+	    	// stop alert if player responds
 	    	if (gv.robot.is_alerting == false) {return;}
 	    	else {sounds.play_med();}
 	    }, 1000*i);
 	}
 };
+// sets speed depending on status
 function set_robot_speed(status) {
 	gv.robot.status = status;
 	Crafty.trigger('SetSpeed');
 };
+// indicates request was sent
 function set_request(time) {
-	if (time != -1) {
-		// record that response was sent
-		request_list.sentRequest();
-		// set trigger for new request
-		setTimeout(function() {
-			var text = request_list.getText();
-			var action = request_list.getAction();
-			Crafty.log(text, action);
-			update_robot_text(text,action);
-		}, time);
-	}
+	// record that response was sent
+	request_list.sentRequest();
+	// set trigger for new request
+	setTimeout(function() {
+		// get information and update text
+		var text = request_list.getText();
+		update_robot_text(text);
+		// initialize action (alert)
+		var action = request_list.getAction();
+		if (action == 0) {}
+		else if (action == 1) {Crafty.trigger('LowAlert');}
+		else if (action == 2) {Crafty.trigger('MedAlert');}
+		else if (action == 3) {Crafty.trigger('HighAlert');}
+		// output to console
+		Crafty.log(text, action);
+	}, time);
 };
 Crafty.c('Robot', {
 	_power: 100,
-	_battery_life: 2000, // how often lose power
-	_is_charging: false, // stops moving if charging == true
+	_battery_life: 2000, // how often lose power in ms
+	_is_charging: false, // stops moving if true
 	_movement: [], // records last 5 moves
-	_do_move: 1500, // how often move
-	_speed: [0, 2400, 1200], // different speeds depending on status
-	_task: -1, // [-1:none, 0:plant, 1:water, 2:pick]
+	_do_move: 1500, // how often moves, depends on status
+	_speed: [0, 2400, 1200], // different speeds, depends on status
+	_task: -1, // [-1:none, 0:plant, 1:water]
 	_is_alerting: false, // currently blinking, beeping, or both
 	init: function() {
 		this.requires('2D, Canvas, Grid, Collision, SpriteAnimation, spr_bot, Tween, Delay, Text')
@@ -360,6 +368,7 @@ Crafty.c('Robot', {
 			// delay events
 			.delay(this.randomMove, this._do_move, -1)
 			.delay(this.losePower, this._battery_life, -1)
+			// request specific
 			.delay(this.alertFire, 900000, -1) // 15 minutes = 900000
 			.delay(this.alertPlants, 420000, -1) // 7 minutes = 420000
 			.delay(this.alertNotification, 240000, -1) // 4 minutes = 240000
@@ -377,7 +386,6 @@ Crafty.c('Robot', {
 			.bind('RobotRight', this.moveRight)
 			.bind('Plant', this.plant)
 			.bind('Water', this.water)
-			.bind('Pick', this.pick)
 			.bind('LowAlert', this.lowAlert)
 			.bind('MedAlert', this.medAlert)
 			.bind('HighAlert', this.highAlert)
@@ -506,13 +514,13 @@ Crafty.c('Robot', {
 			this._is_charging = false;
 		}
 	},
-	// either plants, waters, or collects wheat
+	// ROBOT TASKS
+	// either plants or waters
 	tendPlants: function() {
 		// not on fire
 		if (gv.robot.fire == -1) {
 			if (this._task == 0) {this.plant();}
 			else if (this._task == 1) {this.water();}
-			else if (this._task == 2) {this.pick();}
 		// on fire
 		} else {this.burn();}
 	},
@@ -545,16 +553,7 @@ Crafty.c('Robot', {
 			if (gv.robot.fire == 3) {this.offFire();}
 		}
 	}, 
-	pick: function() {
-		this._task = 2;
-
-		var x = Math.round(this.x/gv.tile_sz);
-		var y = Math.round(this.y/gv.tile_sz);
-
-		if (gv.field.wheat_loc_x.indexOf(x) != -1 && gv.field.wheat_loc_y.indexOf(y) != -1) {
-			Crafty.e('Soil5').at(x, y);
-		}
-	},
+	// destroys wheat if on fire
 	burn: function() {
 		var x = Math.round(this.x/gv.tile_sz);
 		var y = Math.round(this.y/gv.tile_sz);
@@ -563,11 +562,12 @@ Crafty.c('Robot', {
 			Crafty.e('Soil5').at(x,y);
 		}
 	},
+	// ALERTS
 	// flashing light
 	lowAlert: function() {
 		gv.robot.is_alerting = true;
 		this.animate('AnimateLight', -1);
-		this.delay(this.stopAlert, 20000);
+		this.delay(this.stopAlert, gv.robot.alert_len*1000);
 	},
 	// beeping
 	medAlert: function() {
@@ -578,7 +578,7 @@ Crafty.c('Robot', {
 	highAlert: function() {
 		gv.robot.is_alerting = true;
 		this.animate('AnimateLight', -1);
-		this.delay(this.stopAlert, 20000);
+		this.delay(this.stopAlert, gv.robot.alert_len*1000);
 		robot_alert_sound();
 	},
 	stopAlert: function() {
@@ -588,7 +588,7 @@ Crafty.c('Robot', {
 			this.sprite('spr_bot');
 		}
 	},
-	// trigger requests
+	// REQUESTS
 	alertNotification: function() {
 		if (this._is_charging == false && gv.robot.status != 0) {
 			gv.robot.is_alerting = true;
@@ -644,6 +644,7 @@ Crafty.c('Robot', {
 			request_list.addRequest(13);
 			set_request(500);
 		}
+		// moves slowly
 		set_robot_speed(1);
 	},
 	alertFire: function() {
@@ -651,7 +652,7 @@ Crafty.c('Robot', {
 		request_list.addRequest(15);
 		set_request(500);
 		// request specific 
-		this.delay(this.onFire, 20000);
+		this.delay(this.onFire, gv.robot.alert_len*1000);
 	},
 	onFire: function() {
 		gv.robot.fire = 0;
@@ -667,18 +668,10 @@ Crafty.c('Robot', {
 });
 
 // REQUESTS
-function update_robot_text(text, action) {
-	// update text
-	gv.robot.txt = text;
-	// initialize action (alert)
-	if (action == 0) {}
-	else if (action == 1) {Crafty.trigger('LowAlert');}
-	else if (action == 2) {Crafty.trigger('MedAlert');}
-	else if (action == 3) {Crafty.trigger('HighAlert');}
-};
+function update_robot_text(text) {gv.robot.txt = text;};
 function hide_robot_text() {Crafty.trigger('HideRequest');};
 Crafty.c('RobotRequest', {
-	_incomplete_txt: '',
+	_incomplete_txt: '', // shows text one letter at a time
 	init: function() {
 		this.requires('2D, DOM, Grid, Color, Text')
 			.attr({ w:gv.tile_sz*52, h:gv.tile_sz*13, z:10 })

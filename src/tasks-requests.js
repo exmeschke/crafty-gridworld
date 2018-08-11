@@ -1,10 +1,10 @@
 // Generates human task list, human availability function, robot requests / actions, and state-action information
 
-// set tasks for game
+// SET FOR GAME
+// tasks
 // [0:none, 1:wheat, 2:berries, 3:eggs, 4:wool, 5:milk, 6:gophers, 7:butterflies, 8:snakes, 9:chest, 10:bread, 11:muffin, 12:thread]
-// var task_indices = [1,2,3,4,5,6,7,8,9,10,11,12,0];
 var task_indices = [1,0,2,3,4,0,5,6,7,8,0,9,0,10,11,12,0];
-// set requests for game
+// requests
 // [0:none, 1-4:short notification, 5-7:long notification, 8:text response, 9:low battery, 10-11:task change, 12-13:broken robot, 14:very low battery, 15:emergency]
 var request_indices = [];
 var all_requests = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15];
@@ -252,15 +252,13 @@ var receptivity = {
     // moment - moment of interruption ['break', 'middle']
     moment: '',
 
+    // STORES
     // another request sent - update count, request number, and store receptivity
     sentRequest: function(request_num) {
         this.curr += 1;
         this.request_num = request_num;
         this.receptivityFunc();
     },
-    // returns most recent receptivity
-    getReceptivity: function() {this.receptivity[-1];},
-
     // implements receptivity function and adds new receptivity to end of list
     receptivityFunc: function() {
         // most recent receptivity
@@ -278,7 +276,8 @@ var receptivity = {
         // push current receptivity to log of receptivity
         this.receptivity.push(r_sum);
     },
-    // updates current information - always up to date in Task.checkTasK();
+    // UPDATES
+    // updates current information, based on task - called in Task.checkTasK();
     updateState: function(interacting, difficulty, moment) {
         // save current information
         this.interacting = interacting;
@@ -307,7 +306,10 @@ var receptivity = {
             }
         }
         Crafty.log('A',this.availability, 'I',this.interacting, 'D',this.difficulty, 'M',this.moment);
-    }
+    },
+    // RETURNS
+    // returns most recent receptivity
+    getReceptivity: function() {this.receptivity[-1];}
 };  
 
 
@@ -375,6 +377,7 @@ var request_list = {
     // list of requests sent (empty at beginning)
     sent: new RRequestList(request_indices),
     
+    // UPDATE REQUEST
     // add request to beginning of sent
     addRequest: function(request_num) {
         if (this.sent[this.curr] != this.possible[request_num] && request_num != -1) {
@@ -389,10 +392,11 @@ var request_list = {
         // and receptivity record
         receptivity.sentRequest(this.sent[-1].number);        
     },
-    // indicates request was checked / responded to
+    // indicates request was checked / responded to -- REWARD
     receivedResponse: function() {this.sent[this.curr].receivedResponse();},
 
-    // getters -- returns current in sent list
+    // RETURN INFORMATION
+    // returns current in sent list
     getNumber: function() {return this.sent[this.curr].number;},
     getDuration: function() {return this.sent[this.curr].duration;},
     getText: function() {return this.sent[this.curr].txt;},
