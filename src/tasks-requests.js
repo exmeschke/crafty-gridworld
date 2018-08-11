@@ -202,13 +202,13 @@ var task_funcs = {
 // STATE OF HUMAN
 // definition for receptivity
 function HReceptivity (availability, requestNum) {
+    // VARIABLES
     // value of human receptivity
-    this.val = 0;
+    this.val = availability/2;
     // availability at time of alert
     this.availability = availability;
     // request number
     this.requestNum = requestNum;
-
     // time = 0
     this.timeSent = new Date().getTime()/1000;
     // time = current
@@ -216,10 +216,7 @@ function HReceptivity (availability, requestNum) {
     // time since request sent
     this.timeSince = 0;
 
-    // initialize value
-    this.updateValue();
-
-    // helper functions
+    // HELPER FUNCS
     // updates how much time has passed
     this.timePassed = function() {
         this.timeCurr = new Date().getTime()/1000;
@@ -228,7 +225,7 @@ function HReceptivity (availability, requestNum) {
     // updates value based on availability, request duration, and time
     this.updateValue = function() {
         var factor = -1; // TBD
-        Math.exp(factor * (this.timePassed())) * (this.availability);
+        Math.exp(factor * (this.timePassed())) * (this.availability/2);
     };
     // returns current value
     this.getValue = function() {return this.val;};
@@ -237,7 +234,7 @@ function HReceptivity (availability, requestNum) {
 var receptivity = {
     // tracks number of requests sent
     curr: 0,
-    // receptivity - [0:interacting, 1:low, 2:high]
+    // receptivity - stores list of receptivity objects, one for each request
     receptivity: [],
 
     // CURRENT VARIABLES
@@ -253,28 +250,18 @@ var receptivity = {
     moment: '',
 
     // STORES
-    // another request sent - update count, request number, and store receptivity
+    // another request sent - store receptivity and update count + request number 
     sentRequest: function(request_num) {
+        // update temporary information
         this.curr += 1;
         this.request_num = request_num;
-        this.receptivityFunc();
+        // add receptivity to log
+        var r_curr = new HReceptivity(this.availability, this.request_num);
+        this.receptivity.push(r_curr);
     },
     // implements receptivity function and adds new receptivity to end of list
-    receptivityFunc: function() {
-        // most recent receptivity
-        var r_curr = new HReceptivity(this.availability, this.request_num);
-        // summed receptivity
-        var r_sum = 0;
-
-        // loop through receptivity for each request, apply function, and add to r_sum
-        for (var i = 0; i < this.curr; i++) {
-            // gets updated receptivity
-            var r_i = this.receptivity[i].updateValue();
-            // adds to sum
-            r_sum += r_i.getValue();
-        }
-        // push current receptivity to log of receptivity
-        this.receptivity.push(r_sum);
+    logReceptivity: function() {
+        
     },
     // UPDATES
     // updates current information, based on task - called in Task.checkTasK();
@@ -308,8 +295,21 @@ var receptivity = {
         Crafty.log('A',this.availability, 'I',this.interacting, 'D',this.difficulty, 'M',this.moment);
     },
     // RETURNS
-    // returns most recent receptivity
-    getReceptivity: function() {this.receptivity[-1];}
+    // implements receptivity function
+    getReceptivity: function() {
+        // summed receptivity
+        var r_sum = r_curr.getValue();
+
+        // loop through receptivity for each request, apply function, and add to r_sum
+        for (var i = 0; i < this.curr; i++) {
+            // gets updated receptivity
+            var r_i = this.receptivity[i];
+            r_i.updateValue();
+            // adds to sum
+            r_sum += r_i.getValue();
+        }
+        return r_sum;
+    }
 };  
 
 
@@ -371,7 +371,7 @@ function RRequestList(indices) {
 // stores robot action list
 var request_list = {
     // index for current / next task
-    curr: 0,
+    curr: -1,
     // request options
     possible: new RRequestList(all_requests),
     // list of requests sent (empty at beginning)
@@ -380,19 +380,15 @@ var request_list = {
     // UPDATE REQUEST
     // add request to beginning of sent
     addRequest: function(request_num) {
+        this.curr += 1;
         if (this.sent[this.curr] != this.possible[request_num] && request_num != -1) {
             this.sent.push(this.possible[request_num]);
             // this.sent.splice(this.curr, 0, this.possible[request_num]);
         }
     },
     // indicates request was sent
-    sentRequest: function() {
-        // update current request number for both request record...
-        this.curr += 1;
-        // and receptivity record
-        receptivity.sentRequest(this.sent[-1].number);        
-    },
-    // indicates request was checked / responded to -- REWARD
+    sentRequest: function() {receptivity.sentRequest(this.sent[this.curr].number);},
+    // indicates request was checked / responded to
     receivedResponse: function() {this.sent[this.curr].receivedResponse();},
 
     // RETURN INFORMATION

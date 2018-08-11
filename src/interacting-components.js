@@ -371,7 +371,7 @@ Crafty.c('Robot', {
 			// request specific
 			.delay(this.alertFire, 900000, -1) // 15 minutes = 900000
 			.delay(this.alertPlants, 420000, -1) // 7 minutes = 420000
-			.delay(this.alertNotification, 240000, -1) // 4 minutes = 240000
+			.delay(this.alertNotification, 2000) // 4 minutes = 240000
 			.delay(this.alertCognitive, 660000, -1) // 11 minutes = 660000
 			// on hit events
 			.onHit('Solid', this.turnAround)
