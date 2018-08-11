@@ -269,9 +269,9 @@ Crafty.c('Butterfly', {
 	type: function() { return 'butterfly'; },
 	// initial direction
 	setDir: function(dir) {this._dir = dir;},
-	// deviates from movement with a probability of 0.2
+	// deviates from movement with a probability of 0.1
 	butterflyMove: function() {
-		if (Math.random() < 0.2) {
+		if (Math.random() < 0.1) {
 			var a = Math.random();
 			if (a < 0.25){this._dir = 'up';}
 			else if (a < 0.5){this._dir = 'down';}
@@ -319,9 +319,9 @@ Crafty.c('Snake', {
 	type: function() { return 'snake'; },
 	// initial direction
 	setDir: function(dir) {this._dir = dir;},
-	// deviates from movement with a probability of 0.1
+	// deviates from movement with a probability of 0.05
 	snakeMove: function() {
-		if (Math.random() < 0.1) {
+		if (Math.random() < 0.05) {
 			var a = Math.random();
 			if (a < 0.25){this._dir = 'up';}
 			else if (a < 0.5){this._dir = 'down';}
