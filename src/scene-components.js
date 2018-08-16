@@ -793,7 +793,6 @@ Crafty.c('Chest', {
 		if (task_funcs.chestGetOpened() == 0 && task_funcs.chestGetDestroyed() == 0){
 			var pin = prompt('Please enter the 7 digit password:');
 			if (pin == task_funcs.chestGetPassword()) {
-				Crafty.log(pin+' = '+task_funcs.chestGetPassword());
 				// open chest
 				this.sprite('spr_chest_open');
 				task_funcs.chestIsOpen();

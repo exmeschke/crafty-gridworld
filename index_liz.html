@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/5.0.4/math.js"></script>
+	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+
+
+	<title>Interaction Lab | USC</title>
+
+
+ 	<?php include('loadQtable.php') ?> 
+ 	<?php include('loadNTable.php') ?> 
+
+
+	<script type="text/javascript">
+		var states = 19; //total states
+		var starting_states = 16; // only 1-16 are starting states
+		var actions = 4; // 4 actions
+		var epsilon = 0.2; // exploration rate 
+
+
+		var Q_array = <?php echo json_encode($q_array); ?>;
+		var n_array = <?php echo json_encode($num_array); ?>;
+
+
+		/*console.log(Q_array.length);
+		console.log(Q_array[0].length);
+		}*/
+
+		var Q_table = [];
+		var n_table = [];
+		for (i=0; i<states; i++)
+		{
+			Q_table[i] = [];
+			n_table[i] = [];
+		 	for (j=0; j<actions; j++)
+		 	{
+		 		Q_table[i][j] = parseInt(Q_array[i][j]);
+		 		n_table[i][j] = parseInt(n_array[i][j]);
+		 	}
+		}
+
+		//document.write(jArray[1][1]);
+		//const mat = math.matrix(jArray);
+		//console.log(math.subset(mat,math.index(1,1)));
+
+	</script>
+
+
+	<script type="text/javascript" src="https://rawgithub.com/craftyjs/Crafty/release/dist/crafty-min.js"></script>
+	<script src="src/game-setup.js"></script>
+	<script src="src/tasks-requests.js"></script>
+	<script src="src/scene-components.js"></script>
+	<script src="src/scenes.js"></script>
+	<script src="src/event-components.js"></script>
+	<style> * {cursor: none;} </style> 
+
+
+	<script type="text/javascript">
+		//alter Q values to test saving
+		for (i=0; i<states; i++)
+		{
+		 	for (j=0; j<actions; j++)
+		 	{
+		 		Q_table[i][j] = Q_table[i][j] + Math.random();
+		 	}
+		}
+		Q_line = JSON.stringify(Q_table);
+
+		console.log(Q_line);
+
+		$.ajax({
+		    url: 'saveQtable.php',
+		    method: 'POST',
+		    data: {data: Q_line},
+		    success: function (response) {
+		    	console.log('Done');
+        		console.log(response);
+    		}, 
+    		error: function (jqXhr, textStatus, errorThrown ){
+        		console.log( errorThrown );
+    		}
+    	});
+	</script>
+    <?php include('saveQTable.php') ?> 
+
+
+	<script type="text/javascript">
+		for (i=0; i<states; i++)
+		{
+		 	for (j=0; j<actions; j++)
+		 	{
+		 		n_table[i][j] = n_table[i][j] + 1;
+		 	}
+		}
+		n_line = JSON.stringify(n_table);
+
+		console.log(n_line);
+
+		$.ajax({
+		    url: 'saveNtable.php',
+		    method: 'POST',
+		    data: {data: n_line},
+		    success: function (response) {
+		    	console.log('Done');
+        		console.log(response);
+    		}, 
+    		error: function (jqXhr, textStatus, errorThrown ){
+        		console.log( errorThrown );
+    		}
+    	});
+	</script>
+    <?php include('saveNtable.php') ?> 
+
+
+    <?php include('savedata.php') ?>
+
+</head>
+<body>
+	<div id="game" style="margin-left:auto; margin-right:auto"></div>
+</body>
+</html>

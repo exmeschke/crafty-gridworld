@@ -490,7 +490,7 @@ Crafty.scene('Game', function() {
 	this.currTask = Crafty.e('Task').at(7,box_b+.4).text('').trigger('UpdateTask');
 
 	// End game
-	setTimeout(function() {eval("Crafty.scene('EndGame');");}, 2400000); // 40 minutes in ms
+	setTimeout(function() {eval("Crafty.scene('EndGame');");}, 4000); // 40 minutes = 2400000
 });
 
 // 3. End game screen
@@ -504,6 +504,46 @@ Crafty.scene('EndGame', function() {
 		.text('Congrats, you made '+score+' dollars!')
 		.attr({ x:0, y:Game.height()/2-24, w:Game.width() })
 		.css($text_css);
+
+	// Write information to files
+	// QTABLE
+	for (i=0; i<states; i++)
+	{
+	 	for (j=0; j<actions; j++)
+	 	{
+	 		Q_table[i][j] = Q_table[i][j] + Math.random();
+	 	}
+	}
+	Q_line = JSON.stringify(Q_table);
+	// console.log(Q_line);
+	$.ajax({
+	    url: 'saveQtable.php',
+	    method: 'POST',
+	    data: {data: Q_line},
+	    success: function (response) {
+	    	console.log('Done');
+    		console.log(response);
+		}, 
+		error: function (jqXhr, textStatus, errorThrown ){
+    		console.log( errorThrown );
+		}
+	});
+
+	// NTABLE
+	// n_line = JSON.stringify(n_table);
+	// console.log(n_line);
+	// $.ajax({
+	// 	url: 'saveNtable.php',
+	// 	method: 'POST',
+	// 	data: {data: n_line},
+	// 	success: function (response) {
+	// 		console.log('Done');
+	// 		console.log(response);
+	// 	}, 
+	// 	error: function (jqXhr, textStatus, errorThrown ){
+	// 		console.log( errorThrown );
+	// 	}
+	// });
 });
 
 

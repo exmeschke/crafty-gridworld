@@ -320,6 +320,7 @@ Crafty.c('Task', {
 	}
 });
 
+
 // ROBOT CHARACTER
 // sound for robot alert
 function robot_alert_sound() {
@@ -358,7 +359,7 @@ function set_request(time) {
 };
 Crafty.c('Robot', {
 	_power: 100,
-	_battery_life: 2000, // how often lose power in ms
+	_battery_life: 4000, // how often lose power in ms
 	_is_charging: false, // stops moving if true
 	_movement: [], // records last 5 moves
 	_do_move: 1500, // how often moves, depends on status
@@ -374,8 +375,8 @@ Crafty.c('Robot', {
 			// request specific
 			.delay(this.alertFire, 900000, -1) // 15 minutes = 900000
 			.delay(this.alertPlants, 420000, -1) // 7 minutes = 420000
-			.delay(this.alertNotification, 240000) // 4 minutes = 240000
-			.delay(this.alertCognitive, 660000, -1) // 11 minutes = 660000
+			.delay(this.alertNotification, 5000) // 4 minutes = 240000
+			.delay(this.alertCognitive, 5000, -1) // 11 minutes = 660000
 			// on hit events
 			.onHit('Solid', this.turnAround)
 			.onHit('ChargingStation', this.recharge)

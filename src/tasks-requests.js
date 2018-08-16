@@ -3,10 +3,9 @@
 // SET FOR GAME
 // tasks
 // [0:none, 1:wheat, 2:berries, 3:eggs, 4:wool, 5:milk, 6:gophers, 7:butterflies, 8:snakes, 9:chest, 10:bread, 11:muffin, 12:thread]
-var task_indices = [6,0];
+var task_indices = [6,0,1,2,3,0,0,4,6,8,9,0,8,11,3,5,0];
 // requests
 // [0:none, 1-4:short notification, 5-7:long notification, 8:text response, 9:low battery, 10-11:task change, 12-13:broken robot, 14:very low battery, 15:emergency]
-var request_indices = [];
 var all_requests = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15];
 
 
@@ -52,7 +51,7 @@ function HTaskList(indices) {
     this.taskOptions[6] = new HTask(2, 2, 'Hit the gophers with your hammer before they disappear and steal one dollar!', ['',0], 'gopher_task();');
     this.taskOptions[7] = new HTask(3, 1, 'Collect butterflies for a one dollar reward per butterfly!', ['',0], 'butterfly_task();');
     this.taskOptions[8] = new HTask(4, 2, 'Hurry and hit the snakes with your hammer. Each snake steals an egg every two seconds!', ['',0], 'snake_task();');
-    this.taskOptions[9] = new HTask(5, 1, 'Grab you shovel and open the treasure chest burried under a tuft of grass (ticking means it might explode!)', ['',0], 'chest_task();');
+    this.taskOptions[9] = new HTask(5, 1, 'Grab your shovel and open the treasure chest burried under a tuft of grass (ticking means it might explode!)', ['',0], 'chest_task();');
     this.taskOptions[10] = new HTask(6, 2, 'Bake a loaf of bread.', ['bread',1], '');
     this.taskOptions[11] = new HTask(6, 2, 'Bake a muffin.', ['muffin',1], '');
     this.taskOptions[12] = new HTask(6, 2, 'Make a spool of thread.', ['thread',1], '');
@@ -222,27 +221,18 @@ function HReceptivity (availability, requestNum) {
     // request number
     this.requestNum = requestNum;
     // time = 0
-    this.timeSent = new Date().getTime()/1000;
-    // time = current
-    this.timeCurr = 0;
-    // time since request sent
-    this.timeSince = 0;
+    this.time_i = new Date().getTime()/1000;
 
     // HELPER FUNCS
-    // updates how much time has passed
-    this.timePassed = function() {
-        this.timeCurr = new Date().getTime()/1000;
-        this.timeSince = this.timeCurr - this.timeSent;
-    };
     // updates value based on availability, request duration, and time
-    this.updateValue = function() {
+    this.updateValue = function(time_n) {
         var factor = -1; // TBD
-        Math.exp(factor * (this.timePassed())) * (this.availability/2);
+        this.val = Math.exp(factor * (time_n-this.time_i)) * (this.availability/2);
     };
     // returns current value
     this.getValue = function() {return this.val;};
 };
-// tracks receptivity 
+// tracks receptivity
 var receptivity = {
     // tracks number of requests sent
     curr: 0,
@@ -270,10 +260,6 @@ var receptivity = {
         // add receptivity to log
         var r_curr = new HReceptivity(this.availability, this.request_num);
         this.receptivity.push(r_curr);
-    },
-    // implements receptivity function and adds new receptivity to end of list
-    logReceptivity: function() {
-        
     },
     // UPDATES
     // updates current information, based on task - called in Task.checkTasK();
@@ -308,19 +294,25 @@ var receptivity = {
     // RETURNS
     // implements receptivity function
     getReceptivity: function() {
+        // current time
+        var time = new Date().getTime()/1000;
         // summed receptivity
         var r_sum = r_curr.getValue();
 
         // loop through receptivity for each request, apply function, and add to r_sum
         for (var i = 0; i < this.curr; i++) {
-            // gets updated receptivity
+            // updates receptivity
             var r_i = this.receptivity[i];
-            r_i.updateValue();
-            // adds to sum
+            r_i.updateValue(time);
+            // adds val to sum
             r_sum += r_i.getValue();
         }
         return r_sum;
     },
+    getReceptivity: function(ii) {
+        if (this.receptivity[ii] != undefined) {return this.receptivity[ii];}
+    },
+    // PRINTS
     printState: function() {Crafty.log(this.availability, this.interacting, this.difficulty, this.moment);}
 };  
 
@@ -387,7 +379,7 @@ var request_list = {
     // request options
     possible: new RRequestList(all_requests),
     // list of requests sent (empty at beginning)
-    sent: new RRequestList(request_indices),
+    sent: [],
     
     // UPDATE REQUEST
     // add request to beginning of sent
@@ -401,7 +393,11 @@ var request_list = {
     // indicates request was sent
     sentRequest: function() {receptivity.sentRequest(this.sent[this.curr].number);},
     // indicates request was checked / responded to
-    receivedResponse: function() {this.sent[this.curr].receivedResponse();},
+    receivedResponse: function() {
+        if (this.sent[this.curr] != undefined){
+            this.sent[this.curr].receivedResponse();
+        }
+    },
 
     // RETURN INFORMATION
     // returns current in sent list
@@ -438,8 +434,13 @@ var request_list = {
         if (rand < 0.33) {return 1;}
         else if (rand < 0.66) {return 2;}
         else {return 3;}
+    },
+    // returns index ii in sent
+    getSent: function(ii) {
+        if (this.sent[ii] != undefined) {return this.sent[ii];}
     }
 };
 
 
+// REWARD
 
