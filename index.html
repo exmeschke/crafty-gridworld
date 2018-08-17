@@ -14,7 +14,6 @@
 		var actions = 4; // 4 actions
 		var epsilon = 0.2; // exploration rate 
 
-
 		var Q_array = <?php echo json_encode($q_array); ?>;
 		var n_array = <?php echo json_encode($num_array); ?>;
 
@@ -26,10 +25,14 @@
 			n_table[i] = [];
 		 	for (j=0; j<actions; j++)
 		 	{
-		 		Q_table[i][j] = parseInt(Q_array[i][j]);
+		 		Q_table[i][j] = parseFloat(Q_array[i][j]);
 		 		n_table[i][j] = parseInt(n_array[i][j]);
 		 	}
 		}
+	// Q_line = JSON.stringify(Q_table);
+	// console.log(Q_line);
+	// n_line = JSON.stringify(n_table);
+	// console.log(n_line);
 
 	</script>
 
@@ -46,7 +49,6 @@
 	<div id="game" style="margin-left:auto; margin-right:auto"></div>
 
 	<?php include('saveQTable.php') ?> 
-	<!-- <?php include('saveNtable.php') ?>  -->
-	<!-- <?php include('savedata.php') ?> -->
+	<?php include('saveNtable.php') ?>
 </body>
 </html>

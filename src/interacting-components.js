@@ -42,7 +42,7 @@ Crafty.c('Player', {
 			.bind('KeyDown', function(e) {
 				if (e.key == Crafty.keys.X) {this.action();} 
 				if (e.key == Crafty.keys.R) {this.reset();}
-				if (e.key == Crafty.keys.SPACE) {Crafty.trigger('HideRequest');}
+				// if (e.key == Crafty.keys.SPACE) {Crafty.trigger('HideRequest');}
 			})
 			// triggered events
 			.bind('SetSpeed', this.setSpeed)
@@ -299,8 +299,9 @@ Crafty.c('Task', {
 		this.text(new_txt);
 		// update human state information
 		gv.player.difficulty = task_list.getDiff();
-		receptivity.updateState(gv.player.interacting, gv.player.difficulty, gv.player.moment);
-		// receptivity.printState();
+		receptivity_list.updateState(gv.player.interacting, gv.player.difficulty, gv.player.moment);
+		// request.updateState();
+		// receptivity_list.printState();
 		// check if task is complete if not gopher, snake, or butterfly task
 		if (resource != '') {
 			if (quantity <= curr_quant || this._filler >= 2) {this.completedTask();}
@@ -340,8 +341,6 @@ function set_robot_speed(status) {
 };
 // indicates request was sent
 function set_request(time) {
-	// record that response was sent
-	request_list.sentRequest();
 	// set trigger for new request
 	setTimeout(function() {
 		// get information and update text
@@ -349,7 +348,7 @@ function set_request(time) {
 		update_robot_text(text);
 		// initialize action (alert)
 		var action = request_list.getAction();
-		if (action == 0) {}
+		if (action == 0) {updateQ();}
 		else if (action == 1) {Crafty.trigger('LowAlert');}
 		else if (action == 2) {Crafty.trigger('MedAlert');}
 		else if (action == 3) {Crafty.trigger('HighAlert');}
@@ -376,7 +375,7 @@ Crafty.c('Robot', {
 			.delay(this.alertFire, 900000, -1) // 15 minutes = 900000
 			.delay(this.alertPlants, 420000, -1) // 7 minutes = 420000
 			.delay(this.alertNotification, 5000) // 4 minutes = 240000
-			.delay(this.alertCognitive, 5000, -1) // 11 minutes = 660000
+			.delay(this.alertCognitive, 45000, -1) // 11 minutes = 660000
 			// on hit events
 			.onHit('Solid', this.turnAround)
 			.onHit('ChargingStation', this.recharge)
@@ -591,10 +590,12 @@ Crafty.c('Robot', {
 			this.pauseAnimation();
 			this.sprite('spr_bot');
 		}
+		// update Q-table with reward
+		updateQ();
 	},
 	// REQUESTS
 	alertNotification: function() {
-		if (this._is_charging == false && gv.robot.status != 0) {
+		if (this._is_charging == false && gv.robot.status != 0 && gv.robot.is_alerting == false) {
 			gv.robot.is_alerting = true;
 			var request_num = -1;
 			var rand = Math.random();
@@ -620,7 +621,7 @@ Crafty.c('Robot', {
 		}
 	},
 	alertPlants: function() {
-		if (this._is_charging == false && gv.robot.status != 0) {
+		if (this._is_charging == false && gv.robot.status != 0 && gv.robot.is_alerting == false) {
 			gv.robot.is_alerting = true;
 			var request_num = -1;
 			// switch to planting
@@ -636,27 +637,31 @@ Crafty.c('Robot', {
 		}
 	},
 	alertCognitive: function() {
-		gv.robot.is_alerting = true;
-		var rand = Math.random();
-		if (rand < 0.5) { // missing part request
-			request_list.addRequest(12);
-			set_request(500);
-			// location of missing part
-			gv.robot.part.loc_x = Math.floor(Math.random() * (16 - 2)) + 2;
-			gv.robot.part.loc_y = Math.floor(Math.random() * (15 - 2)) + 2;
-		} else { // software update task
-			request_list.addRequest(13);
-			set_request(500);
+		if (this._is_charging == false && gv.robot.status != 0 && gv.robot.is_alerting == false) {
+			gv.robot.is_alerting = true;
+			var rand = Math.random();
+			if (rand < 0.5) { // missing part request
+				request_list.addRequest(12);
+				set_request(500);
+				// location of missing part
+				gv.robot.part.loc_x = Math.floor(Math.random() * (16 - 2)) + 2;
+				gv.robot.part.loc_y = Math.floor(Math.random() * (15 - 2)) + 2;
+			} else { // software update task
+				request_list.addRequest(13);
+				set_request(500);
+			}
+			// moves slowly
+			set_robot_speed(1);
 		}
-		// moves slowly
-		set_robot_speed(1);
 	},
 	alertFire: function() {
-		gv.robot.is_alerting = true;
-		request_list.addRequest(15);
-		set_request(500);
-		// request specific 
-		this.delay(this.onFire, gv.robot.alert_len*1000);
+		if (this._is_charging == false && gv.robot.status != 0 && gv.robot.is_alerting == false) {
+			gv.robot.is_alerting = true;
+			request_list.addRequest(15);
+			set_request(500);
+			// request specific 
+			this.delay(this.onFire, gv.robot.alert_len*1000);
+		}
 	},
 	onFire: function() {
 		gv.robot.fire = 0;

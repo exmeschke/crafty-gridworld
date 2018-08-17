@@ -86,12 +86,12 @@ function snake_task() {
 // HIDDEN CHEST
 function chest_task() {
 	var coord = task_funcs.chestGetLocation();
-	setTimeout(function() {
-		update_robot_text('The chest is located at ['+coord[0]+', '+coord[1]+']');
-	}, 23000);
+	// setTimeout(function() {
+	// 	update_robot_text('The chest is located at ['+coord[0]+', '+coord[1]+']');
+	// }, 23000);
 	setTimeout(function() {
 		update_robot_text('Did you know you can break rocks with your hammer?');
-	}, 63000);
+	}, 33000);
 };
 
 
