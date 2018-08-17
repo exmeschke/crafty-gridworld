@@ -273,10 +273,13 @@ Crafty.c('Butterfly', {
 	butterflyMove: function() {
 		if (Math.random() < 0.1) {
 			var a = Math.random();
-			if (a < 0.25){this._dir = 'up';}
-			else if (a < 0.5){this._dir = 'down';}
-			else if (a < 0.75){this._dir = 'left';}
-			else {this._dir = 'right';}
+			if (this._dir == 'up' || this._dir == 'down') {
+				if (a < 0.5) {this._dir = 'left';}
+				else {this._dir = 'right';}
+			} else {
+				if (a < 0.5) {this._dir = 'up';}
+				else {this._dir = 'down';}
+			}
 		}
 
 		if (this._dir == 'up') {
@@ -323,10 +326,13 @@ Crafty.c('Snake', {
 	snakeMove: function() {
 		if (Math.random() < 0.05) {
 			var a = Math.random();
-			if (a < 0.25){this._dir = 'up';}
-			else if (a < 0.5){this._dir = 'down';}
-			else if (a < 0.75){this._dir = 'left';}
-			else {this._dir = 'right';}
+			if (this._dir == 'up' || this._dir == 'down') {
+				if (a < 0.5) {this._dir = 'left';}
+				else {this._dir = 'right';}
+			} else if (this._dir == 'left' || this._dir == 'right') {
+				if (a < 0.5) {this._dir = 'up';}
+				else {this._dir = 'down';}
+			}
 		}
 
 		if (this._dir == 'up') {

@@ -348,7 +348,10 @@ function set_request(time) {
 		update_robot_text(text);
 		// initialize action (alert)
 		var action = request_list.getAction();
-		if (action == 0) {updateQ();}
+		if (action == 0) {
+			updateQ();
+			gv.robot.is_alerting = false;
+		}
 		else if (action == 1) {Crafty.trigger('LowAlert');}
 		else if (action == 2) {Crafty.trigger('MedAlert');}
 		else if (action == 3) {Crafty.trigger('HighAlert');}
@@ -374,8 +377,8 @@ Crafty.c('Robot', {
 			// request specific
 			.delay(this.alertFire, 900000, -1) // 15 minutes = 900000
 			.delay(this.alertPlants, 420000, -1) // 7 minutes = 420000
-			.delay(this.alertNotification, 5000) // 4 minutes = 240000
-			.delay(this.alertCognitive, 45000, -1) // 11 minutes = 660000
+			.delay(this.alertNotification, 120000, -1) // 2 minutes = 120000
+			.delay(this.alertCognitive, 660000, -1) // 11 minutes = 660000
 			// on hit events
 			.onHit('Solid', this.turnAround)
 			.onHit('ChargingStation', this.recharge)
@@ -500,6 +503,7 @@ Crafty.c('Robot', {
 				gv.robot.is_alerting = true;
 				request_list.addRequest(14);
 				set_request(500);
+				set_robot_speed(1);
 			} else if (power == 20 || power == 21) {
 				gv.robot.is_alerting = true;
 				request_list.addRequest(9);

@@ -3,7 +3,7 @@
 // SET FOR GAME
 // tasks
 // [0:none, 1:wheat, 2:berries, 3:eggs, 4:wool, 5:milk, 6:gophers, 7:butterflies, 8:snakes, 9:chest, 10:bread, 11:muffin, 12:thread]
-var task_indices = [6,0,1,2,3,0,0,4,6,8,9,0,8,11,3,5,0];
+var task_indices = [7,0,1,2,3,0,0,4,6,8,9,0,8,11,3,5,0];
 // requests
 // [0:none, 1-4:short notification, 5-7:long notification, 8:text response, 9:low battery, 10-11:task change, 12-13:broken robot, 14:very low battery, 15:emergency]
 var request_indices = [];
@@ -317,7 +317,7 @@ var receptivity_list = {
                 r_sum += r_i.getValue();
             }
             Crafty.log('r_sum = '+r_sum);
-            this.r_sum = r_sum;
+            this.r_sum += r_sum;
         // if receptivity is empty
         } else {this.r_sum = 1.0;}
     },
@@ -553,8 +553,14 @@ var request_list = {
     }
 };
 
+// SAVE
+// state progression - starting state, state progression, action, reward 
+function saveStates() {
+    // current vars
+    var request = request_list.curr_req;
+    
+};
 
-// REWARDS
 // update Q-table based on state and action
 function updateQ() {
     // curr request

@@ -38,7 +38,7 @@ function gopher_task() {
 		setTimeout(function () {
 			a++;
 			spawn_gopher(perm[a]);
-		}, 12000*i);
+		}, 10000*i);
 	}
 };
 // BUTTERLIES
