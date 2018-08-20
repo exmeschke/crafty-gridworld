@@ -489,8 +489,8 @@ Crafty.scene('Game', function() {
 	// HUMAN TASKS
 	this.currTask = Crafty.e('Task').at(7,box_b+.4).text('').trigger('UpdateTask');
 
-	// End game
-	setTimeout(function() {eval("Crafty.scene('EndGame');");}, 3000000); // 40 minutes = 2400000
+	// End game - 40 min = 2400000, 30 min = 1800000, 20 min = 1200000
+	setTimeout(function() {eval("Crafty.scene('EndGame');");}, 40000); 
 });
 
 // 3. End game screen
@@ -501,19 +501,19 @@ Crafty.scene('EndGame', function() {
 	// Background
 	Crafty.background('white');
 	Crafty.e('2D, DOM, Color, Text')
-		.text('Congrats, you made '+score+' dollars!')
+		.text('Congrats, you made '+score.toFixed(2)+' dollars!')
 		.attr({ x:0, y:Game.height()/2-24, w:Game.width() })
 		.css($text_css);
 
 	// Write information to files
 	// QTABLE
-	// for (i=0; i<states; i++)
-	// {
-	//  	for (j=0; j<actions; j++)
-	//  	{
-	//  		Q_table[i][j] = Q_table[i][j] + .2;
-	//  	}
-	// }
+	for (i=0; i<starting_states; i++)
+	{
+	 	for (j=0; j<actions; j++)
+	 	{
+	 		Q_table[i][j] = Q_table[i][j] + .2;
+	 	}
+	}
 	Q_line = JSON.stringify(Q_table);
 	console.log(Q_line);
 	$.ajax({
@@ -521,8 +521,7 @@ Crafty.scene('EndGame', function() {
 	    method: 'POST',
 	    data: {data: Q_line},
 	    success: function (response) {
-	    	console.log('Done');
-    		console.log(response);
+	    	console.log('Done q-table');
 		}, 
 		error: function (jqXhr, textStatus, errorThrown ){
     		console.log( errorThrown );
@@ -530,22 +529,22 @@ Crafty.scene('EndGame', function() {
 	});
 
 	// NTABLE
-	// for (i=0; i<states; i++)
-	// {
-	//  	for (j=0; j<actions; j++)
-	//  	{
-	//  		n_table[i][j] = n_table[i][j] + 1;
-	//  	}
-	// }
+	for (i=0; i<starting_states; i++)
+	{
+	 	for (j=0; j<actions; j++)
+	 	{
+	 		// n_table[i][j] = n_table[i][j] + 1;
+	 		n_table[i][j] = 0;
+	 	}
+	}
 	n_line = JSON.stringify(n_table);
 	console.log(n_line);
 	$.ajax({
 		url: 'saveNtable.php',
 		method: 'POST',
-		data: {data: n_line},
+		data: {n_data: n_line},
 		success: function (response) {
-			console.log('Done');
-			console.log(response);
+			console.log('Done n-table');
 		}, 
 		error: function (jqXhr, textStatus, errorThrown ){
 			console.log( errorThrown );
@@ -553,19 +552,25 @@ Crafty.scene('EndGame', function() {
 	});
 
 	// PARTICIPANT DATA
-	// states_line = JSON.stringify(all_states);
-	// $.ajax({
-	// 	url: 'savedata.php',
-	// 	method: 'POST',
-	// 	data: {data: n_line},
-	// 	success: function (response) {
-	// 		console.log('Done');
-	// 		console.log(response);
-	// 	}, 
-	// 	error: function (jqXhr, textStatus, errorThrown ){
-	// 		console.log( errorThrown );
-	// 	}
-	// });
+	mdp_line = JSON.stringify(MDP);
+	hstate_line = JSON.stringify(HState);
+	states_line = JSON.stringify(all_states);
+	console.log(states_line);
+	$.ajax({
+		url: 'savedata.php',
+		method: 'POST',
+		data: {
+			mdp_data: mdp_line,
+			hstate_data: hstate_line,
+			rstate_data: states_line			
+		},
+		success: function (response) {
+			console.log('Done participant');
+		}, 
+		error: function (jqXhr, textStatus, errorThrown ){
+			console.log( errorThrown);
+		}
+	});
 });
 
 

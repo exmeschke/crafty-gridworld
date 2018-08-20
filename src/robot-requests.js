@@ -2,7 +2,7 @@
 
 // save data
 var MDP = []; // starting_state [1:16], action [1:4], h_responded [true, false], reward 
-var h_info = []; // distance between human and robot, h_task, h_r_sum, h_availability
+var HState = []; // distance between human and robot, h_task, h_r_sum, h_availability
 var all_states = [19]; // state progression
 
 // requests
@@ -28,6 +28,7 @@ function HReceptivity (availability, requestNum) {
     // updates value based on availability, request duration, and time
     this.updateValue = function(time_n) {
         var time = (time_n - this.time_i)/60;
+        Crafty.log('t0='+time);
         this.val = Math.exp(time/5) * ((5-this.availability)/4);
     };
     // returns current value
@@ -111,6 +112,7 @@ var receptivity_list = {
                 // updates receptivity
                 var r_i = this.list[i];
                 r_i.updateValue(time);
+                Crafty.log(this.list[i].getValue, r_i);
                 // adds val to sum
                 r_sum += r_i.getValue();
             }
@@ -153,11 +155,11 @@ function RRequest(number, urgency, duration, effort, resp, text) {
 
     // updated upon sending request
     this.receptivity = -1;
-    this.setReceptivity = function(receptivity) {this.receptivity = receptivity;}
+    this.setReceptivity = function(receptivity) {this.receptivity = receptivity;};
     this.dist = -1;
-    this.setDist = function(dist) {this.dist = dist;}
+    this.setDist = function(dist) {this.dist = dist;};
     this.doAction = -1;
-    this.setDoAction = function(action) {this.doAction = action;}
+    this.setDoAction = function(action) {this.doAction = action;};
     this.responded = 0;
     this.setResponded = function() {this.responded = 1;};
     // reward for request
@@ -208,8 +210,10 @@ var request_list = {
     sent: [],
 
     // CURRENT VARIABLES
-    // current state enumerated [0:19], 0 is no request
+    // current state enumerated [1:19]
     curr_state: 19,
+    // most recent start state [1:16]
+    start_state: -1,
     // current request, will be pushed to sent after action set
     curr_req: '',
 
@@ -269,7 +273,7 @@ var request_list = {
         // add to list of all states
         if (all_states.slice(-1)[0] != this.curr_state) {
             all_states.push(this.curr_state);
-            Crafty.log('states:'+all_states);
+            Crafty.log('states: '+all_states);
         }
     },
     // tracks requests that have been sent
@@ -290,6 +294,9 @@ var request_list = {
     receivedResponse: function() {this.curr_req.setResponded();},
     // called after request is responded to or alert is stopped
     endRequest: function(h_responded, r_status) {
+        if (this.curr_state < 17) {
+            this.start_state = this.curr_state;
+        }
         if (h_responded == true) { 
             request_list.updateCurrState(0,17,0,0); // person is interacting
         } else {
@@ -304,13 +311,12 @@ var request_list = {
     getDuration: function() {return this.curr_req.duration;},
     getText: function() {return this.curr_req.txt;},
     getRequiresResponse: function() {return this.curr_req.requiresResponse;},
-    // epsilon is the exploration rate, returns 0,1,2,3 for the action
+    // epsilon is the exploration rate [0.2], returns 0,1,2,3 for the action
     getAction: function() {
         // indicate request is sent, updates receptivity
         receptivity_list.setRequest(this.curr_req.number);
         // grab current request information
         var state_curr = this.curr_state;
-        var epsilon = 0.2;
         var doAction = -1;
         // find the highest Q value action
         var maxAction = 0;
@@ -348,17 +354,17 @@ var request_list = {
 // SAVE INFORMATION
 // general human information, saved at time of initiating request
 function saveHInfo(dist, task, r_sum, availability) {
-    h_info.push(['-', dist, task, r_sum, availability]);
-    // Crafty.log('h_info'+h_info);
+    HState.push([dist, task, r_sum, availability]);
+    Crafty.log('HState: '+HState);
 };
 // update Q-table based on state and action, saved after knowing whether player has responded or not
 function updateQ() {
     // curr request
     var request = request_list.curr_req;
     // state enumerated = i
-    var state_curr = request_list.curr_state;
+    var start_state = request_list.start_state;
     // action enumerated = j
-    var action = request.doAction+1;
+    var action = request.doAction;
     // variables needed
     var urgency = request.urgency;
     var received_resp = request.responded;
@@ -375,10 +381,11 @@ function updateQ() {
     // store value in request
     request_list.sent.slice(-1)[0].setReward(R);
     // update Q-table
-    Q_table[state_curr][action] += R;
-    // save other state information
-    MDP.push(['-', state_curr, action, received_resp, R]);  
-    // Crafty.log('MDP'+MDP);
+    Crafty.log(start_state);
+    Q_table[start_state-1][action] += R; // -1 to account for indices
+    // save MDP data
+    MDP.push([start_state, action, received_resp, R]);  
+    Crafty.log('MDP: '+MDP);
 };
 
 

@@ -1,6 +1,6 @@
 <?php
-	if (isset($_POST['data'])) {
-		$n = json_decode($_POST['data']);
+	if (isset($_POST['n_data'])) {
+		$n = json_decode($_POST['n_data']);
 
 
 		$fp = fopen('n.csv', 'w');

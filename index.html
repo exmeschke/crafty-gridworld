@@ -19,7 +19,7 @@
 
 		var Q_table = [];
 		var n_table = [];
-		for (i=0; i<states; i++)
+		for (i=0; i<starting_states; i++)
 		{
 			Q_table[i] = [];
 			n_table[i] = [];
@@ -29,11 +29,10 @@
 		 		n_table[i][j] = parseInt(n_array[i][j]);
 		 	}
 		}
-	Q_line = JSON.stringify(Q_table);
-	console.log(Q_line);
-	n_line = JSON.stringify(n_table);
-	console.log(n_line);
-
+	// Q_line = JSON.stringify(Q_table);
+	// console.log(Q_line);
+	// n_line = JSON.stringify(n_table);
+	// console.log(n_line);
 	</script>
 
 	<script type="text/javascript" src="https://rawgithub.com/craftyjs/Crafty/release/dist/crafty-min.js"></script>

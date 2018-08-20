@@ -1,7 +1,7 @@
 // HUMAN TASKS
 
 // [0:none, 1:wheat, 2:berries, 3:eggs, 4:wool, 5:milk, 6:gophers, 7:butterflies, 8:snakes, 9:chest, 10:bread, 11:muffin, 12:thread]
-var task_indices = [7,0,1,2,3,0,0,4,6,8,9,0,8,11,3,5,0];
+var task_indices = [1,2,3,4,5,0,6,7,8,0,9,0,10,11,12,0,5,2,6,0,12,0];
 
 // human task definition
 //      num - task number [1:easy gather, 2:hard gather, 3:easy chase, 4:hard chase, 5:easy combo, 6:hard combo]

@@ -10,7 +10,7 @@ function dist_robot_player () {
 	Crafty.trigger('GetLocation'); // updates locations
 	var xx = gv.player.loc[0] - gv.robot.loc[0];
 	var yy = gv.player.loc[1] - gv.robot.loc[1];
-	var dist = Math.sqrt(Math.pow(xx,2)+Math.pow(yy,2));
+	var dist = Math.round(Math.sqrt(Math.pow(xx,2)+Math.pow(yy,2)));
 	return dist;
 };
 Crafty.c('Player', {
@@ -91,14 +91,14 @@ Crafty.c('Player', {
 		} else if ((hitDatas = this.hit('Stump'))) {
 			Crafty.trigger('SwitchTools');
 			// update player moment if in need shears or hammer in task
-			var task_text = task+list.getText();
+			var task_text = task_list.getText();
 			if (task_text.includes('shears') || task_text.includes('hammer')){
 				gv.player.moment = 'middle';
 			}
 		} else if ((hitDatas = this.hit('GroundTools'))) {
 			Crafty.trigger('SwitchLgTools');
 			// update player moment if in need scythe or shovel in task
-			var task_text = task+list.getText();
+			var task_text = task_list.getText();
 			if (task_text.includes('scythe') || task_text.includes('shovel')){
 				gv.player.moment = 'middle';
 			}
@@ -367,8 +367,8 @@ function set_request(time) {
 		// do chosen action
 		if (action == 0) {
 			setTimeout(function() {
+				request_list.endRequest(gv.player.interacting, gv.robot.status);
 				updateQ();
-				setTimeout(function() {request_list.endRequest(gv.player.interacting, gv.robot.status);}, 2000);
 				gv.robot.is_alerting = false;
 			}, gv.robot.alert_len*1000);
 		}
@@ -384,22 +384,19 @@ function set_robot_speed(status) {
 	gv.robot.status = status;
 	Crafty.trigger('SetSpeed');
 };
-// establishes the robot is in a 
-function fully_operational() {
-
-};
 // establishes that the robot is not fully operational
 function not_operational() {
 	set_robot_speed(1);
-	setTimeout(function(){request_list.endRequest(gv.player.interacting, gv.robot.status);}, 500);
-	// set time for speed to return to normal
+	request_list.endRequest(gv.player.interacting, gv.robot.status);
+	// set for speed to return to normal
 	setTimout(function() {terminal_state();}, 30000);
 };
 // establishes that the state progression is over
 function terminal_state() {
-	set_robot_speed(2);
-	gv.player.interacting = false;
-	setTimeout(function(){request_list.endRequest(gv.player.interacting, gv.robot.status);}, 500);
+	updateQ(); // update Q-table with reward
+	set_robot_speed(2); // reset speed
+	gv.player.interacting = false; // no longer interacting
+	request_list.endRequest(gv.player.interacting, gv.robot.status); // udpate state
 };
 Crafty.c('Robot', {
 	_power: 100,
@@ -419,8 +416,8 @@ Crafty.c('Robot', {
 			.delay(this.recordState, 100, -1)
 			// request specific
 			.delay(this.alertFire, 900000, -1) // 15 minutes = 900000
-			.delay(this.alertPlants, 420000, -1) // 7 minutes = 420000
-			.delay(this.alertNotification, 120000, -1) // 2 minutes = 120000
+			.delay(this.alertPlants, 65000) // 7 minutes = 420000
+			.delay(this.alertNotification, 5000) // 2 minutes = 120000
 			.delay(this.alertCognitive, 660000, -1) // 11 minutes = 660000
 			// on hit events
 			.onHit('Solid', this.turnAround)
@@ -651,10 +648,8 @@ Crafty.c('Robot', {
 			this.pauseAnimation();
 			this.sprite('spr_bot');
 		}
-		// update Q-table with reward
-		updateQ();
-		// change state after Q-table updated
-		setTimeout(function() {request_list.endRequest(gv.player.interacting, gv.robot.status);}, 2000);
+		// update state
+		request_list.endRequest(gv.player.interacting, gv.robot.status);
 	},
 	// REQUESTS
 	alertNotification: function() {
