@@ -396,10 +396,10 @@ function not_operational() {
 };
 // establishes that the state progression is over
 function terminal_state() {
-	request_list.endRequest(gv.player.interacting, gv.robot.status); // udpate state
-	updateQ(); // update Q-table with reward
 	set_robot_speed(2); // reset speed
 	gv.player.interacting = false; // no longer interacting
+	request_list.endRequest(gv.player.interacting, gv.robot.status); // udpate state
+	updateQ(); // update Q-table with reward
 };
 Crafty.c('Robot', {
 	_power: 100,
@@ -420,7 +420,7 @@ Crafty.c('Robot', {
 			// request specific
 			.delay(this.alertFire, 900000, -1) // 15 minutes = 900000
 			.delay(this.alertPlants, 420000, -1) // 7 minutes = 420000
-			.delay(this.alertNotification, 40000, -1) // 2 minutes = 120000
+			.delay(this.alertNotification, 120000, -1) // 2 minutes = 120000
 			.delay(this.alertCognitive, 660000, -1) // 11 minutes = 660000
 			// on hit events
 			.onHit('Solid', this.turnAround)
@@ -658,14 +658,12 @@ Crafty.c('Robot', {
 			this.sprite('spr_bot');
 		}
 		// update state
-		Crafty.log(gv.player.interacting, gv.robot.status);
 		var request_num = request_list.getNumber();
 		if (gv.player.interacting == false) { 
 			if (request_num == 6 || request_num == 7) { 
 				not_operational(); // ignored = 18
-			} else { 
-				terminal_state(); // ignored = 19
-			} 
+			} else if (request_num == 8) {} // nothing
+			else {terminal_state();} // ignored = 19 
 		} else { // reponded = 17
 			request_list.endRequest(gv.player.interacting, gv.robot.status);
 		}

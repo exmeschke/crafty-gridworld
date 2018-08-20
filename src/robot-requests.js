@@ -388,12 +388,15 @@ function updateQ() {
     }
     neg_state = 0; // reset
     Crafty.log(start_state, curr_state);
+    Crafty.log('reward = '+r);
 
     // save data
-    request_list.sent.slice(-1)[0].setReward(r); // store value in request
-    Q_table[start_state-1][action] += R; // -1 to account for indices
-    MDP.push([start_state, action, received_resp, R]);  
-    // Crafty.log('MDP: '+MDP);
+    if (curr_state == 19) {
+        request_list.sent.slice(-1)[0].setReward(r); // store value in request
+        Q_table[start_state-1][action] += r; // -1 to account for indices
+        MDP.push([start_state, action, received_resp, r]);  
+        // Crafty.log('MDP: '+MDP);
+    }
 };
 
 

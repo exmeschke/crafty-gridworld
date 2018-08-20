@@ -8,8 +8,8 @@
 
 		$p_file = 'participant_num.txt';
 		$handle = fopen($p_file, 'w') or die('Cannot open file:  '.$p_file);
-		// $pnum = (int)$pnum + 1;
-		$pnum = 0;
+		$pnum = (int)$pnum + 1;
+		// $pnum = 0;
 		fwrite($handle, $pnum);
 		fclose($handle);
 

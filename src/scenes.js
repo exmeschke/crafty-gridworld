@@ -507,13 +507,13 @@ Crafty.scene('EndGame', function() {
 
 	// Write information to files
 	// QTABLE
-	for (i=0; i<starting_states; i++)
-	{
-	 	for (j=0; j<actions; j++)
-	 	{
-	 		Q_table[i][j] = Q_table[i][j] + .2;
-	 	}
-	}
+	// for (i=0; i<starting_states; i++)
+	// {
+	//  	for (j=0; j<actions; j++)
+	//  	{
+	//  		Q_table[i][j] = Q_table[i][j] + .2;
+	//  	}
+	// }
 	Q_line = JSON.stringify(Q_table);
 	console.log(Q_line);
 	$.ajax({
@@ -533,8 +533,7 @@ Crafty.scene('EndGame', function() {
 	{
 	 	for (j=0; j<actions; j++)
 	 	{
-	 		// n_table[i][j] = n_table[i][j] + 1;
-	 		n_table[i][j] = 0;
+	 		n_table[i][j] = n_table[i][j] + 1;
 	 	}
 	}
 	n_line = JSON.stringify(n_table);
