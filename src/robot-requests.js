@@ -28,8 +28,7 @@ function HReceptivity (availability, requestNum) {
     // updates value based on availability, request duration, and time
     this.updateValue = function(time_n) {
         var time = (time_n - this.time_i)/60;
-        Crafty.log('t0='+time);
-        this.val = Math.exp(time/5) * ((5-this.availability)/4);
+        this.val = Math.exp(-time/5) * ((5-this.availability)/4);
     };
     // returns current value
     this.getValue = function() {return this.val;};
@@ -105,6 +104,7 @@ var receptivity_list = {
             var time = new Date().getTime()/1000;
             // summed receptivity
             var r_sum = this.list.slice(-1)[0].getValue();
+            Crafty.log(r_sum);
             // var r_sum = 0;
 
             // loop through receptivity for each request, apply function, and add to r_sum
@@ -112,7 +112,7 @@ var receptivity_list = {
                 // updates receptivity
                 var r_i = this.list[i];
                 r_i.updateValue(time);
-                Crafty.log(this.list[i].getValue, r_i);
+                Crafty.log(i, r_i.val);
                 // adds val to sum
                 r_sum += r_i.getValue();
             }
@@ -175,7 +175,7 @@ function RRequestList(indices) {
     this.requestOptions[1] = new RRequest(1,1,1,1,false,'Baked goods can burn!');
     this.requestOptions[2] = new RRequest(1,1,1,1,false,"Debug any issues by entering [X5214] at the monitor.");
     this.requestOptions[3] = new RRequest(1,1,1,1,false,'We lose money when I run out of battery!');
-    this.requestOptions[4] = new RRequest(1,1,1,1,false,'Sometimes I can give you helpful hints.');
+    this.requestOptions[4] = new RRequest(1,1,1,1,false,'Sometimes I give you helpful hints.');
     // state 2: low urgency, long duration, low effort, no response
     this.requestOptions[5] = new RRequest(2,1,2,1,false,'A locked treasure chest is burried somewhere under a tuft of grass. You have to be carrying your shovel to dig it up. And be careful, it will explode a minute after it is revealed! If you open it, you get $20, so you need to figure out how to open it quickly.');
     this.requestOptions[6] = new RRequest(2,1,2,1,false,'Different resources are worth different amounts of money. Try to make bread; you get $15 per loaf! The recipe is 6 eggs, 4 milk, and 2 wheat. You can also make muffins to earn $18, with 10 berries, 8 eggs, 4 milk, and 1 wheat. If you forget the recipes, open the book near the well.');
@@ -214,6 +214,8 @@ var request_list = {
     curr_state: 19,
     // most recent start state [1:16]
     start_state: -1,
+    // experienced negative state
+    neg_state: 0,
     // current request, will be pushed to sent after action set
     curr_req: '',
 
@@ -294,14 +296,15 @@ var request_list = {
     receivedResponse: function() {this.curr_req.setResponded();},
     // called after request is responded to or alert is stopped
     endRequest: function(h_responded, r_status) {
-        if (this.curr_state < 17) {
-            this.start_state = this.curr_state;
-        }
+        if (this.curr_state <= 16) {this.start_state = this.curr_state;} // if a starting state, update
         if (h_responded == true) { 
             request_list.updateCurrState(0,17,0,0); // person is interacting
         } else {
             if (r_status == 2) {request_list.updateCurrState(0,19,0,0);} // fully operational
-            else {request_list.updateCurrState(0,18,0,0);} // not fully operational
+            else { // not fully operational
+                this.neg_state = 1;
+                request_list.updateCurrState(0,18,0,0);
+            } 
         }
     },
 
@@ -355,7 +358,7 @@ var request_list = {
 // general human information, saved at time of initiating request
 function saveHInfo(dist, task, r_sum, availability) {
     HState.push([dist, task, r_sum, availability]);
-    Crafty.log('HState: '+HState);
+    // Crafty.log('HState: '+HState);
 };
 // update Q-table based on state and action, saved after knowing whether player has responded or not
 function updateQ() {
@@ -363,6 +366,8 @@ function updateQ() {
     var request = request_list.curr_req;
     // state enumerated = i
     var start_state = request_list.start_state;
+    var curr_state = request_list.curr_state;
+    var neg_state = request_list.neg_state;
     // action enumerated = j
     var action = request.doAction;
     // variables needed
@@ -371,21 +376,24 @@ function updateQ() {
     var duration = request.duration;
     var effort = request.effort;
     var receptivity = request.receptivity;
-    // R = reward - cost
-    var R = 0.0;
-    var reward = urgency*received_resp;
-    var cost = (action/(receptivity*urgency) + (duration*effort*received_resp))/4;
-    R = reward - cost;
-    Crafty.log(urgency+'*'+received_resp, '-', '('+action+'/('+receptivity+'*'+urgency+')+('+duration+'*'+effort+'*'+received_resp+'))/4');
-    Crafty.log(reward+'-'+cost+'='+R);
-    // store value in request
-    request_list.sent.slice(-1)[0].setReward(R);
-    // update Q-table
-    Crafty.log(start_state);
+    
+    // reward
+    var r = 0.0;
+    if (action == 0) {  // no action
+        r = -1 * (0.5*(urgency-1) + neg_state);
+    } else { // some action
+        var rR = (0.85*urgency*received_resp) - (0.25*urgency + neg_state);
+        var rH = (0.25*duration*effort*received_resp + (action/3)) / (receptivity*urgency);
+        r = rR + rH;
+    }
+    neg_state = 0; // reset
+    Crafty.log(start_state, curr_state);
+
+    // save data
+    request_list.sent.slice(-1)[0].setReward(r); // store value in request
     Q_table[start_state-1][action] += R; // -1 to account for indices
-    // save MDP data
     MDP.push([start_state, action, received_resp, R]);  
-    Crafty.log('MDP: '+MDP);
+    // Crafty.log('MDP: '+MDP);
 };
 
 

@@ -173,7 +173,10 @@ Crafty.c('Player', {
 		} else {
 			// default plays tone
 			sounds.play_low();
-			Crafty.trigger('EmptyBucket');
+			setTimeout(function() {
+				Crafty.trigger('EmptyBucket');
+				Crafty.trigger('EmptySeedBag');
+			}, 500);
 		}
 	},
 	// prevents from moving through obstacles
@@ -389,14 +392,14 @@ function not_operational() {
 	set_robot_speed(1);
 	request_list.endRequest(gv.player.interacting, gv.robot.status);
 	// set for speed to return to normal
-	setTimout(function() {terminal_state();}, 30000);
+	setTimeout(function() {terminal_state();}, 30000);
 };
 // establishes that the state progression is over
 function terminal_state() {
+	request_list.endRequest(gv.player.interacting, gv.robot.status); // udpate state
 	updateQ(); // update Q-table with reward
 	set_robot_speed(2); // reset speed
 	gv.player.interacting = false; // no longer interacting
-	request_list.endRequest(gv.player.interacting, gv.robot.status); // udpate state
 };
 Crafty.c('Robot', {
 	_power: 100,
@@ -416,8 +419,8 @@ Crafty.c('Robot', {
 			.delay(this.recordState, 100, -1)
 			// request specific
 			.delay(this.alertFire, 900000, -1) // 15 minutes = 900000
-			.delay(this.alertPlants, 65000) // 7 minutes = 420000
-			.delay(this.alertNotification, 5000) // 2 minutes = 120000
+			.delay(this.alertPlants, 420000, -1) // 7 minutes = 420000
+			.delay(this.alertNotification, 40000, -1) // 2 minutes = 120000
 			.delay(this.alertCognitive, 660000, -1) // 11 minutes = 660000
 			// on hit events
 			.onHit('Solid', this.turnAround)
@@ -591,9 +594,11 @@ Crafty.c('Robot', {
 		var x = Math.round(this.x/gv.tile_sz);
 		var y = Math.round(this.y/gv.tile_sz);
 
-		Crafty.e('Wheat2').at(x, y);
-		if (gv.field.seed_loc_x.indexOf(x) == -1) {gv.field.seed_loc_x.push(x);}
-		if (gv.field.seed_loc_y.indexOf(y) == -1) {gv.field.seed_loc_y.push(y);}
+		if (x > 1 && x < 15 && y > 1 && y < 16) {
+			Crafty.e('Wheat2').at(x, y);
+			if (gv.field.seed_loc_x.indexOf(x) == -1) {gv.field.seed_loc_x.push(x);}
+			if (gv.field.seed_loc_y.indexOf(y) == -1) {gv.field.seed_loc_y.push(y);}
+		}
 	},
 	water: function() {
 		// if robot not on fire
@@ -611,7 +616,7 @@ Crafty.c('Robot', {
 		// if robot on fire
 		} else {
 			gv.robot.fire += 1;
-			if (gv.robot.fire == 3) {this.offFire();}
+			if (gv.robot.fire == 3) {this.putOutFire();}
 		}
 	}, 
 	// destroys wheat if on fire
@@ -619,6 +624,9 @@ Crafty.c('Robot', {
 		var x = Math.round(this.x/gv.tile_sz);
 		var y = Math.round(this.y/gv.tile_sz);
 
+		if (gv.field.seed_loc_x.indexOf(x) != -1 && gv.field.seed_loc_y.indexOf(y) != -1) {
+			Crafty.e('Soil5').at(x,y);
+		}
 		if (gv.field.wheat_loc_x.indexOf(x) != -1 && gv.field.wheat_loc_y.indexOf(y) != -1) {
 			Crafty.e('Soil5').at(x,y);
 		}
@@ -634,6 +642,7 @@ Crafty.c('Robot', {
 	medAlert: function() {
 		gv.robot.is_alerting = true;
 		robot_alert_sound();
+		this.delay(this.stopAlert, gv.robot.alert_len*1000);
 	},
 	// flashing light + beeping
 	highAlert: function() {
@@ -649,7 +658,17 @@ Crafty.c('Robot', {
 			this.sprite('spr_bot');
 		}
 		// update state
-		request_list.endRequest(gv.player.interacting, gv.robot.status);
+		Crafty.log(gv.player.interacting, gv.robot.status);
+		var request_num = request_list.getNumber();
+		if (gv.player.interacting == false) { 
+			if (request_num == 6 || request_num == 7) { 
+				not_operational(); // ignored = 18
+			} else { 
+				terminal_state(); // ignored = 19
+			} 
+		} else { // reponded = 17
+			request_list.endRequest(gv.player.interacting, gv.robot.status);
+		}
 	},
 	// REQUESTS
 	alertNotification: function() {
@@ -705,8 +724,6 @@ Crafty.c('Robot', {
 				request_list.addRequest(13);
 				set_request(100);
 			}
-			// moves slowly
-			setTimeout(function(){not_operational();}, gv.robot.alert_len*1000);
 		}
 	},
 	alertFire: function() {
@@ -722,7 +739,12 @@ Crafty.c('Robot', {
 		this.animate('AnimateFire', -1);
 		this.delay(this.offFire, 60000); // eventually will not be on fire
 	},
-	offFire: function() {
+	putOutFire: function() {
+		this.pauseAnimation();
+		this.sprite('spr_bot');
+		gv.robot.fire = -1;
+	},
+	offFire: function() { // -1 reward
 		this.pauseAnimation();
 		this.sprite('spr_bot');
 		gv.robot.fire = -1;
