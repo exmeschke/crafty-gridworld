@@ -398,7 +398,7 @@ function not_operational() {
 function terminal_state() {
 	set_robot_speed(2); // reset speed
 	gv.player.interacting = false; // no longer interacting
-	request_list.endRequest(gv.player.interacting, gv.robot.status); // udpate state
+	request_list.endRequest(gv.player.interacting, gv.robot.status); // update state
 	updateQ(); // update Q-table with reward
 };
 Crafty.c('Robot', {
@@ -410,6 +410,7 @@ Crafty.c('Robot', {
 	_speed: [0, 2400, 1200], // different speeds, depends on status
 	_task: -1, // [-1:none, 0:plant, 1:water]
 	_is_alerting: false, // currently blinking, beeping, or both
+	_min: 0,
 	init: function() {
 		this.requires('2D, Canvas, Grid, Collision, SpriteAnimation, spr_bot, Tween, Delay, Text')
 			.attr({ w: gv.tile_sz+2, h: gv.tile_sz+2, z:2 })
@@ -417,6 +418,7 @@ Crafty.c('Robot', {
 			.delay(this.randomMove, this._do_move, -1)
 			.delay(this.losePower, this._battery_life, -1)
 			.delay(this.recordState, 100, -1)
+			.delay(this.timing, 60000, -1) // every minute
 			// request specific
 			.delay(this.alertFire, 900000, -1) // 15 minutes = 900000
 			.delay(this.alertPlants, 420000, -1) // 7 minutes = 420000
@@ -449,6 +451,10 @@ Crafty.c('Robot', {
 	// continues to update robot state information
 	recordState: function() {
 		dist_robot_player();
+	},
+	timing: function() {
+		this._min += 1;
+		Crafty.log(this._min+' min');
 	},
 	// returns this.x and this.y
 	getLoc: function() {
@@ -556,12 +562,10 @@ Crafty.c('Robot', {
 			// check if low power
 			var power = Math.round(this._power);
 			if (power == 5 || power == 6) { // very low power
-				gv.robot.is_alerting = true;
 				request_list.addRequest(14);
 				set_request(100);
 				
 			} else if (power == 20 || power == 21) {
-				gv.robot.is_alerting = true;
 				request_list.addRequest(9);
 				set_request(100);
 			}
