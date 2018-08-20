@@ -54,11 +54,11 @@ function butterfly_task() {
 	var perm = get_perm(num_butterflies);
 	// spawn butterflies
 	var a = 0;
-	spawn_butterfly(a);
+	spawn_butterfly(perm[a]);
 	for (var i = 1; i < num_butterflies; i++) {
 		setTimeout(function() {
 			a++;
-			spawn_butterfly(a);
+			spawn_butterfly(perm[a]);
 		}, 8000*i);
 	}
 };
@@ -75,11 +75,11 @@ function snake_task() {
 	var perm = get_perm(num_snakes);
 	// spawn snakes
 	var a = 0;
-	spawn_snake(a);
+	spawn_snake(perm[a]);
 	for (var i = 1; i < num_snakes; i++) {
 		setTimeout(function() {
 			a++;
-			spawn_snake(a);
+			spawn_snake(perm[a]);
 		}, 9000*i);
 	}
 };

@@ -303,9 +303,9 @@ Crafty.scene('Game', function() {
 		for (var j = 0; j < Game.h(); j++) {this.occupied[i][j] = false;}
 	}
 	// Add player
-	this.player = Crafty.e('Player').at(30, 16);
+	this.player = Crafty.e('Player').at(gv.player.loc[0], gv.player.loc[1]);
 	// Add robot
-	this.robot = Crafty.e('Robot').at(5,10);
+	this.robot = Crafty.e('Robot').at(gv.robot.loc[0],gv.robot.loc[0]);
 	this.request = Crafty.e('RobotRequest').at(1,2);
 	// this.robot.attach(this.request);
 	this.screen = Crafty.e('RequestScreen').at(16,5.3);
@@ -551,6 +551,21 @@ Crafty.scene('EndGame', function() {
 			console.log( errorThrown );
 		}
 	});
+
+	// PARTICIPANT DATA
+	// states_line = JSON.stringify(all_states);
+	// $.ajax({
+	// 	url: 'savedata.php',
+	// 	method: 'POST',
+	// 	data: {data: n_line},
+	// 	success: function (response) {
+	// 		console.log('Done');
+	// 		console.log(response);
+	// 	}, 
+	// 	error: function (jqXhr, textStatus, errorThrown ){
+	// 		console.log( errorThrown );
+	// 	}
+	// });
 });
 
 

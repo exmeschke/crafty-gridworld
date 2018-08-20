@@ -1,4 +1,18 @@
 // PLAYER CHARACTER
+function set_h_info() {
+	var dist = dist_robot_player(); // distance between robot and human
+	var task_num = task_list.getNum(); // human task 
+	var receptivity = receptivity_list.getRSum(); // summed receptivity value
+	var availability = receptivity_list.getAvailability(); // current availability
+	saveHInfo(dist, task_num, receptivity, availability); // save at initial time of alert 
+};
+function dist_robot_player () {
+	Crafty.trigger('GetLocation'); // updates locations
+	var xx = gv.player.loc[0] - gv.robot.loc[0];
+	var yy = gv.player.loc[1] - gv.robot.loc[1];
+	var dist = Math.sqrt(Math.pow(xx,2)+Math.pow(yy,2));
+	return dist;
+};
 Crafty.c('Player', {
 	_movement: [], // tracks 5 most recent moves 
 	_back: 1.6, // keeps player from moving through solid objects
@@ -46,6 +60,7 @@ Crafty.c('Player', {
 			})
 			// triggered events
 			.bind('SetSpeed', this.setSpeed)
+			.bind('GetLocation', this.getLoc)
 	},
 	// resets location if off screen
 	reset: function() {
@@ -55,7 +70,12 @@ Crafty.c('Player', {
 	// changes speed of player pushing robot depending on robot speed
 	setSpeed: function() {
 		if (gv.robot.status == 2) {this._back = 1.6;}
-		else if (gv.robot.status == 1) {this._back = 2;}
+		else if (gv.robot.status == 1) {this._back = 1.8;}
+	},
+	// returns this.x and this.y
+	getLoc: function() {
+		gv.player.loc[0] = this._x/gv.tile_sz;
+		gv.player.loc[1] = this._y/gv.tile_sz;
 	},
 	// action triggered by hitting object and pressed 'X'
 	action: function() {
@@ -71,17 +91,17 @@ Crafty.c('Player', {
 		} else if ((hitDatas = this.hit('Stump'))) {
 			Crafty.trigger('SwitchTools');
 			// update player moment if in need shears or hammer in task
-			// var task_text = task+list.getText();
-			// if (task_text.includes('shears') || task_text.includes('hammer')){
-			// 	gv.player.moment = 'middle';
-			// }
+			var task_text = task+list.getText();
+			if (task_text.includes('shears') || task_text.includes('hammer')){
+				gv.player.moment = 'middle';
+			}
 		} else if ((hitDatas = this.hit('GroundTools'))) {
 			Crafty.trigger('SwitchLgTools');
 			// update player moment if in need scythe or shovel in task
-			// var task_text = task+list.getText();
-			// if (task_text.includes('scythe') || task_text.includes('shovel')){
-			// 	gv.player.moment = 'middle';
-			// }
+			var task_text = task+list.getText();
+			if (task_text.includes('scythe') || task_text.includes('shovel')){
+				gv.player.moment = 'middle';
+			}
 		} else if ((hitDatas = this.hit('Book'))) { 
 			Crafty.trigger('OpenBook');
 		} else if ((hitDatas = this.hit('RequestScreen'))) {
@@ -179,13 +199,13 @@ Crafty.c('Player', {
 				Crafty.trigger('Water');
 				Crafty.trigger('EmptyBucket');
 				// if request is to give water to robot, trigger completed
-				if (request_list.getNumber() == 5) {gv.player.interacting = false;}
+				if (request_list.getNumber() == 5) {terminal_state();}
 			// if seed bag full, set robot task to plant
 			} else if (gv.tools.seed_bag == 1) {
 				Crafty.trigger('Plant');
 				Crafty.trigger('EmptySeedBag');
 				// if request is to give seeds to robot, trigger completed
-				if (request_list.getNumber() == 5) {gv.player.interacting = false;}
+				if (request_list.getNumber() == 5) {terminal_state();}
 			}
 		}
 		// check if over lost part 
@@ -200,7 +220,7 @@ Crafty.c('Player', {
 
 			if (Math.round(this.x/gv.tile_sz) == gv.robot.part.loc_x && Math.round(this.y/gv.tile_sz) == gv.robot.part.loc_y) {
 				alert('Found it!');
-				gv.player.interacting = false;
+				terminal_state();
 				gv.robot.part.loc_x = -1;
 				gv.robot.part.loc_y = -1;
 				set_robot_speed(2);
@@ -299,8 +319,7 @@ Crafty.c('Task', {
 		this.text(new_txt);
 		// update human state information
 		gv.player.difficulty = task_list.getDiff();
-		receptivity_list.updateState(gv.player.interacting, gv.player.difficulty, gv.player.moment);
-		// request.updateState();
+		receptivity_list.updateState(gv.player.interacting, gv.player.difficulty, gv.player.moment, gv.robot.status);
 		// receptivity_list.printState();
 		// check if task is complete if not gopher, snake, or butterfly task
 		if (resource != '') {
@@ -334,11 +353,6 @@ function robot_alert_sound() {
 	    }, 1000*i);
 	}
 };
-// sets speed depending on status
-function set_robot_speed(status) {
-	gv.robot.status = status;
-	Crafty.trigger('SetSpeed');
-};
 // indicates request was sent
 function set_request(time) {
 	// set trigger for new request
@@ -348,9 +362,15 @@ function set_request(time) {
 		update_robot_text(text);
 		// initialize action (alert)
 		var action = request_list.getAction();
+		// immediately save human information
+		set_h_info();
+		// do chosen action
 		if (action == 0) {
-			updateQ();
-			gv.robot.is_alerting = false;
+			setTimeout(function() {
+				updateQ();
+				setTimeout(function() {request_list.endRequest(gv.player.interacting, gv.robot.status);}, 2000);
+				gv.robot.is_alerting = false;
+			}, gv.robot.alert_len*1000);
 		}
 		else if (action == 1) {Crafty.trigger('LowAlert');}
 		else if (action == 2) {Crafty.trigger('MedAlert');}
@@ -358,6 +378,28 @@ function set_request(time) {
 		// output to console
 		Crafty.log(text, action);
 	}, time);
+};
+// sets speed depending on status
+function set_robot_speed(status) {
+	gv.robot.status = status;
+	Crafty.trigger('SetSpeed');
+};
+// establishes the robot is in a 
+function fully_operational() {
+
+};
+// establishes that the robot is not fully operational
+function not_operational() {
+	set_robot_speed(1);
+	setTimeout(function(){request_list.endRequest(gv.player.interacting, gv.robot.status);}, 500);
+	// set time for speed to return to normal
+	setTimout(function() {terminal_state();}, 30000);
+};
+// establishes that the state progression is over
+function terminal_state() {
+	set_robot_speed(2);
+	gv.player.interacting = false;
+	setTimeout(function(){request_list.endRequest(gv.player.interacting, gv.robot.status);}, 500);
 };
 Crafty.c('Robot', {
 	_power: 100,
@@ -370,10 +412,11 @@ Crafty.c('Robot', {
 	_is_alerting: false, // currently blinking, beeping, or both
 	init: function() {
 		this.requires('2D, Canvas, Grid, Collision, SpriteAnimation, spr_bot, Tween, Delay, Text')
-			.attr({ w: gv.tile_sz+2, h: gv.tile_sz+2, z:1 })
+			.attr({ w: gv.tile_sz+2, h: gv.tile_sz+2, z:2 })
 			// delay events
 			.delay(this.randomMove, this._do_move, -1)
 			.delay(this.losePower, this._battery_life, -1)
+			.delay(this.recordState, 100, -1)
 			// request specific
 			.delay(this.alertFire, 900000, -1) // 15 minutes = 900000
 			.delay(this.alertPlants, 420000, -1) // 7 minutes = 420000
@@ -397,11 +440,21 @@ Crafty.c('Robot', {
 			.bind('HighAlert', this.highAlert)
 			.bind('StopAlert', this.stopAlert)
 			.bind('SetSpeed', this.setSpeed)
+			.bind('GetLocation', this.getLoc)
 			.bind('KeyDown', function(e) {if (e.key == Crafty.keys.R) {this.reset();}})
 	},
 	char: function() {return 'robot';},
 	// resets location if off screen
 	reset: function() {this.at(5,10);},
+	// continues to update robot state information
+	recordState: function() {
+		dist_robot_player();
+	},
+	// returns this.x and this.y
+	getLoc: function() {
+		gv.robot.loc[0] = this._x/gv.tile_sz;
+		gv.robot.loc[1] = this._y/gv.tile_sz;
+	},
 	// changes speed depending on status
 	setSpeed: function() {
 		this.cancelDelay(this.randomMove);
@@ -492,22 +545,25 @@ Crafty.c('Robot', {
 	// -1 robot power 
 	losePower: function() {
 		// only lose power if robot not alerting and player not interacting
-		if (this._is_charging == false && gv.robot.is_alerting == false && gv.player.interacting == false) {
+		if (this._is_charging == false && gv.robot.is_alerting == false && gv.player.interacting == false && gv.robot.fire == -1) {
 			// check if lose power
 			if (this._power > 0) {this._power -= 1;}
-			else {this._power = 0;}
+			else {
+				this._power = 0;
+				gv.robot.status = 0;
+			}
 
 			// check if low power
 			var power = Math.round(this._power);
 			if (power == 5 || power == 6) { // very low power
 				gv.robot.is_alerting = true;
 				request_list.addRequest(14);
-				set_request(500);
-				set_robot_speed(1);
+				set_request(100);
+				
 			} else if (power == 20 || power == 21) {
 				gv.robot.is_alerting = true;
 				request_list.addRequest(9);
-				set_request(500);
+				set_request(100);
 			}
 		}
 	},
@@ -519,6 +575,7 @@ Crafty.c('Robot', {
 		} else {
 			this._power = 100;
 			this._is_charging = false;
+			gv.robot.status = 2;
 		}
 	},
 	// ROBOT TASKS
@@ -596,11 +653,12 @@ Crafty.c('Robot', {
 		}
 		// update Q-table with reward
 		updateQ();
+		// change state after Q-table updated
+		setTimeout(function() {request_list.endRequest(gv.player.interacting, gv.robot.status);}, 2000);
 	},
 	// REQUESTS
 	alertNotification: function() {
-		if (this._is_charging == false && gv.robot.status != 0 && gv.robot.is_alerting == false) {
-			gv.robot.is_alerting = true;
+		if (this._is_charging == false && gv.robot.status == 2 && gv.robot.is_alerting == false && gv.robot.fire == -1) {
 			var request_num = -1;
 			var rand = Math.random();
 			// short notification
@@ -621,12 +679,11 @@ Crafty.c('Robot', {
 			}
 			// trigger
 			request_list.addRequest(request_num);
-			set_request(500);
+			set_request(100);
 		}
 	},
 	alertPlants: function() {
-		if (this._is_charging == false && gv.robot.status != 0 && gv.robot.is_alerting == false) {
-			gv.robot.is_alerting = true;
+		if (this._is_charging == false && gv.robot.status == 2 && gv.robot.is_alerting == false && gv.robot.fire == -1) {
 			var request_num = -1;
 			// switch to planting
 			if (this._task == -1 || this._task == 1) {
@@ -637,32 +694,30 @@ Crafty.c('Robot', {
 			}
 			// trigger
 			request_list.addRequest(request_num);
-			set_request(500);
+			set_request(100);
 		}
 	},
 	alertCognitive: function() {
-		if (this._is_charging == false && gv.robot.status != 0 && gv.robot.is_alerting == false) {
-			gv.robot.is_alerting = true;
+		if (this._is_charging == false && gv.robot.status == 2 && gv.robot.is_alerting == false && gv.robot.fire == -1) {
 			var rand = Math.random();
 			if (rand < 0.5) { // missing part request
 				request_list.addRequest(12);
-				set_request(500);
+				set_request(100);
 				// location of missing part
 				gv.robot.part.loc_x = Math.floor(Math.random() * (16 - 2)) + 2;
 				gv.robot.part.loc_y = Math.floor(Math.random() * (15 - 2)) + 2;
 			} else { // software update task
 				request_list.addRequest(13);
-				set_request(500);
+				set_request(100);
 			}
 			// moves slowly
-			set_robot_speed(1);
+			setTimeout(function(){not_operational();}, gv.robot.alert_len*1000);
 		}
 	},
 	alertFire: function() {
-		if (this._is_charging == false && gv.robot.status != 0 && gv.robot.is_alerting == false) {
-			gv.robot.is_alerting = true;
+		if (this._is_charging == false && gv.robot.status == 2 && gv.robot.is_alerting == false && gv.robot.fire == -1) {
 			request_list.addRequest(15);
-			set_request(500);
+			set_request(100);
 			// request specific 
 			this.delay(this.onFire, gv.robot.alert_len*1000);
 		}
@@ -670,13 +725,14 @@ Crafty.c('Robot', {
 	onFire: function() {
 		gv.robot.fire = 0;
 		this.animate('AnimateFire', -1);
+		this.delay(this.offFire, 60000); // eventually will not be on fire
 	},
 	offFire: function() {
 		this.pauseAnimation();
 		this.sprite('spr_bot');
 		gv.robot.fire = -1;
 		// moves slowly
-		set_robot_speed(1);
+		not_operational();
 	}
 });
 
@@ -720,7 +776,7 @@ Crafty.c('RobotRequest', {
 		gv.robot.txt = '';
 		// if no response required, player no longer interacting
 		var requiresResponse = request_list.getRequiresResponse();
-		if (requiresResponse == false) {gv.player.interacting = false;}
+		if (requiresResponse == false) {terminal_state();}
 	}
 });
 Crafty.c('RequestScreen', {
@@ -735,21 +791,20 @@ Crafty.c('RequestScreen', {
 		var resp = prompt('Enter response here: ');
 		if (resp == 'up' || resp == 'down' || resp == 'left' || resp == 'right') {
 			if (request_list.getNumber() == 3) {
-				gv.player.interacting = false;
+				terminal_state();
 				sounds.play_correct();
 			}
 			gv.robot.direction = resp;
 		}
 		else if (resp == 'X91R23Q7') { // password for high cognitive load request
 			if (request_list.getNumber() == 6) {
-				gv.player.interacting = false;
+				terminal_state();
 				sounds.play_correct();
-				set_robot_speed(2);
 			}
 		}
 		else if (resp == 'X5214') { // password to reset robot speed
 			if (request_list.getNumber() == 8) {
-				gv.player.interacting = false;
+				terminal_state();
 				sounds.play_correct();
 			}
 			set_robot_speed(2);

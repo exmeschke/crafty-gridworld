@@ -2,11 +2,11 @@
 
 // Game variables -- need to be accessed before entities defined
 gv = {
-	// size of tiles
-	tile_sz: 24,
-	// score, updated for each frame
-	score: 0,
+	tile_sz: 24, // size of tiles
+	score: 0, // score, updated each frame
 	player: {
+		// x and y coordinates
+		loc: [30, 16],
 		// interacting with robot [true, false]
 		interacting: false,
 		// task difficulty [0:none, 1:low, 2:high]
@@ -16,6 +16,7 @@ gv = {
 	}, 
 	// track status of robot
 	robot: {
+		loc: [5, 10], // x and y coordinates
 		status: 2, // [0:not operational, 1:slow, 2:normal]
 		// REQUEST - general
 		alert_len: 20, // number of beeps and/or blinks
@@ -214,8 +215,8 @@ Crafty.c('Cow', {
 		this.requires('Animal, spr_cow13')
 			.attr({ w:60, h:60 })
 			.delay(this.randomMove, 2000, -1)
-			.onHit('Solid', this.turnAround)
 			.delay(this.hasMilk, 20000, -1)
+			.onHit('Solid', this.turnAround)
 			.bind('Milked', this.milked)
 	},
 	pushMovement: function(dir) {
@@ -262,7 +263,7 @@ Crafty.c('Butterfly', {
 	_speed: 600,
 	init: function() {
 		this.requires('Animal, Resource, spr_butterfly')
-			.attr({ w:24, h:24, r:1 })
+			.attr({ w:24, h:24, r:1, z:4 })
 			.delay(this.butterflyMove, this._speed, -1)
 			.bind('UpdateFrame', this.offScreen)
 	},
@@ -301,7 +302,7 @@ Crafty.c('Butterfly', {
 	},
 	// destroy when it leaves the screen
 	offScreen: function() {
-		if (this._x < -1 || this._x > gv.tile_sz*54 || this._y < -1 || this._y > gv.tile_sz*22) {
+		if (this._x < -1 || this._x > gv.tile_sz*54 || this._y < -1 || this._y > gv.tile_sz*23) {
 			this.destroy();
 			task_funcs.butterflyGone();
 		}
@@ -314,7 +315,7 @@ Crafty.c('Snake', {
 	_speed: 700,
 	init: function() {
 		this.requires('Animal, spr_snake5')
-			.attr({ w:24, h:24 })
+			.attr({ w:24, h:24, z:4 })
 			.delay(this.eatEgg, gv.animal.snake.eat_egg, -1)
 			.delay(this.snakeMove, this._speed, -1)
 			.bind('UpdateFrame', this.offScreen)
@@ -378,7 +379,7 @@ Crafty.c('Snake', {
 Crafty.c('Gopher', {
 	init: function() {
 		this.requires('Animal, spr_gopher_hole')
-			.attr({ w:24, h:24 })
+			.attr({ w:24, h:24, z:4 })
 			.delay(this.disappear, gv.animal.gopher.disappear)
 			.reel('PopOut', 2000, [
 				[0,0], [1,0], [2,0]

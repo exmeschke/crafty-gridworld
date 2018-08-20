@@ -17,16 +17,15 @@ function HTask(num, diff, txt, met, cmd) {
     this.command = cmd;
     // time it takes to complete task
     this.time = { begin:0, end:0, duration:0 };
-    // moment in task [0 = breakpoint, 1 = mid]
-    this.moment = 1;
     // whether completed
-    this.completed = 0; 
+    this.completed = 0;
 
     // setters
     this.setStart = function() {this.time.begin = new Date().getTime()/1000;};
     this.setEnd = function() {
     	this.time.end = new Date().getTime()/1000;
     	this.time.duration = this.time.end - this.time.begin;
+        this.completed = 1;
     };
     // runs command to start event
     this.runCode = function() {eval(this.command);}
@@ -76,6 +75,7 @@ var task_list = {
 
     // getters 
     getCurr: function() {return this.list[this.curr];},
+    getNum: function() {return this.list[this.curr].num;},
     getDiff: function() {return this.list[this.curr].diff;},
 	getText: function() {return this.list[this.curr].txt;},
 	getMet: function() {return this.list[this.curr].met;},

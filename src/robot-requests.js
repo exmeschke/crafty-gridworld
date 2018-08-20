@@ -1,5 +1,10 @@
 // Human receptivity, robot requests / actions, and state-action information
 
+// save data
+var MDP = []; // starting_state [1:16], action [1:4], h_responded [true, false], reward 
+var h_info = []; // distance between human and robot, h_task, h_r_sum, h_availability
+var all_states = [19]; // state progression
+
 // requests
 // [0:none, 1-4:short notification, 5-7:long notification, 8:text response, 9:low battery, 10-11:task change, 12-13:broken robot, 14:very low battery, 15:emergency]
 var request_indices = [];
@@ -8,14 +13,12 @@ var all_requests = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15];
 
 // STATE OF HUMAN
 // definition for receptivity
-function HReceptivity (availability, duration, requestNum) {
+function HReceptivity (availability, requestNum) {
     // VARIABLES
     // value of human receptivity
-    this.val = availability/2;
+    this.val = (5-availability)/4;
     // availability at time of alert
     this.availability = availability;
-    // duration of alert
-    this.duration = duration;
     // request number
     this.requestNum = requestNum;
     // time = 0
@@ -24,8 +27,8 @@ function HReceptivity (availability, duration, requestNum) {
     // HELPER FUNCS
     // updates value based on availability, request duration, and time
     this.updateValue = function(time_n) {
-        var factor = -1; // TBD
-        this.val = Math.exp(factor * (time_n-this.time_i)) * (this.availability/(2*this.duration));
+        var time = (time_n - this.time_i)/60;
+        this.val = Math.exp(time/5) * ((5-this.availability)/4);
     };
     // returns current value
     this.getValue = function() {return this.val;};
@@ -35,13 +38,11 @@ var receptivity_list = {
     // receptivity - stores list of receptivity objects, one for each request
     list: [],
     // tracks current receptivity
-    r_sum: 1.0,
+    r_sum: 0.0,
 
     // CURRENT VARIABLES
     // request number - [0:8]
     request_num: -1,
-    // duration - [0:none, 1:short, 2:long]
-    duration: -1,
     // availability - [0:interacting, 1, 2, 3, 4]
     availability: -1,
     // interacting - [true, false]
@@ -53,10 +54,9 @@ var receptivity_list = {
 
     // STORES
     // another request set - store receptivity and update count + request number 
-    setRequest: function(request_num, duration) {
+    setRequest: function(request_num) {
         // update temporary information
         this.request_num = request_num;
-        this.duration = duration;
         // add receptivity to log
         var r_curr = new HReceptivity(this.availability, this.request_num);
         this.list.push(r_curr);
@@ -65,14 +65,16 @@ var receptivity_list = {
     },
     // UPDATES
     // updates current information, based on task - called in Task.checkTasK();
-    updateState: function(interacting, difficulty, moment) {
+    updateState: function(interacting, difficulty, moment, r_status) {
         // save current information
         this.interacting = interacting;
         this.difficulty = difficulty;
         this.moment = moment;
 
         // already interacting with robot [0]
-        if (interacting == true) {this.availability = 0;}
+        if (interacting == true) {
+            this.availability = 0;
+        }
         // not interacting
         else if (interacting == false) {
             // no task --> very available [4]
@@ -101,11 +103,11 @@ var receptivity_list = {
             // current time
             var time = new Date().getTime()/1000;
             // summed receptivity
-            // var r_sum = this.list.slice(-1)[0].getValue();
-            var r_sum = 0;
+            var r_sum = this.list.slice(-1)[0].getValue();
+            // var r_sum = 0;
 
             // loop through receptivity for each request, apply function, and add to r_sum
-            for (var i = 0; i < this.list.length; i++) {
+            for (var i = 0; i < this.list.length-1; i++) {
                 // updates receptivity
                 var r_i = this.list[i];
                 r_i.updateValue(time);
@@ -115,14 +117,18 @@ var receptivity_list = {
             Crafty.log('r_sum = '+r_sum);
             this.r_sum += r_sum;
         // if receptivity is empty
-        } else {this.r_sum = 1.0;}
+        } else {this.r_sum = 0.0;}
     },
     // returns receptivity as 'low' or 'high'
     getReceptivity: function() {
-        var recep_threshold = 0.5;
-        if (this.r_sum > recep_threshold) {return 2;}
-        else {return 1;}
+        var recep_threshold = 0.8;
+        if (this.r_sum >= recep_threshold) {return 1;} // low
+        else {return 2;} // high
     },
+    // returns receptivity value
+    getRSum: function() {return this.r_sum;},
+    // returns current availability
+    getAvailability: function() {return this.availability;},
     // PRINTS
     printState: function() {Crafty.log(this.availability, this.interacting, this.difficulty, this.moment);}
 };  
@@ -148,6 +154,8 @@ function RRequest(number, urgency, duration, effort, resp, text) {
     // updated upon sending request
     this.receptivity = -1;
     this.setReceptivity = function(receptivity) {this.receptivity = receptivity;}
+    this.dist = -1;
+    this.setDist = function(dist) {this.dist = dist;}
     this.doAction = -1;
     this.setDoAction = function(action) {this.doAction = action;}
     this.responded = 0;
@@ -201,106 +209,94 @@ var request_list = {
 
     // CURRENT VARIABLES
     // current state enumerated [0:19], 0 is no request
-    curr_state: 0,
+    curr_state: 19,
     // current request, will be pushed to sent after action set
     curr_req: '',
 
     // UPDATE REQUEST
     // updates this.curr_state
     updateCurrState: function(receptivity, urgency, duration, effort) {
-        // low urgency
-        if (urgency == 1) {
-            // short duration & low effort
-            if (duration == 1 && effort == 1) {
-                // low receptivity
-                if (receptivity == 1) {this.curr_state = 1;}
-                // high receptivity
-                else {this.curr_state = 2;}
+        // starting states 1-16
+        if (receptivity == 1 || receptivity == 2) {
+            if (urgency == 1) { // low urgency
+                if (duration == 1 && effort == 1) { // short duration & low effort
+                    if (receptivity == 1) {this.curr_state = 1;} // low receptivity
+                    else {this.curr_state = 2;} // high receptivity
+                }
+                else if (duration == 2 && effort == 1) { // long duration & low effort
+                    if (receptivity == 1) {this.curr_state = 3;} // low receptivity
+                    else {this.curr_state = 4;} // high receptivity
+                }
             }
-            // long duration & low effort
-            else if (duration == 2 && effort == 1) {
-                // low receptivity
-                if (receptivity == 1) {this.curr_state = 3;}
-                // high receptivity
-                else {this.curr_state = 4;}
+            else if (urgency == 2) { // med urgency
+                if (duration == 1) { // short duration
+                    if (effort == 1) { // low effort 
+                        if (receptivity == 1) {this.curr_state = 5;} // low receptivity
+                        else {this.curr_state = 6;} // high receptivity
+                    }
+                    else if (effort == 2) { // high effort
+                        if (receptivity == 1) {this.curr_state = 7;} // low receptivity
+                        else {this.curr_state = 8;} // high receptivity
+                    }
+                }
+                else if (duration == 2) { // long duration
+                    if (effort == 1) { // low effort 
+                        if (receptivity == 1) {this.curr_state = 9;} // low receptivity
+                        else {this.curr_state = 10;} // high receptivity
+                    }
+                    else if (effort == 2) { // high effort
+                        if (receptivity == 1) {this.curr_state = 11;} // low receptivity
+                        else {this.curr_state = 12;} // high receptivity
+                    }
+                }
             }
+            if (urgency == 3) { // high urgency
+                if (duration == 1 && effort == 1) { // short duration & low effort
+                    if (receptivity == 1) {this.curr_state = 13;} // low receptivity
+                    else {this.curr_state = 14;} // high receptivity
+                }
+                else if (duration == 2 && effort == 1) { // long duration & low effort
+                    if (receptivity == 1) {this.curr_state = 15;} // low receptivity
+                    else {this.curr_state = 16;} // high receptivity
+                }
+            }
+        // non-starting states 17-19
+        } else {
+            if (urgency == 17) {this.curr_state = 17;}
+            else if (urgency == 18) {this.curr_state = 18;}
+            else if (urgency == 19) {this.curr_state = 19;}
         }
-        // med urgency
-        else if (urgency == 2) {
-            // short duration
-            if (duration == 1) {
-                // low effort 
-                if (effort == 1) {
-                    // low receptivity
-                    if (receptivity == 1) {this.curr_state = 5;}
-                    // high receptivity
-                    else {this.curr_state = 6;}
-                }
-                // high effort
-                else if (effort == 2) {
-                    // low receptivity
-                    if (receptivity == 1) {this.curr_state = 7;}
-                    // high receptivity
-                    else {this.curr_state = 8;}
-                }
-            }
-            // long duration
-            else if (duration == 2) {
-                // low effort 
-                if (effort == 1) {
-                    // low receptivity
-                    if (receptivity == 1) {this.curr_state = 9;}
-                    // high receptivity
-                    else {this.curr_state = 10;}
-                }
-                // high effort
-                else if (effort == 2) {
-                    // low receptivity
-                    if (receptivity == 1) {this.curr_state = 11;}
-                    // high receptivity
-                    else {this.curr_state = 12;}
-                }
-            }
-        }
-        // high urgency
-        if (urgency == 3) {
-            // short duration & low effort
-            if (duration == 1 && effort == 1) {
-                // low receptivity
-                if (receptivity == 1) {this.curr_state = 13;}
-                // high receptivity
-                else {this.curr_state = 14;}
-            }
-            // long duration & low effort
-            else if (duration == 2 && effort == 1) {
-                // low receptivity
-                if (receptivity == 1) {this.curr_state = 15;}
-                // high receptivity
-                else {this.curr_state = 16;}
-            }
+        // add to list of all states
+        if (all_states.slice(-1)[0] != this.curr_state) {
+            all_states.push(this.curr_state);
+            Crafty.log('states:'+all_states);
         }
     },
     // tracks requests that have been sent
     addRequest: function(request_num) {
-        // new request
-        if (request_num != -1) {
-            var new_request = this.possible[request_num];
-            // grab information
-            var urgency = new_request.urgency;
-            var duration = new_request.duration;
-            var effort = new_request.effort;
+        // new request = states 1-16
+        if (request_num >= 1) {
+            var new_req = this.possible[request_num];
             // update receptivity
             var receptivity = receptivity_list.getReceptivity();
-            new_request.setReceptivity(receptivity);
+            new_req.setReceptivity(receptivity);
             // update this.curr_req
-            this.curr_req = new_request;
-            Crafty.log(this.curr_req);
+            this.curr_req = new_req;
             // update this.curr_state
-            this.updateCurrState(receptivity, urgency, duration, effort);
+            this.updateCurrState(receptivity, new_req.urgency, new_req.duration, new_req.effort);
         }
     },
     // indicates most recent request was checked / responded to
     receivedResponse: function() {this.curr_req.setResponded();},
+    // called after request is responded to or alert is stopped
+    endRequest: function(h_responded, r_status) {
+        if (h_responded == true) { 
+            request_list.updateCurrState(0,17,0,0); // person is interacting
+        } else {
+            if (r_status == 2) {request_list.updateCurrState(0,19,0,0);} // fully operational
+            else {request_list.updateCurrState(0,18,0,0);} // not fully operational
+        }
+    },
 
     // RETURN INFORMATION
     // returns current in sent list
@@ -311,7 +307,7 @@ var request_list = {
     // epsilon is the exploration rate, returns 0,1,2,3 for the action
     getAction: function() {
         // indicate request is sent, updates receptivity
-        receptivity_list.setRequest(this.curr_req.number, this.curr_req.duration);
+        receptivity_list.setRequest(this.curr_req.number);
         // grab current request information
         var state_curr = this.curr_state;
         var epsilon = 0.2;
@@ -349,38 +345,40 @@ var request_list = {
     }
 };
 
-// SAVE
-// state progression - starting state, state progression, action, reward 
-function saveStates() {
-    // current vars
-    var request = request_list.curr_req;
-
+// SAVE INFORMATION
+// general human information, saved at time of initiating request
+function saveHInfo(dist, task, r_sum, availability) {
+    h_info.push(['-', dist, task, r_sum, availability]);
+    // Crafty.log('h_info'+h_info);
 };
-
-// update Q-table based on state and action
+// update Q-table based on state and action, saved after knowing whether player has responded or not
 function updateQ() {
     // curr request
     var request = request_list.curr_req;
     // state enumerated = i
     var state_curr = request_list.curr_state;
     // action enumerated = j
-    var action = request.doAction;
+    var action = request.doAction+1;
     // variables needed
     var urgency = request.urgency;
     var received_resp = request.responded;
     var duration = request.duration;
+    var effort = request.effort;
     var receptivity = request.receptivity;
     // R = reward - cost
     var R = 0.0;
     var reward = urgency*received_resp;
-    var cost = (action*duration)/(receptivity*urgency);
+    var cost = (action/(receptivity*urgency) + (duration*effort*received_resp))/4;
     R = reward - cost;
-    Crafty.log(urgency+'*'+received_resp, '-', '('+action+'*'+duration+')/('+receptivity+'*'+urgency+')');
-    Crafty.log(reward+'-'+cost);
+    Crafty.log(urgency+'*'+received_resp, '-', '('+action+'/('+receptivity+'*'+urgency+')+('+duration+'*'+effort+'*'+received_resp+'))/4');
+    Crafty.log(reward+'-'+cost+'='+R);
     // store value in request
     request_list.sent.slice(-1)[0].setReward(R);
     // update Q-table
     Q_table[state_curr][action] += R;
+    // save other state information
+    MDP.push(['-', state_curr, action, received_resp, R]);  
+    // Crafty.log('MDP'+MDP);
 };
 
 
