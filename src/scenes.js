@@ -491,7 +491,7 @@ Crafty.scene('Game', function() {
 	this.currTask = Crafty.e('Task').at(7,box_b+.4).text('').trigger('UpdateTask');
 
 	// End game - 40 min = 2400000, 30 min = 1800000, 20 min = 1200000
-	setTimeout(function() {eval("Crafty.scene('EndGame');");}, 1200000); 
+	setTimeout(function() {eval("Crafty.scene('EndGame');");}, 90000); 
 });
 
 // 3. End game screen
@@ -507,43 +507,6 @@ Crafty.scene('EndGame', function() {
 		.css($text_css);
 
 	// Write information to files
-	// QTABLE
-	Q_line = JSON.stringify(Q_table);
-	console.log(Q_line);
-	$.ajax({
-	    url: 'saveQtable.php',
-	    method: 'POST',
-	    data: {data: Q_line},
-	    success: function (response) {
-	    	console.log('Done q-table');
-		}, 
-		error: function (jqXhr, textStatus, errorThrown ){
-    		console.log( errorThrown );
-		}
-	});
-
-	// NTABLE
-	for (i=0; i<starting_states; i++)
-	{
-	 	for (j=0; j<actions; j++)
-	 	{
-	 		n_table[i][j] = n_table[i][j] + 1;
-	 	}
-	}
-	n_line = JSON.stringify(n_table);
-	console.log(n_line);
-	$.ajax({
-		url: 'saveNtable.php',
-		method: 'POST',
-		data: {n_data: n_line},
-		success: function (response) {
-			console.log('Done n-table');
-		}, 
-		error: function (jqXhr, textStatus, errorThrown ){
-			console.log( errorThrown );
-		}
-	});
-
 	// PARTICIPANT DATA
 	mdp_line = JSON.stringify(MDP);
 	console.log(mdp_line);
@@ -560,6 +523,38 @@ Crafty.scene('EndGame', function() {
 			console.log( errorThrown);
 		}
 	});
+
+	// QTABLE
+	Q_line = JSON.stringify(Q_table);
+	// console.log(Q_line);
+	$.ajax({
+	    url: 'saveQtable.php',
+	    method: 'POST',
+	    data: {data: Q_line},
+	    success: function (response) {
+	    	console.log('Done q-table');
+		}, 
+		error: function (jqXhr, textStatus, errorThrown ){
+    		console.log( errorThrown );
+		}
+	});
+
+	// NTABLE
+	n_line = JSON.stringify(n_table);
+	// console.log(n_line);
+	$.ajax({
+		url: 'saveNtable.php',
+		method: 'POST',
+		data: {n_data: n_line},
+		success: function (response) {
+			console.log('Done n-table');
+		}, 
+		error: function (jqXhr, textStatus, errorThrown ){
+			console.log( errorThrown );
+		}
+	});
+
+	
 });
 
 

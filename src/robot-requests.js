@@ -2,6 +2,9 @@
 
 // save data
 var MDP = []; // starting_state [1:16], action [1:4], h_responded [true, false], reward 
+for (var i = 0; i < 50; i++) {
+    MDP[i] = new Array(8);
+}
 var all_states = [19]; // state progression
 
 // requests
@@ -126,8 +129,6 @@ var receptivity_list = {
         if (this.r_sum >= recep_threshold) {return 1;} // low
         else {return 2;} // high
     },
-    // returns receptivity value
-    getRSum: function() {return this.r_sum;},
     // returns current availability
     getAvailability: function() {return this.availability;},
     // PRINTS
@@ -312,21 +313,6 @@ var request_list = {
             this.neg_state = 1;
             request_list.updateCurrState(0,18,0,0); // not fully operational
         }
-
-        // if (h_responded == true) { 
-        //     if (r_status == 2) {
-        //         request_list.updateCurrState(0,17,0,0); 
-        //     } else {
-        //         this.neg_state = 1;
-        //         request_list.updateCurrState(0,18,0,0); // not fully operational
-        //     }
-        // } else {
-        //     if (r_status == 2) {request_list.updateCurrState(0,19,0,0);} // fully operational
-        //     else {
-        //         this.neg_state = 1;
-        //         request_list.updateCurrState(0,18,0,0); // not fully operational
-        //     } 
-        // }
     },
 
     // RETURN INFORMATION
@@ -345,7 +331,7 @@ var request_list = {
         // find the highest Q value action
         var maxAction = 0;
         for (var j = 1; j < actions; j++) {
-            if (Q_table[state_curr][j] > Q_table[state_curr][maxAction]) {
+            if (Q_table[state_curr][j]/n_table[state_curr][j] > Q_table[state_curr][maxAction]/n_table[state_curr][maxAction]) {
                 maxAction = j;
             }
         }
@@ -376,19 +362,21 @@ var request_list = {
 };
 
 // SAVE INFORMATION
-// ['time', 's0', 'a', 'progression', 'reward', 'task_num', 'dist', 'receptivity'];
-var curr_int = []; 
+var n_int = 0;
+//[start_time, end_time, s0, a, progression, reward, task_num, distance, receptivity_raw]
+var curr_int; 
 // general information, saved at time of initiating request
 function saveHInfo(time, task, dist) {
-    for (var i = 0; i < 8; i++) {
-        curr_int[i] = '';
-    }
+    curr_int = new Array(9);
+
     curr_int[0] = time;
-    curr_int[5] = task;
-    curr_int[6] = dist;
+    curr_int[6] = task;
+    curr_int[7] = dist;
+    var receptivity_raw = receptivity_list.r_sum;
+    curr_int[8] = receptivity_raw;
 }; 
 // update Q-table based on state and action, saved at terminal state
-function updateQ() {
+function updateQ(time) {
     // curr request
     var request = request_list.curr_req;
     // state enumerated = i
@@ -404,7 +392,7 @@ function updateQ() {
     var duration = request.duration;
     var effort = request.effort;
     var receptivity = request.receptivity;
-    
+
     // reward
     var r = 0.0;
     if (action == 0) {  // no action
@@ -422,13 +410,18 @@ function updateQ() {
     if (curr_state == 19) {
         request_list.sent.slice(-1)[0].setReward(r); // store value in request
         Q_table[start_state-1][action] += r; // -1 to account for indices starting at 0
+        n_table[start_state-1][action] += 1;
 
-        curr_int[1] = start_state;
-        curr_int[2] = action;
-        curr_int[3] = states;
-        curr_int[4] = r;
-        MDP.push(curr_int);
-        Crafty.log('MDP: '+MDP);
+        curr_int[1] = time;
+        curr_int[2] = start_state;
+        curr_int[3] = action;
+        curr_int[4] = states.toString();
+        curr_int[5] = r;
+
+        for (var i = 0; i < 8; i++) {
+            MDP[n_int][i] = curr_int[i];
+        }
+        n_int += 1;
     }
 };
 
