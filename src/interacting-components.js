@@ -456,6 +456,7 @@ Crafty.c('Robot', {
 			.bind('StopAlert', this.stopAlert)
 			.bind('SetSpeed', this.setSpeed)
 			.bind('GetLocation', this.getLoc)
+			.bind('ResetLoc', this.setLoc)
 			.bind('KeyDown', function(e) {
 				if (e.key == 51) {
 					Crafty.log('reset');
@@ -468,10 +469,11 @@ Crafty.c('Robot', {
 	reset: function() {
 		this.cancelDelay(this.randomMove);
 		this.cancelTween();
-		while (this._x != 5*gv.tile_sz && this._y != 10*gv.tile_sz) {
-			this.at(5,10);
-			Crafty.log(this._x, this._y);
-		}
+		this.at(5,10);
+		setTimeout(function(){Crafty.trigger('ResetLoc');}, 200); 
+		setTimeout(function(){Crafty.trigger('ResetLoc');}, 400);
+		setTimeout(function(){Crafty.trigger('ResetLoc');}, 600);
+		setTimeout(function(){Crafty.trigger('ResetLoc');}, 800);
 		set_robot_speed(2);
 	},
 	// continues to update robot state information
@@ -484,6 +486,7 @@ Crafty.c('Robot', {
 		gv.robot.loc[0] = this._x/gv.tile_sz;
 		gv.robot.loc[1] = this._y/gv.tile_sz;
 	},
+	setLoc: function() {this.at(5,10);}, 
 	// changes speed depending on status
 	setSpeed: function() {
 		this.cancelDelay(this.randomMove);
