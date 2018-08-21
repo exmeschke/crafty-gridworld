@@ -54,7 +54,7 @@ Crafty.c('Player', {
 			// actions
 			.bind('KeyDown', function(e) {
 				if (e.key == Crafty.keys.X) {this.action();} 
-				if (e.key == Crafty.keys.R) {this.reset();}
+				if (e.key == 51) {this.reset();}
 				// if (e.key == Crafty.keys.SPACE) {Crafty.trigger('HideRequest');}
 			})
 			// triggered events
@@ -354,14 +354,14 @@ Crafty.c('Task', {
 
 // ROBOT CHARACTER
 // sound for robot alert
-function robot_alert_sound() {
+function robot_alert_sound(saliency) {
 	sounds.play_med();
-	for (var i = 0; i < gv.robot.alert_len; i++) {
+	for (var i = 0; i < gv.robot.alerts.len[saliency]; i++) {
 	    setTimeout(function() {
 	    	// stop alert if player responds
 	    	if (gv.robot.is_alerting == false) {return;}
 	    	else {sounds.play_med();}
-	    }, gv.robot.alert_freq*i);
+	    }, gv.robot.alerts.freq[saliency]*i);
 	}
 };
 // indicates request was sent
@@ -430,15 +430,17 @@ Crafty.c('Robot', {
 			.delay(this.losePower, this._battery_life, -1)
 			// request specific
 			.delay(this.alertFire, 900000, -1) // 15 minutes = 900000
-			.delay(this.alertPlants, 420000, -1) // 7 minutes = 420000
-			.delay(this.alertNotification, 124000, -1) // 2 minutes, 4 sec = 124000
+			.delay(this.alertPlants, 65000) // 7 minutes = 420000
+			.delay(this.alertNotification, 5000) // 2 minutes, 4 sec = 124000
 			.delay(this.alertCognitive, 681000, -1) // 11 minutes, 21 sec = 681000
-			.delay(this.alertLowPower, 540000, -1) // 9 minutes = 540000
+			.delay(this.alertLowPower, 125000) // 9 minutes = 540000
 			// on hit events
 			.onHit('Solid', this.turnAround)
 			.onHit('ChargingStation', this.recharge)
 			// animations
-			.reel('AnimateLight', gv.robot.alert_freq, [ [1,0], [0,0] ])
+			.reel('AnimateLow', gv.robot.alerts.freq[0], [ [1,0], [0,0] ])
+			.reel('AnimateMed', gv.robot.alerts.freq[1], [ [2,0], [0,0] ])
+			.reel('AnimateHigh', gv.robot.alerts.freq[2], [ [3,0], [0,0] ])
 			.reel('AnimateFire', 1000, [ [1,1], [2,1], [3,1] ])
 			// binded events
 			.bind('UpdateFrame', this.recordState)
@@ -455,7 +457,8 @@ Crafty.c('Robot', {
 			.bind('SetSpeed', this.setSpeed)
 			.bind('GetLocation', this.getLoc)
 			.bind('KeyDown', function(e) {
-				if (e.key == Crafty.keys.R) {
+				if (e.key == 51) {
+					Crafty.log('reset');
 					this.reset();
 				}
 			})
@@ -463,8 +466,13 @@ Crafty.c('Robot', {
 	char: function() {return 'robot';},
 	// resets location if off screen
 	reset: function() {
+		this.cancelDelay(this.randomMove);
+		this.cancelTween();
+		while (this._x != 5*gv.tile_sz && this._y != 10*gv.tile_sz) {
+			this.at(5,10);
+			Crafty.log(this._x, this._y);
+		}
 		set_robot_speed(2);
-		this.at(5,10);
 	},
 	// continues to update robot state information
 	recordState: function() {
@@ -651,21 +659,23 @@ Crafty.c('Robot', {
 	// flashing light
 	lowAlert: function() {
 		gv.robot.is_alerting = true;
-		this.animate('AnimateLight', -1);
-		this.delay(this.stopAlert, gv.robot.alert_len*1000);
+		this.animate('AnimateLow', -1);
+		robot_alert_sound(0);
+		this.delay(this.stopAlert, gv.robot.alerts.len[0]*1000);
 	},
 	// beeping
 	medAlert: function() {
 		gv.robot.is_alerting = true;
-		robot_alert_sound();
-		this.delay(this.stopAlert, gv.robot.alert_len*1000);
+		this.animate('AnimateMed', -1);
+		robot_alert_sound(1);
+		this.delay(this.stopAlert, gv.robot.alerts.len[1]*1000);
 	},
 	// flashing light + beeping
 	highAlert: function() {
 		gv.robot.is_alerting = true;
-		this.animate('AnimateLight', -1);
-		this.delay(this.stopAlert, gv.robot.alert_len*1000);
-		robot_alert_sound();
+		this.animate('AnimateHigh', -1);
+		robot_alert_sound(2);
+		this.delay(this.stopAlert, gv.robot.alerts.len[2]*1000);
 	},
 	stopAlert: function() {
 		gv.robot.is_alerting = false;

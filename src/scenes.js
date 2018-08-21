@@ -49,11 +49,10 @@ Crafty.scene('Loading', function() {
 				tile: 16, tileh: 18,
 				map: { spr_player: [0,2] }
 			},
-			'assets/bots-fire.png': {
+			'assets/bots-alerts.png': {
 				tile: 128, tileh: 144,
 				map: { 
 					spr_bot: [0,0],
-					spr_bot_lit: [1,0],
 					spr_bot_fire: [0,1]
 				}
 			},
@@ -295,11 +294,11 @@ Crafty.scene('Loading', function() {
 Crafty.scene('Game', function() {
 	// set pause [w] and quit [q] buttons
 	Crafty.bind('KeyDown', function(e) {
-		if (e.key == Crafty.keys.Q) {
+		if (e.key == 49) {
 			Crafty.pause();
 			Crafty.scene('EndGame');
 		}
-		else if (e.key == Crafty.keys.W) {Crafty.pause();}
+		else if (e.key == 50) {Crafty.pause();}
 	})
 
 	// background

@@ -20,8 +20,10 @@ gv = {
 		loc: [5, 10], // x and y coordinates
 		status: 2, // [0:not operational, 1:slow, 2:normal]
 		// REQUEST - general
-		alert_len: 30, // number of beeps and/or blinks
-		alert_freq: 1250, // how often beep
+		alerts: {
+			len: [20, 27, 40], // number of beeps and/or blinks
+			freq: [2000, 1500, 1000] // frequency of beeps and/or blinks
+		},
 		is_alerting: false, // currently is alerting w/beep, blink, or both
 		txt: '', // content for text bubble 
 		incomplete_txt: '',
