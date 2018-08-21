@@ -361,7 +361,7 @@ function robot_alert_sound() {
 	    	// stop alert if player responds
 	    	if (gv.robot.is_alerting == false) {return;}
 	    	else {sounds.play_med();}
-	    }, 1000*i);
+	    }, gv.robot.alert_freq*i);
 	}
 };
 // indicates request was sent
@@ -373,8 +373,6 @@ function set_request(time) {
 		update_robot_text(text);
 		// initialize action (alert)
 		var action = request_list.getAction();
-		// immediately save human information
-		set_h_info();
 		// do chosen action
 		if (action == 0) {
 			setTimeout(function() {
@@ -387,6 +385,8 @@ function set_request(time) {
 		else if (action == 1) {Crafty.trigger('LowAlert');}
 		else if (action == 2) {Crafty.trigger('MedAlert');}
 		else if (action == 3) {Crafty.trigger('HighAlert');}
+		// save human information
+		set_h_info();
 		// output to console
 		Crafty.log(text, action);
 	}, time);
@@ -438,7 +438,7 @@ Crafty.c('Robot', {
 			.onHit('Solid', this.turnAround)
 			.onHit('ChargingStation', this.recharge)
 			// animations
-			.reel('AnimateLight', 1000, [ [1,0], [0,0] ])
+			.reel('AnimateLight', gv.robot.alert_freq, [ [1,0], [0,0] ])
 			.reel('AnimateFire', 1000, [ [1,1], [2,1], [3,1] ])
 			// binded events
 			.bind('UpdateFrame', this.recordState)

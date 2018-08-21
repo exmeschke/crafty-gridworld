@@ -373,6 +373,7 @@ function saveHInfo(time, task, dist) {
     curr_int[6] = task;
     curr_int[7] = dist;
     var receptivity_raw = receptivity_list.r_sum;
+    Crafty.log(receptivity_raw);
     curr_int[8] = receptivity_raw;
 }; 
 // update Q-table based on state and action, saved at terminal state

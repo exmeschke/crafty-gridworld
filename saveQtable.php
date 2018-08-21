@@ -4,7 +4,7 @@
 		$p_file = 'participant_num.txt';
 		$handle = fopen($p_file, 'r') or die('Cannot open file:  '.$p_file);
 		$pnum = fgets($handle);
-		$pnum = (int)$pnum - 1;
+		$pnum = (int)$pnum+1;
 		fclose($handle);
 
 		$q = json_decode($_POST['data']);

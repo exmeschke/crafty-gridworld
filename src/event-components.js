@@ -59,7 +59,7 @@ function butterfly_task() {
 		setTimeout(function() {
 			a++;
 			spawn_butterfly(perm[a]);
-		}, 8000*i);
+		}, 6000*i);
 	}
 };
 // SNAKES
@@ -80,7 +80,7 @@ function snake_task() {
 		setTimeout(function() {
 			a++;
 			spawn_snake(perm[a]);
-		}, 9000*i);
+		}, 8000*i);
 	}
 };
 // HIDDEN CHEST

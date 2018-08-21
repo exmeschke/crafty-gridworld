@@ -293,6 +293,15 @@ Crafty.scene('Loading', function() {
 
 // 2. Adds components to the game 
 Crafty.scene('Game', function() {
+	// set pause [w] and quit [q] buttons
+	Crafty.bind('KeyDown', function(e) {
+		if (e.key == Crafty.keys.Q) {
+			Crafty.pause();
+			Crafty.scene('EndGame');
+		}
+		else if (e.key == Crafty.keys.W) {Crafty.pause();}
+	})
+
 	// background
 	Crafty.background('rgb(47, 130, 52)');
 

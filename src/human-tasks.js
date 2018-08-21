@@ -1,7 +1,8 @@
 // HUMAN TASKS
 
 // [0:none, 1:wheat, 2:berries, 3:eggs, 4:wool, 5:milk, 6:gophers, 7:butterflies, 8:snakes, 9:chest, 10:bread, 11:muffin, 12:thread]
-var task_indices = [1,2,3,4,5,0,6,7,8,0,9,0,10,11,12,0,5,2,6,0,12,0];
+// var task_indices = [1,2,3,4,5,0,6,7,8,0,9,0,10,11,12,0,5,2,6,0,12,0];
+var task_indices = [1,2,3,4,5,0,6,7,7,0,8,8,0,6,6,12,11,5,2,10,3,6,12,8,4,1,7,7,2,10,8,12,0,0,0];
 
 // human task definition
 //      num - task number [1:easy gather, 2:hard gather, 3:easy chase, 4:hard chase, 5:easy combo, 6:hard combo]
@@ -90,8 +91,8 @@ var task_funcs = {
         // number of gophers that pop up
         num: 7,
         // location coordinates
-        loc_x: [44, 32, 46, 39, 12, 24, 48],
-        loc_y: [10, 20, 18, 2, 19, 16, 11],
+        loc_x: [44, 32, 46, 39, 36, 24, 48],
+        loc_y: [10, 20, 18, 2, 21, 16, 11],
         // number hit
         hit: 0,
         // number disappear
@@ -117,10 +118,10 @@ var task_funcs = {
         // number of butterflies that will appear
         num: 8,
         // direction of flight
-        direction: ['right', 'down', 'right', 'left', 'down', 'left', 'down', 'left'],
+        direction: ['left', 'down', 'up', 'up', 'down', 'left', 'down', 'left'],
         // location coordinates
-        loc_x: [0, 14, 0, 52, 46, 52, 12, 52],
-        loc_y: [10, 0, 2, 19,  0,  3,  0, 4],
+        loc_x: [52, 39, 30, 44, 46, 52, 47, 52],
+        loc_y: [20, 1, 23, 23,  1,  3,  1, 12],
         // number hit
         hit: 0,
         // number disappear
@@ -143,10 +144,10 @@ var task_funcs = {
         // number of snakes that will appear
         num: 6,
         // direction of movement
-        direction: ['down', 'right', 'left', 'down', 'left', 'down'],
+        direction: ['down', 'up', 'left', 'down', 'up', 'down'],
         // location coordinates
-        loc_x: [17, 0, 52, 33, 52, 7, 52],
-        loc_y: [0,  5, 11,  0, 18, 0, 7],
+        loc_x: [48, 29, 52, 42, 52, 44, 52],
+        loc_y: [1,  23, 11,  1, 18, 23, 7],
         // number hit
         hit: 0,
         // number disappear

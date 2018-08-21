@@ -20,7 +20,8 @@ gv = {
 		loc: [5, 10], // x and y coordinates
 		status: 2, // [0:not operational, 1:slow, 2:normal]
 		// REQUEST - general
-		alert_len: 25, // number of beeps and/or blinks
+		alert_len: 30, // number of beeps and/or blinks
+		alert_freq: 1250, // how often beep
 		is_alerting: false, // currently is alerting w/beep, blink, or both
 		txt: '', // content for text bubble 
 		incomplete_txt: '',
@@ -42,7 +43,7 @@ gv = {
 		speed: 1500,
 		sheep: {hasWool: 0},
 		cow: {hasMilk: 0},
-		snake: {eat_egg: 4000},
+		snake: {eat_egg: 8000},
 		gopher: {disappear: 20000}
 	},
 	tools:{
@@ -282,6 +283,7 @@ Crafty.c('Butterfly', {
 	setDir: function(dir) {this._dir = dir;},
 	// deviates from movement with a probability of 0.1
 	butterflyMove: function() {
+		// random move
 		if (Math.random() < 0.1) {
 			var a = Math.random();
 			if (this._dir == 'up' || this._dir == 'down') {
@@ -292,6 +294,13 @@ Crafty.c('Butterfly', {
 				else {this._dir = 'down';}
 			}
 		}
+		// overridden by turning around
+		if (this._y < 1*gv.tile_sz) {this._dir = 'down';}
+		else if (this._y < 13*gv.tile_sz && this._x < 40*gv.tile_sz) {this._dir = 'down';} 
+		else if (this._y > 23*gv.tile_sz) {this._dir = 'up';}
+		else if (this._x < 30*gv.tile_sz) {this._dir = 'right';}
+		else if (this._x < 40*gv.tile_sz && this._y < 13*gv.tile_sz) {this._dir = 'right';}
+		else if (this._x > 51*gv.tile_sz) {this._dir = 'left';}
 
 		if (this._dir == 'up') {
 			this.animate('AnimalMovingUp');
@@ -312,7 +321,7 @@ Crafty.c('Butterfly', {
 	},
 	// destroy when it leaves the screen
 	offScreen: function() {
-		if (this._x < -1 || this._x > gv.tile_sz*54 || this._y < -1 || this._y > gv.tile_sz*23) {
+		if (this._x < -1 || this._x > gv.tile_sz*54 || this._y < -1 || this._y > gv.tile_sz*25) {
 			this.destroy();
 			task_funcs.butterflyGone();
 		}
@@ -345,6 +354,13 @@ Crafty.c('Snake', {
 				else {this._dir = 'down';}
 			}
 		}
+		// overridden by turning around
+		if (this._y < 1*gv.tile_sz) {this._dir = 'down';}
+		else if (this._y < 13*gv.tile_sz && this._x < 40*gv.tile_sz) {this._dir = 'down';} 
+		else if (this._y > 23*gv.tile_sz) {this._dir = 'up';}
+		else if (this._x < 30*gv.tile_sz) {this._dir = 'right';}
+		else if (this._x < 40*gv.tile_sz && this._y < 13*gv.tile_sz) {this._dir = 'right';}
+		else if (this._x > 51*gv.tile_sz) {this._dir = 'left';}
 
 		if (this._dir == 'up') {
 			this.animate('AnimalMovingUp');
@@ -379,7 +395,7 @@ Crafty.c('Snake', {
 		if (task_funcs.snakeComplete()) {Crafty.trigger('CompletedTask');}
 	},
 	offScreen: function() {
-		if (this._x < -1 || this._x > gv.tile_sz*54 || this._y < -1 || this._y > gv.tile_sz*23) {
+		if (this._x < -1 || this._x > gv.tile_sz*54 || this._y < -1 || this._y > gv.tile_sz*25) {
 			this.destroy();
 			task_funcs.snakeGone();
 		}
