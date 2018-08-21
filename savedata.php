@@ -25,18 +25,5 @@
 			}
 			fclose($handle);
 		}
-		// save robot state data
-		if (isset($_POST['rstate_data'])) {
-			$rstate = json_decode($_POST['rstate_data']);
-
-			$data_file = 'p'.$pnum.'_states.txt';
-			$handle = fopen($data_file, 'w') or die('Cannot open file:  '.$data_file);
-
-			foreach ($rstate as $fields) {
-			    fwrite($handle, $fields);
-			    fwrite($handle, ',');
-			}
-			fclose($handle);
-		}
 
 ?>

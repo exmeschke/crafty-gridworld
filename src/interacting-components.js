@@ -426,8 +426,8 @@ Crafty.c('Robot', {
 			.delay(this.losePower, this._battery_life, -1)
 			.delay(this.recordState, 100, -1)
 			// request specific
-			.delay(this.alertFire, 60000) // 15 minutes = 900000
-			.delay(this.alertPlants, 5000) // 7 minutes = 420000
+			.delay(this.alertFire, 900000, -1) // 15 minutes = 900000
+			.delay(this.alertPlants, 420000, -1) // 7 minutes = 420000
 			.delay(this.alertNotification, 120000, -1) // 2 minutes = 120000
 			.delay(this.alertCognitive, 660000, -1) // 11 minutes = 660000
 			// on hit events
@@ -621,13 +621,15 @@ Crafty.c('Robot', {
 			var x = Math.round(this.x/gv.tile_sz);
 			var y = Math.round(this.y/gv.tile_sz);
 
-			if (gv.field.seed[y-2][x-2] != '') { // if seeds in location
-				// destroy seeds
-				gv.field.seed[y-2][x-2].destroy(); 
-				gv.field.seed[y-2][x-2] = '';
-				// insert wheat
-				Crafty.log(gv.wheat.seed);
-				gv.field.wheat[y-2][x-2] = Crafty.e('Wheat4').at(x, y);
+			if (x > 1 && x < 15 && y > 1 && y < 16) {
+				if (gv.field.seed[y-2][x-2] != '') { // if seeds in location
+					// destroy seeds
+					gv.field.seed[y-2][x-2].destroy(); 
+					gv.field.seed[y-2][x-2] = '';
+					// insert wheat
+					Crafty.log(gv.wheat.seed);
+					gv.field.wheat[y-2][x-2] = Crafty.e('Wheat4').at(x, y);
+				}
 			}
 		// if robot on fire
 		} else {
@@ -640,19 +642,21 @@ Crafty.c('Robot', {
 		var x = Math.round(this.x/gv.tile_sz);
 		var y = Math.round(this.y/gv.tile_sz);
 
-		if (gv.field.seed[y-2][x-2] != '') {
-			var seeds = gv.field.seed[y-2][x-2];
-			if (seeds != undefined) {
-				seeds.destroy();
-				gv.field.seed[y-2][x-2] = '';
+		if (x > 1 && x < 15 && y > 1 && y < 16) {
+			if (gv.field.seed[y-2][x-2] != '') {
+				var seeds = gv.field.seed[y-2][x-2];
+				if (seeds != undefined) {
+					seeds.destroy();
+					gv.field.seed[y-2][x-2] = '';
+				}
 			}
-		}
 
-		if (gv.field.wheat[y-2][x-2] != '') {
-			var wheat = gv.field.wheat[y-2][x-2];
-			if (wheat != undefined) {
-				wheat.destroy();
-				gv.field.wheat[y-2][x-2] = '';
+			if (gv.field.wheat[y-2][x-2] != '') {
+				var wheat = gv.field.wheat[y-2][x-2];
+				if (wheat != undefined) {
+					wheat.destroy();
+					gv.field.wheat[y-2][x-2] = '';
+				}
 			}
 		}
 	},

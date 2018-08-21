@@ -415,7 +415,7 @@ function updateQ() {
         r = rR + rH;
     }
     neg_state = 0; // reset
-    Crafty.log(start_state, curr_state);
+    // Crafty.log(start_state, curr_state);
     Crafty.log('reward = '+r);
 
     // save data at terminal state

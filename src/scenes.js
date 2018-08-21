@@ -508,13 +508,6 @@ Crafty.scene('EndGame', function() {
 
 	// Write information to files
 	// QTABLE
-	// for (i=0; i<starting_states; i++)
-	// {
-	//  	for (j=0; j<actions; j++)
-	//  	{
-	//  		Q_table[i][j] = Q_table[i][j] + .2;
-	//  	}
-	// }
 	Q_line = JSON.stringify(Q_table);
 	console.log(Q_line);
 	$.ajax({
@@ -553,14 +546,12 @@ Crafty.scene('EndGame', function() {
 
 	// PARTICIPANT DATA
 	mdp_line = JSON.stringify(MDP);
-	states_line = JSON.stringify(all_states);
-	console.log(states_line);
+	console.log(mdp_line);
 	$.ajax({
 		url: 'savedata.php',
 		method: 'POST',
 		data: {
-			mdp_data: mdp_line,
-			rstate_data: states_line			
+			mdp_data: mdp_line
 		},
 		success: function (response) {
 			console.log('Done participant');
