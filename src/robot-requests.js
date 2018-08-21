@@ -2,7 +2,6 @@
 
 // save data
 var MDP = []; // starting_state [1:16], action [1:4], h_responded [true, false], reward 
-var HState = []; // distance between human and robot, h_task, h_r_sum, h_availability
 var all_states = [19]; // state progression
 
 // requests
@@ -173,7 +172,7 @@ function RRequestList(indices) {
     this.requestOptions[0] = new RRequest(0,0,0,0,false,'');
     // state 1: low urgency, short duration, low effort, no response
     this.requestOptions[1] = new RRequest(1,1,1,1,false,'Baked goods can burn!');
-    this.requestOptions[2] = new RRequest(1,1,1,1,false,"Debug any issues by entering [X5214] at the monitor.");
+    this.requestOptions[2] = new RRequest(1,1,1,1,false,"Debug any future issues by entering [X5214] at the monitor.");
     this.requestOptions[3] = new RRequest(1,1,1,1,false,'We lose money when I run out of battery!');
     this.requestOptions[4] = new RRequest(1,1,1,1,false,'Sometimes I give you helpful hints.');
     // state 2: low urgency, long duration, low effort, no response
@@ -193,7 +192,7 @@ function RRequestList(indices) {
     // state 7: high urgency, short duration, high effort, requires response
     this.requestOptions[14] = new RRequest(7,2,1,2,true,'My battery is less than 5%!');
     // state 8: high urgency, long duration, high effort, requires response
-    this.requestOptions[15] = new RRequest(8,2,2,2,true,"Something's short circuited--I'm about to catch on fire! Put it out with 3 buckets of water. Then enter the password [X5214] at the monitor to debug the issue.");
+    this.requestOptions[15] = new RRequest(8,2,2,2,true,"Something short circuited--I'm about to catch on fire! Put it out with 3 buckets of water. Then enter the code [X5214] at the monitor to debug the issue.");
 
     this.requests = []
     for (var i = 0; i < indices.length; i++) {
@@ -210,6 +209,8 @@ var request_list = {
     sent: [],
 
     // CURRENT VARIABLES
+    // state progression
+    states: [],
     // current state enumerated [1:19]
     curr_state: 19,
     // most recent start state [1:16]
@@ -266,6 +267,7 @@ var request_list = {
                     else {this.curr_state = 16;} // high receptivity
                 }
             }
+            this.states = [];
         // non-starting states 17-19
         } else {
             if (urgency == 17) {this.curr_state = 17;}
@@ -275,6 +277,7 @@ var request_list = {
         // add to list of all states
         if (all_states.slice(-1)[0] != this.curr_state) {
             all_states.push(this.curr_state);
+            this.states.push(this.curr_state);
             Crafty.log('states: '+all_states);
         }
     },
@@ -296,16 +299,34 @@ var request_list = {
     receivedResponse: function() {this.curr_req.setResponded();},
     // called after request is responded to or alert is stopped
     endRequest: function(h_responded, r_status) {
-        if (this.curr_state <= 16) {this.start_state = this.curr_state;} // if a starting state, update
-        if (h_responded == true) { 
-            request_list.updateCurrState(0,17,0,0); // person is interacting
-        } else {
-            if (r_status == 2) {request_list.updateCurrState(0,19,0,0);} // fully operational
-            else { // not fully operational
-                this.neg_state = 1;
-                request_list.updateCurrState(0,18,0,0);
+        if (this.curr_state <= 16) { // if a starting state, update
+            this.start_state = this.curr_state; 
+        } 
+        if (r_status == 2) {
+            if (h_responded == true) { // person is interacting
+                request_list.updateCurrState(0,17,0,0);
+            } else { // completed task, fully operational
+                request_list.updateCurrState(0,19,0,0);
             } 
+        } else {
+            this.neg_state = 1;
+            request_list.updateCurrState(0,18,0,0); // not fully operational
         }
+
+        // if (h_responded == true) { 
+        //     if (r_status == 2) {
+        //         request_list.updateCurrState(0,17,0,0); 
+        //     } else {
+        //         this.neg_state = 1;
+        //         request_list.updateCurrState(0,18,0,0); // not fully operational
+        //     }
+        // } else {
+        //     if (r_status == 2) {request_list.updateCurrState(0,19,0,0);} // fully operational
+        //     else {
+        //         this.neg_state = 1;
+        //         request_list.updateCurrState(0,18,0,0); // not fully operational
+        //     } 
+        // }
     },
 
     // RETURN INFORMATION
@@ -355,16 +376,23 @@ var request_list = {
 };
 
 // SAVE INFORMATION
-// general human information, saved at time of initiating request
-function saveHInfo(dist, task, r_sum, availability) {
-    HState.push([dist, task, r_sum, availability]);
-    // Crafty.log('HState: '+HState);
-};
-// update Q-table based on state and action, saved after knowing whether player has responded or not
+// ['time', 's0', 'a', 'progression', 'reward', 'task_num', 'dist', 'receptivity'];
+var curr_int = []; 
+// general information, saved at time of initiating request
+function saveHInfo(time, task, dist) {
+    for (var i = 0; i < 8; i++) {
+        curr_int[i] = '';
+    }
+    curr_int[0] = time;
+    curr_int[5] = task;
+    curr_int[6] = dist;
+}; 
+// update Q-table based on state and action, saved at terminal state
 function updateQ() {
     // curr request
     var request = request_list.curr_req;
     // state enumerated = i
+    var states = request_list.states;
     var start_state = request_list.start_state;
     var curr_state = request_list.curr_state;
     var neg_state = request_list.neg_state;
@@ -390,12 +418,17 @@ function updateQ() {
     Crafty.log(start_state, curr_state);
     Crafty.log('reward = '+r);
 
-    // save data
+    // save data at terminal state
     if (curr_state == 19) {
         request_list.sent.slice(-1)[0].setReward(r); // store value in request
-        Q_table[start_state-1][action] += r; // -1 to account for indices
-        MDP.push([start_state, action, received_resp, r]);  
-        // Crafty.log('MDP: '+MDP);
+        Q_table[start_state-1][action] += r; // -1 to account for indices starting at 0
+
+        curr_int[1] = start_state;
+        curr_int[2] = action;
+        curr_int[3] = states;
+        curr_int[4] = r;
+        MDP.push(curr_int);
+        Crafty.log('MDP: '+MDP);
     }
 };
 

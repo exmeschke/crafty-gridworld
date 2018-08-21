@@ -1,10 +1,9 @@
 // PLAYER CHARACTER
 function set_h_info() {
+	var time = gv.time[0]+':'+gv.time[1];
 	var dist = dist_robot_player(); // distance between robot and human
 	var task_num = task_list.getNum(); // human task 
-	var receptivity = receptivity_list.getRSum(); // summed receptivity value
-	var availability = receptivity_list.getAvailability(); // current availability
-	saveHInfo(dist, task_num, receptivity, availability); // save at initial time of alert 
+	saveHInfo(time, task_num, dist); // save at initial time of alert 
 };
 function dist_robot_player () {
 	Crafty.trigger('GetLocation'); // updates locations
@@ -79,6 +78,7 @@ Crafty.c('Player', {
 	},
 	// action triggered by hitting object and pressed 'X'
 	action: function() {
+		// check for everything else
 		var hitDatas, hitData;
 		if ((hitDatas = this.hit('Well'))) {
 			Crafty.trigger('FillBucket');
@@ -149,7 +149,11 @@ Crafty.c('Player', {
 			// if holding scythe, collect wheat
 			if (gv.tools.lgtools == 0) {
 				Crafty.trigger('WheatCount');
+				// destroy wheat
 				hitDatas[0].obj.destroy();
+				var x = Math.round(this.x/gv.tile_sz);
+				var y = Math.round(this.y/gv.tile_sz);
+				gv.field.wheat[y-2][x-2] = '';
 			} else {sounds.play_low();}
 		} else if ((hitDatas = this.hit('Oven'))) {
 			// ask what to bake
@@ -171,12 +175,34 @@ Crafty.c('Player', {
 				Crafty.trigger('MakeThread');
 			} else {sounds.play_low();}
 		} else {
-			// default plays tone
-			sounds.play_low();
-			setTimeout(function() {
-				Crafty.trigger('EmptyBucket');
-				Crafty.trigger('EmptySeedBag');
-			}, 500);
+			// if robot is alerting person and player nearby, trigger show response
+			var dist = dist_robot_player();
+			if (dist <= 3) {
+				Crafty.log(dist, gv.robot.is_alerting);
+				if (gv.robot.is_alerting == true) {
+					Crafty.trigger('ShowRequest');
+				// if bucket is full
+				} else if (gv.tools.bucket == 1) {
+					Crafty.trigger('Water');
+					Crafty.trigger('EmptyBucket');
+					// if request is to give water to robot, trigger completed
+					if (request_list.getNumber() == 5) {terminal_state();}
+				// if seed bag full, set robot task to plant
+				} else if (gv.tools.seed_bag == 1) {
+					Crafty.trigger('Plant');
+					Crafty.trigger('EmptySeedBag');
+					// if request is to give seeds to robot, trigger completed
+					if (request_list.getNumber() == 5) {terminal_state();}
+			}
+				
+			// default
+			} else {
+				sounds.play_low();
+				setTimeout(function() {
+					Crafty.trigger('EmptyBucket');
+					Crafty.trigger('EmptySeedBag');
+				}, 200);
+			}			
 		}
 	},
 	// prevents from moving through obstacles
@@ -193,24 +219,6 @@ Crafty.c('Player', {
 	}, 
 	// pushes robot
 	pushRobot: function() {		
-		// hands item to robot to trigger robot action
-		if (Crafty.s('Keyboard').isKeyDown('X')) {
-			// if robot is alerting person, trigger show response
-			if (gv.robot.is_alerting == true) {Crafty.trigger('ShowRequest');} 
-			// if bucket is full
-			else if (gv.tools.bucket == 1) {
-				Crafty.trigger('Water');
-				Crafty.trigger('EmptyBucket');
-				// if request is to give water to robot, trigger completed
-				if (request_list.getNumber() == 5) {terminal_state();}
-			// if seed bag full, set robot task to plant
-			} else if (gv.tools.seed_bag == 1) {
-				Crafty.trigger('Plant');
-				Crafty.trigger('EmptySeedBag');
-				// if request is to give seeds to robot, trigger completed
-				if (request_list.getNumber() == 5) {terminal_state();}
-			}
-		}
 		// check if over lost part 
 		if (gv.robot.part.loc_x != -1) {
 			var xx = gv.robot.part.loc_x - (this.x/gv.tile_sz);
@@ -410,7 +418,6 @@ Crafty.c('Robot', {
 	_speed: [0, 2400, 1200], // different speeds, depends on status
 	_task: -1, // [-1:none, 0:plant, 1:water]
 	_is_alerting: false, // currently blinking, beeping, or both
-	_min: 0,
 	init: function() {
 		this.requires('2D, Canvas, Grid, Collision, SpriteAnimation, spr_bot, Tween, Delay, Text')
 			.attr({ w: gv.tile_sz+2, h: gv.tile_sz+2, z:2 })
@@ -418,10 +425,9 @@ Crafty.c('Robot', {
 			.delay(this.randomMove, this._do_move, -1)
 			.delay(this.losePower, this._battery_life, -1)
 			.delay(this.recordState, 100, -1)
-			.delay(this.timing, 60000, -1) // every minute
 			// request specific
-			.delay(this.alertFire, 900000, -1) // 15 minutes = 900000
-			.delay(this.alertPlants, 420000, -1) // 7 minutes = 420000
+			.delay(this.alertFire, 60000) // 15 minutes = 900000
+			.delay(this.alertPlants, 5000) // 7 minutes = 420000
 			.delay(this.alertNotification, 120000, -1) // 2 minutes = 120000
 			.delay(this.alertCognitive, 660000, -1) // 11 minutes = 660000
 			// on hit events
@@ -443,18 +449,21 @@ Crafty.c('Robot', {
 			.bind('StopAlert', this.stopAlert)
 			.bind('SetSpeed', this.setSpeed)
 			.bind('GetLocation', this.getLoc)
-			.bind('KeyDown', function(e) {if (e.key == Crafty.keys.R) {this.reset();}})
+			.bind('KeyDown', function(e) {
+				if (e.key == Crafty.keys.R) {
+					this.reset();
+				}
+			})
 	},
 	char: function() {return 'robot';},
 	// resets location if off screen
-	reset: function() {this.at(5,10);},
+	reset: function() {
+		set_robot_speed(2);
+		this.at(5,10);
+	},
 	// continues to update robot state information
 	recordState: function() {
 		dist_robot_player();
-	},
-	timing: function() {
-		this._min += 1;
-		Crafty.log(this._min+' min');
 	},
 	// returns this.x and this.y
 	getLoc: function() {
@@ -484,7 +493,7 @@ Crafty.c('Robot', {
 	// does random movement
 	randomMove: function() {
 		// check if on fire
-		if (gv.robot.fire != -1) {gv.score -= 0.25;}
+		if (gv.robot.fire != -1) {gv.score -= 0.15;}
 		// if not broken
 		if (gv.robot.status != 0) {
 			// complete task
@@ -561,11 +570,11 @@ Crafty.c('Robot', {
 
 			// check if low power
 			var power = Math.round(this._power);
-			if (power == 5 || power == 6) { // very low power
+			if (power == 5) { // very low power
 				request_list.addRequest(14);
 				set_request(100);
 				
-			} else if (power == 20 || power == 21) {
+			} else if (power == 20) { // low power
 				request_list.addRequest(9);
 				set_request(100);
 			}
@@ -576,10 +585,12 @@ Crafty.c('Robot', {
 		if (this._power < 100) {
 			this._power += .05;
 			this._is_charging = true;
+			Crafty.trigger('StartCharging');
 		} else {
 			this._power = 100;
 			this._is_charging = false;
 			gv.robot.status = 2;
+			Crafty.trigger('StopCharging');
 		}
 	},
 	// ROBOT TASKS
@@ -598,10 +609,8 @@ Crafty.c('Robot', {
 		var x = Math.round(this.x/gv.tile_sz);
 		var y = Math.round(this.y/gv.tile_sz);
 
-		if (x > 1 && x < 15 && y > 1 && y < 16) {
-			Crafty.e('Wheat2').at(x, y);
-			if (gv.field.seed_loc_x.indexOf(x) == -1) {gv.field.seed_loc_x.push(x);}
-			if (gv.field.seed_loc_y.indexOf(y) == -1) {gv.field.seed_loc_y.push(y);}
+		if (x > 1 && x < 15 && y > 1 && y < 16 && gv.field.seed[y-2][x-2] == '' && gv.field.wheat[y-2][x-2] == '') {
+			gv.field.seed[y-2][x-2] = Crafty.e('Wheat2').at(x, y);
 		}
 	},
 	water: function() {
@@ -612,15 +621,18 @@ Crafty.c('Robot', {
 			var x = Math.round(this.x/gv.tile_sz);
 			var y = Math.round(this.y/gv.tile_sz);
 
-			if (gv.field.seed_loc_x.indexOf(x) != -1 && gv.field.seed_loc_y.indexOf(y) != -1) {
-				Crafty.e('Wheat4').at(x, y);
-				if (gv.field.wheat_loc_x.indexOf(x) == -1) {gv.field.wheat_loc_x.push(x);}
-				if (gv.field.wheat_loc_y.indexOf(y) == -1) {gv.field.wheat_loc_y.push(y);}
+			if (gv.field.seed[y-2][x-2] != '') { // if seeds in location
+				// destroy seeds
+				gv.field.seed[y-2][x-2].destroy(); 
+				gv.field.seed[y-2][x-2] = '';
+				// insert wheat
+				Crafty.log(gv.wheat.seed);
+				gv.field.wheat[y-2][x-2] = Crafty.e('Wheat4').at(x, y);
 			}
 		// if robot on fire
 		} else {
 			gv.robot.fire += 1;
-			if (gv.robot.fire == 3) {this.putOutFire();}
+			if (gv.robot.fire == 3) {this.offFire(true);}
 		}
 	}, 
 	// destroys wheat if on fire
@@ -628,11 +640,20 @@ Crafty.c('Robot', {
 		var x = Math.round(this.x/gv.tile_sz);
 		var y = Math.round(this.y/gv.tile_sz);
 
-		if (gv.field.seed_loc_x.indexOf(x) != -1 && gv.field.seed_loc_y.indexOf(y) != -1) {
-			Crafty.e('Soil5').at(x,y);
+		if (gv.field.seed[y-2][x-2] != '') {
+			var seeds = gv.field.seed[y-2][x-2];
+			if (seeds != undefined) {
+				seeds.destroy();
+				gv.field.seed[y-2][x-2] = '';
+			}
 		}
-		if (gv.field.wheat_loc_x.indexOf(x) != -1 && gv.field.wheat_loc_y.indexOf(y) != -1) {
-			Crafty.e('Soil5').at(x,y);
+
+		if (gv.field.wheat[y-2][x-2] != '') {
+			var wheat = gv.field.wheat[y-2][x-2];
+			if (wheat != undefined) {
+				wheat.destroy();
+				gv.field.wheat[y-2][x-2] = '';
+			}
 		}
 	},
 	// ALERTS
@@ -739,19 +760,21 @@ Crafty.c('Robot', {
 	onFire: function() {
 		gv.robot.fire = 0;
 		this.animate('AnimateFire', -1);
-		this.delay(this.offFire, 60000); // eventually will not be on fire
+		this.delay(this.noFire, 60000); // put out fire eventually
 	},
-	putOutFire: function() {
+	// default
+	noFire: function() {
+		if (gv.robot.fire == 0) {
+			this.pauseAnimation();
+			this.sprite('spr_bot');
+		}
+	},
+	// put out
+	offFire: function(put_out) { 
 		this.pauseAnimation();
 		this.sprite('spr_bot');
+		if (gv.robot.fire != 3) {not_operational();} // moves slowly if not put out
 		gv.robot.fire = -1;
-	},
-	offFire: function() { // -1 reward
-		this.pauseAnimation();
-		this.sprite('spr_bot');
-		gv.robot.fire = -1;
-		// moves slowly
-		not_operational();
 	}
 });
 

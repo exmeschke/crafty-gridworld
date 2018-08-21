@@ -4,6 +4,7 @@
 gv = {
 	tile_sz: 24, // size of tiles
 	score: 0, // score, updated each frame
+	time: [0, 0], // time [min, sec], updated each frame
 	player: {
 		// x and y coordinates
 		loc: [30, 16],
@@ -19,7 +20,7 @@ gv = {
 		loc: [5, 10], // x and y coordinates
 		status: 2, // [0:not operational, 1:slow, 2:normal]
 		// REQUEST - general
-		alert_len: 20, // number of beeps and/or blinks
+		alert_len: 25, // number of beeps and/or blinks
 		is_alerting: false, // currently is alerting w/beep, blink, or both
 		txt: '', // content for text bubble 
 		incomplete_txt: '',
@@ -31,10 +32,10 @@ gv = {
 		// REQUEST - part location
 		part: {loc_x: -1, loc_y: -1}
 	},
-	// updated when robot moves to tile
+	// updated when robot moves to tile, field is 14 x 15
 	field: {
-		seed_loc_x: [],  seed_loc_y: [],
-		wheat_loc_x: [], wheat_loc_y: []
+		seed: [],
+		wheat: []
 	},
 	// animal actions
 	animal: {
@@ -79,17 +80,26 @@ gv = {
 		}
 	}
 }
+for (var i = 0; i < 13; i++) {
+	gv.field.wheat[i] = [];
+	gv.field.seed[i] = [];
+	for (var j = 0; j < 14; j++) {
+		gv.field.wheat[i][j] = '';
+		gv.field.seed[i][j] = '';
+	}
+}
 
 // Grid
 Crafty.c('Grid', {
-	init: function() {this.attr({ w: gv.tile_sz, h: gv.tile_sz })},
+	init: function() {
+		this.attr({ w:gv.tile_sz, h:gv.tile_sz });
+	},
 	at: function(x, y) {
 		this.attr({ x: x*gv.tile_sz, y: y*gv.tile_sz })
 		return this;
 	},
 	pos: function() { return this.x, this.y; }
 });
-
 
 // Animals
 Crafty.c('Animal', {
@@ -753,12 +763,11 @@ Crafty.c('ChargingStation', {
 	init: function() {
 		this.requires('2D, Canvas, Grid, SpriteAnimation, spr_charging_station')
 			.attr({ w:43, h:50, z:0 })
-			.bind('UpdateFrame', this.checkCharge)
+			.bind('StartCharging', this.lightOn)
+			.bind('StopCharging', this.lightOff)
 	},
-	checkCharge: function() {
-		if (gv.robot.charging == 0) {this.sprite('spr_charging_station');}
-		else {this.sprite('spr_charging_station_lit');}
-	}
+	lightOn: function() {this.sprite('spr_charging_station');}, 
+	lightOff: function() {this.sprite('spr_charging_station_lit');}
 });
 // Hidden chest
 var exp;
@@ -834,12 +843,36 @@ Crafty.c('Rock', {
 // Bottom panel
 Crafty.c('Score', {
 	init: function() {
-		this.requires('2D, Canvas, Grid, Text')
+		this.requires('2D, DOM, Grid, Text')
 			.attr({ w:100, h:40 })
-			.textFont({ size: '24px' })
+			.textFont({ size: '20px' })
 			.bind('UpdateFrame', this.updateScore)
 	},
 	updateScore: function() {this.text('$ '+gv.score.toFixed(2));}
+});
+Crafty.c('Time', {
+	init: function() {
+		this.requires('2D, DOM, Grid, Text, Delay')
+			.attr({ w:100, h:40 })
+			.textFont({ size: '20px' })
+			// time keeping
+			.delay(this.updateMin, 60000, -1)
+			.delay(this.updateSec, 1000, -1)
+			.bind('UpdateFrame', this.updateTime)
+	},
+	updateTime: function() {
+		var min = gv.time[0];
+		var sec = gv.time[1];
+		if (gv.time[0] < 10) {min = '0'+min;}
+		if (gv.time[1] < 10) {sec = '0'+sec;}
+		this.text(min+':'+sec);
+		// this.text('0'+gv.time[0]+':'+gv.time[1]);
+	},
+	updateMin: function() {gv.time[0] += 1;},
+	updateSec: function() {
+		gv.time[1] += 1;
+		if (gv.time[1] == 60) {gv.time[1] = 0;}
+	}
 });
 Crafty.c('Bucket', {
 	init: function() {

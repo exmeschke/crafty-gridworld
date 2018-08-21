@@ -365,7 +365,7 @@ Crafty.scene('Game', function() {
 					Crafty.e('Soil5').at(x,y);
 					this.occupied[x][y] = true;
 					if (y == 2 && (x > 3 && x < 12)) {
-						Crafty.e('Wheat4').at(x,y);
+						gv.field.wheat[y-2][x-2] = Crafty.e('Wheat4').at(x,y);
 					}
 				}
 
@@ -451,7 +451,8 @@ Crafty.scene('Game', function() {
 	// Add score information
 	var box_b = Game.h()-3.8;
 	this.scroll = Crafty.e('Scroll').at(0,Game.h()-5);
-	this.score = Crafty.e('Score').at(3,box_b+1).text('$ 0.00');
+	this.score = Crafty.e('Score').at(3,box_b+.4).text('$ 0.00');
+	this.time = Crafty.e('Time').at(3.1,box_b+1.6).text('00:00');
 	// this.power = Crafty.e('RobotPower').at(8,box_b+1.2);
 
 	// Add lower panels
@@ -552,7 +553,6 @@ Crafty.scene('EndGame', function() {
 
 	// PARTICIPANT DATA
 	mdp_line = JSON.stringify(MDP);
-	hstate_line = JSON.stringify(HState);
 	states_line = JSON.stringify(all_states);
 	console.log(states_line);
 	$.ajax({
@@ -560,7 +560,6 @@ Crafty.scene('EndGame', function() {
 		method: 'POST',
 		data: {
 			mdp_data: mdp_line,
-			hstate_data: hstate_line,
 			rstate_data: states_line			
 		},
 		success: function (response) {

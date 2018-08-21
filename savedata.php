@@ -25,18 +25,6 @@
 			}
 			fclose($handle);
 		}
-		// save human state data
-		if (isset($_POST['hstate_data'])) {
-			$hstate = json_decode($_POST['hstate_data']);
-
-			$data_file = 'p'.$pnum.'_hstate.csv';
-			$handle = fopen($data_file, 'w') or die('Cannot open file:  '.$data_file);
-
-			foreach ($hstate as $fields) {
-			    fputcsv($handle, $fields);
-			}
-			fclose($handle);
-		}
 		// save robot state data
 		if (isset($_POST['rstate_data'])) {
 			$rstate = json_decode($_POST['rstate_data']);
