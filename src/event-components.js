@@ -31,15 +31,18 @@ function gopher_task() {
 	var num_gophers = task_funcs.gopher.num;
 	// create permutation so order is unknown
 	var perm = get_perm(num_gophers);
-	// spawn gophers
-	var a = 0;
-	spawn_gopher(perm[a]);
-	for (var i = 1; i < num_gophers; i++) {
-		setTimeout(function () {
-			a++;
-			spawn_gopher(perm[a]);
-		}, 10000*i);
-	}
+	// wait 15 seconds
+	setTimeout(function() {
+		// spawn gophers
+		var a = 0;
+		spawn_gopher(perm[a]);
+		for (var i = 1; i < num_gophers; i++) {
+			setTimeout(function () {
+				a++;
+				spawn_gopher(perm[a]);
+			}, 10000*i);
+		}
+	}, 15000);
 };
 // BUTTERLIES
 function spawn_butterfly(i) {
@@ -52,15 +55,18 @@ function butterfly_task() {
 	var num_butterflies = task_funcs.butterfly.num;
 	// create permutation so order is unknown
 	var perm = get_perm(num_butterflies);
-	// spawn butterflies
-	var a = 0;
-	spawn_butterfly(perm[a]);
-	for (var i = 1; i < num_butterflies; i++) {
-		setTimeout(function() {
-			a++;
-			spawn_butterfly(perm[a]);
-		}, 6000*i);
-	}
+	// wait 15 seconds
+	setTimeout(function() {
+		// spawn butterflies
+		var a = 0;
+		spawn_butterfly(perm[a]);
+		for (var i = 1; i < num_butterflies; i++) {
+			setTimeout(function() {
+				a++;
+				spawn_butterfly(perm[a]);
+			}, 6000*i);
+		}
+	}, 5000);
 };
 // SNAKES
 function spawn_snake(i) {
@@ -73,15 +79,18 @@ function snake_task() {
 	var num_snakes = task_funcs.snake.num;
 	// create permutation so order is unknown
 	var perm = get_perm(num_snakes);
-	// spawn snakes
-	var a = 0;
-	spawn_snake(perm[a]);
-	for (var i = 1; i < num_snakes; i++) {
-		setTimeout(function() {
-			a++;
-			spawn_snake(perm[a]);
-		}, 8000*i);
-	}
+	// wait 15 seconds
+	setTimeout(function() {
+		// spawn snakes
+		var a = 0;
+		spawn_snake(perm[a]);
+		for (var i = 1; i < num_snakes; i++) {
+			setTimeout(function() {
+				a++;
+				spawn_snake(perm[a]);
+			}, 8000*i);
+		}
+	}, 10000);
 };
 // HIDDEN CHEST
 // function chest_task() {
