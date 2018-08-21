@@ -430,10 +430,10 @@ Crafty.c('Robot', {
 			.delay(this.losePower, this._battery_life, -1)
 			// request specific
 			.delay(this.alertFire, 900000, -1) // 15 minutes = 900000
-			.delay(this.alertPlants, 65000) // 7 minutes = 420000
-			.delay(this.alertNotification, 5000) // 2 minutes, 4 sec = 124000
+			.delay(this.alertPlants, 420000, -1) // 7 minutes = 420000
+			.delay(this.alertNotification, 124000, -1) // 2 minutes, 4 sec = 124000
 			.delay(this.alertCognitive, 681000, -1) // 11 minutes, 21 sec = 681000
-			.delay(this.alertLowPower, 125000) // 9 minutes = 540000
+			.delay(this.alertLowPower, 540000, -1) // 9 minutes = 540000
 			// on hit events
 			.onHit('Solid', this.turnAround)
 			.onHit('ChargingStation', this.recharge)
