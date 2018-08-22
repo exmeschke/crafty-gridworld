@@ -83,7 +83,7 @@ gv = {
 		}
 	}
 }
-for (var i = 0; i < 13; i++) {
+for (var i = 0; i < 15; i++) {
 	gv.field.wheat[i] = [];
 	gv.field.seed[i] = [];
 	for (var j = 0; j < 14; j++) {

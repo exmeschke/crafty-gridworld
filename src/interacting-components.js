@@ -227,8 +227,8 @@ Crafty.c('Player', {
 			var dist = Math.sqrt(Math.pow(xx,2)+Math.pow(yy,2));
 
 			if (dist < 2) {sounds.play_radar_high();}
-			else if (dist < 5) {sounds.play_radar_med();}
-			else if (dist < 10) {sounds.play_radar_low();}
+			else if (dist < 4) {sounds.play_radar_med();}
+			else if (dist < 8) {sounds.play_radar_low();}
 
 			if (Math.round(this.x/gv.tile_sz) == gv.robot.part.loc_x && Math.round(this.y/gv.tile_sz) == gv.robot.part.loc_y) {
 				alert('Found it!');
@@ -432,7 +432,7 @@ Crafty.c('Robot', {
 			.delay(this.alertFire, 900000, -1) // 15 minutes = 900000
 			.delay(this.alertPlants, 420000, -1) // 7 minutes = 420000
 			.delay(this.alertNotification, 124000, -1) // 2 minutes, 4 sec = 124000
-			.delay(this.alertCognitive, 120000, -1) // 11 minutes, 21 sec = 681000
+			.delay(this.alertCognitive, 681000, -1) // 11 minutes, 21 sec = 681000
 			.delay(this.alertLowPower, 540000, -1) // 9 minutes = 540000
 			// on hit events
 			.onHit('Solid', this.turnAround)
