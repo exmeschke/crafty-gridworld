@@ -1,16 +1,8 @@
 <?php
-
-		// update participant_num
+		// get participant_num
 		$p_file = 'participant_num.txt';
 		$handle = fopen($p_file, 'r') or die('Cannot open file:  '.$p_file);
 		$pnum = fgets($handle);
-		fclose($handle);
-
-		$p_file = 'participant_num.txt';
-		$handle = fopen($p_file, 'w') or die('Cannot open file:  '.$p_file);
-		$pnum = (int)$pnum + 1;
-		// $pnum = 0;
-		fwrite($handle, $pnum);
 		fclose($handle);
 
 		// save MDP data

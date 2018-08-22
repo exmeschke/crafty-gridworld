@@ -21,8 +21,8 @@ gv = {
 		status: 2, // [0:not operational, 1:slow, 2:normal]
 		// REQUEST - general
 		alerts: {
-			len: [20, 27, 40], // number of beeps and/or blinks
-			freq: [2000, 1500, 1000] // frequency of beeps and/or blinks
+			len: [20, 40, 80], // number of beeps and/or blinks
+			freq: [2000, 1000, 500] // frequency of beeps and/or blinks
 		},
 		is_alerting: false, // currently is alerting w/beep, blink, or both
 		txt: '', // content for text bubble 
@@ -45,7 +45,7 @@ gv = {
 		speed: 1500,
 		sheep: {hasWool: 0},
 		cow: {hasMilk: 0},
-		snake: {eat_egg: 8000},
+		snake: {eat_egg: 4000},
 		gopher: {disappear: 20000}
 	},
 	tools:{
@@ -501,7 +501,7 @@ Crafty.c('Bread', {
 			.attr({ w:16, h:16, r:15 })
 	},
 	type: function() { return 'bread'; },
-	bake: function() {this.delay(this.burn, 10000);},
+	bake: function() {this.delay(this.burn, 20000);},
 	burn: function() {
 		this.sprite('spr_ashes');
 		this._burned = 1;
@@ -518,7 +518,7 @@ Crafty.c('Muffin', {
 			.attr({ w:16, h:16, r:18 })
 	},
 	type: function() { return 'muffin'; },
-	bake: function() {this.delay(this.burn, 10000);},
+	bake: function() {this.delay(this.burn, 15000);},
 	burn: function() {
 		this.sprite('spr_ashes');
 		this._burned = 1;

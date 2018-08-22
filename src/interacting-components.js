@@ -420,7 +420,7 @@ Crafty.c('Robot', {
 	_movement: [], // records last 5 moves
 	_do_move: 1500, // how often moves, depends on status
 	_speed: [0, 2400, 1200], // different speeds, depends on status
-	_task: -1, // [-1:none, 0:plant, 1:water]
+	_task: 0, // [-1:none, 0:plant, 1:water]
 	_is_alerting: false, // currently blinking, beeping, or both
 	init: function() {
 		this.requires('2D, Canvas, Grid, Collision, SpriteAnimation, spr_bot, Tween, Delay, Text')
@@ -432,8 +432,8 @@ Crafty.c('Robot', {
 			.delay(this.alertFire, 900000, -1) // 15 minutes = 900000
 			.delay(this.alertPlants, 420000, -1) // 7 minutes = 420000
 			.delay(this.alertNotification, 124000, -1) // 2 minutes, 4 sec = 124000
-			.delay(this.alertCognitive, 681000, -1) // 11 minutes, 21 sec = 681000
-			.delay(this.alertLowPower, 540000, -1) // 9 minutes = 540000
+			.delay(this.alertCognitive, 120000, -1) // 11 minutes, 21 sec = 681000
+			.delay(this.alertLowPower, 5000) // 9 minutes = 540000
 			// on hit events
 			.onHit('Solid', this.turnAround)
 			.onHit('ChargingStation', this.recharge)
@@ -576,19 +576,32 @@ Crafty.c('Robot', {
 	},
 	// -1 robot power 
 	losePower: function() {
-		if (this._power > 0) {this._power -= 1;}
-		else {this._power = 0;}
+		// if fully charged and request is low battery
+		if (this._power == 100) {
+			var request_num = request_list.getNumber();
+			if ((request_num == 4 || request_num == 7) && this._curr_state != 19) {
+				set_robot_speed(2);
+				terminal_state();
+			}
+		}
+
+		if (this._is_charging == false) {
+			if (this._power > 0) {this._power -= 1;}
+			else {this._power = 0;}
+		}
 	},
 	// adds to robot power
 	recharge: function() {
+		Crafty.log(this._power);
 		if (this._power < 100) {
-			this._power += .05;
+			this._power += .1;
 			this._is_charging = true;
 			Crafty.trigger('StartCharging');
 		} else {
 			this._power = 100;
 			this._is_charging = false;
-			gv.robot.status = 2;
+			set_robot_speed(2);
+			this.moveLeft();
 			Crafty.trigger('StopCharging');
 		}
 	},
@@ -664,21 +677,21 @@ Crafty.c('Robot', {
 		gv.robot.is_alerting = true;
 		this.animate('AnimateLow', -1);
 		robot_alert_sound(0);
-		this.delay(this.stopAlert, gv.robot.alerts.len[0]*1000);
+		this.delay(this.stopAlert, 40000);
 	},
 	// beeping
 	medAlert: function() {
 		gv.robot.is_alerting = true;
 		this.animate('AnimateMed', -1);
 		robot_alert_sound(1);
-		this.delay(this.stopAlert, gv.robot.alerts.len[1]*1000);
+		this.delay(this.stopAlert, 40000);
 	},
 	// flashing light + beeping
 	highAlert: function() {
 		gv.robot.is_alerting = true;
 		this.animate('AnimateHigh', -1);
 		robot_alert_sound(2);
-		this.delay(this.stopAlert, gv.robot.alerts.len[2]*1000);
+		this.delay(this.stopAlert, 40000);
 	},
 	stopAlert: function() {
 		gv.robot.is_alerting = false;
@@ -692,7 +705,7 @@ Crafty.c('Robot', {
 			if (gv.player.interacting == false) { 
 				if (request_num == 6 || request_num == 7) { 
 					not_operational(); // ignored = 18
-				} else if (request_num == 8) {} // nothing
+				} else if (request_num == 4 || request_num == 8) {} // nothing
 				else {terminal_state();} // ignored = 19 
 			} else { // reponded = 17
 				request_list.endRequest(gv.player.interacting, gv.robot.status);
@@ -729,7 +742,7 @@ Crafty.c('Robot', {
 		if (this._is_charging == false && gv.robot.status == 2 && gv.robot.is_alerting == false && this._curr_state == 19) {
 			var request_num = -1;
 			// switch to planting
-			if (this._task == -1 || this._task == 1) {
+			if (this._task == 1) {
 				request_num = 10;
 			// switch to watering
 			} else if (this._task == 0) {
@@ -742,6 +755,7 @@ Crafty.c('Robot', {
 	},
 	alertLowPower: function() {
 		if (this._is_charging == false && gv.robot.status == 2 && gv.robot.is_alerting == false && this._curr_state == 19) {
+			this._power = 20;
 			request_list.addRequest(9);
 			set_request(100);
 			// request specific 
@@ -749,13 +763,14 @@ Crafty.c('Robot', {
 		}
 	},
 	veryLowPower: function() {
-		if (this.power == 0) {
+		Crafty.log(this._power, this._is_charging);
+		if (this._power < 70 && this._is_charging == false && this._curr_state != 17) {
+			this._power = 0;
 			request_list.addRequest(14);
-			// request specific
+			set_request(100);
 			setTimeout(function() {
-				set_request(100);
-				not_operational(0);
-			}, gv.robot.alert_len*1000);
+				if (this._is_charging == false) {not_operational(0);} // after alert if ignored
+			}, 40000); 
 		}
 	},
 	alertCognitive: function() {

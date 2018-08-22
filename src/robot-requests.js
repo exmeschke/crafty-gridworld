@@ -119,7 +119,7 @@ var receptivity_list = {
                 r_sum += r_i.getValue();
             }
             Crafty.log('r_sum = '+r_sum);
-            this.r_sum += r_sum;
+            this.r_sum = r_sum;
         // if receptivity is empty
         } else {this.r_sum = 0.0;}
     },
@@ -183,15 +183,15 @@ function RRequestList(indices) {
     // state 3: med urgency, short duration, low effort, requires response
     this.requestOptions[8] = new RRequest(3,2,1,1,true,"In which direction should I take 5 steps [up, down, left, right]? Type your response at the monitor.");
     // state 4: med urgency, short duration, high effort, requires response
-    this.requestOptions[9] = new RRequest(4,2,1,2,true,'My battery is less than 20%.');
+    this.requestOptions[9] = new RRequest(4,2,1,2,true,'My battery is less than 20%. Push me over to the charging station to recharge my battery.');
     // state 5: med urgency, long duration, low effort, requires response
     this.requestOptions[10] = new RRequest(5,2,2,1,true,'I want to start planting. Can you bring me seeds from the barrels?');
     this.requestOptions[11] = new RRequest(5,2,2,1,true,'I need to water the plants. Can you bring me water from the well?');
     // state 6: med urgency, long duration, high effort, requires response
-    this.requestOptions[12] = new RRequest(6,2,2,1,true,'One of my parts is missing! Push me around the field and use me as a metal detector to find it.');
+    this.requestOptions[12] = new RRequest(6,2,2,1,true,'One of my parts is missing! Push me around the field; I will beep faster the closer you are.');
     this.requestOptions[13] = new RRequest(6,2,2,1,true,'Enter the password [X91R23Q7] at the monitor to update my software!');
     // state 7: high urgency, short duration, high effort, requires response
-    this.requestOptions[14] = new RRequest(7,2,1,2,true,'My battery is less than 5%!');
+    this.requestOptions[14] = new RRequest(7,2,1,2,true,'My battery is less than 5%! Push me over to the charging station to recharge my battery.');
     // state 8: high urgency, long duration, high effort, requires response
     this.requestOptions[15] = new RRequest(8,2,2,2,true,"Something short circuited--I'm about to catch on fire! Put it out with 3 buckets of water. Then enter the code [X5214] at the monitor to debug the issue.");
 
@@ -401,7 +401,7 @@ function updateQ(time) {
     } else { // some action
         var rR = (0.85*urgency*received_resp) - (0.25*urgency + neg_state);
         var rH = (0.25*duration*effort*received_resp + (action/3)) / (receptivity*urgency);
-        r = rR + rH;
+        r = rR - rH;
     }
     neg_state = 0; // reset
     // Crafty.log(start_state, curr_state);
@@ -419,7 +419,7 @@ function updateQ(time) {
         curr_int[4] = states.toString();
         curr_int[5] = r;
 
-        for (var i = 0; i < 8; i++) {
+        for (var i = 0; i < 9; i++) {
             MDP[n_int][i] = curr_int[i];
         }
         n_int += 1;

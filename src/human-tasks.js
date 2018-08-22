@@ -43,10 +43,10 @@ function HTaskList(indices) {
     this.taskOptions[5] = new HTask(1, 1, 'Collect 2 milk (make sure your bucket is empty).', ['milk',2], '');
     this.taskOptions[6] = new HTask(2, 2, 'Hit the gophers with your hammer before they disappear and steal one dollar!', ['',0], 'gopher_task();');
     this.taskOptions[7] = new HTask(3, 1, 'Collect butterflies for a one dollar reward per butterfly!', ['',0], 'butterfly_task();');
-    this.taskOptions[8] = new HTask(4, 2, 'Hurry and hit the snakes with your hammer. Each snake steals an egg every two seconds!', ['',0], 'snake_task();');
+    this.taskOptions[8] = new HTask(4, 2, 'Hurry and hit the snakes with your hammer. Each snake steals an egg every four seconds!', ['',0], 'snake_task();');
     this.taskOptions[9] = new HTask(5, 1, 'Grab your shovel and open the treasure chest burried under a tuft of grass (ticking means it might explode!)', ['',0], 'chest_task();');
-    this.taskOptions[10] = new HTask(6, 2, 'Bake a loaf of bread.', ['bread',1], '');
-    this.taskOptions[11] = new HTask(6, 2, 'Bake a muffin.', ['muffin',1], '');
+    this.taskOptions[10] = new HTask(6, 2, 'Bake a loaf of bread (Hint: It burns in 20 seconds).', ['bread',1], '');
+    this.taskOptions[11] = new HTask(6, 2, 'Bake a muffin (Hint: It burns in 15 seconds).', ['muffin',1], '');
     this.taskOptions[12] = new HTask(6, 2, 'Make a spool of thread.', ['thread',1], '');
 
     this.tasks = []
