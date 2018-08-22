@@ -404,9 +404,25 @@ function not_operational(dead) {
 	// set for speed to return to normal
 	setTimeout(function() {terminal_state();}, 30000);
 };
+// request timed out, still end state
+function request_timeout(req_num) {
+	var curr_state = request_list.curr_state;
+	var start_state = request_list.start_state; // check current start state
+	Crafty.log(req_num, start_state);
+	if (req_num == start_state) { // stuck on request, end automatically
+		var time = gv.time[0]+':'+gv.time[1]; // get time
+		set_robot_speed(2); // reset speed
+		gv.player.interacting = false; // no longer interacting
+		request_list.endRequest(gv.player.interacting, gv.robot.status); // update state
+		updateQ(time); // update Q-table with reward
+	}
+};
 // establishes that the state progression is over
 function terminal_state() {
 	var time = gv.time[0]+':'+gv.time[1]; // get time
+	// notify user that request complete
+	sounds.play_correct();
+	gv.score += 1;
 	set_robot_speed(2); // reset speed
 	gv.player.interacting = false; // no longer interacting
 	request_list.endRequest(gv.player.interacting, gv.robot.status); // update state
@@ -459,7 +475,6 @@ Crafty.c('Robot', {
 			.bind('ResetLoc', this.setLoc)
 			.bind('KeyDown', function(e) {
 				if (e.key == 51) {
-					Crafty.log('reset');
 					this.reset();
 				}
 			})
@@ -592,7 +607,6 @@ Crafty.c('Robot', {
 	},
 	// adds to robot power
 	recharge: function() {
-		Crafty.log(this._power);
 		if (this._power < 100) {
 			this._power += .1;
 			this._is_charging = true;
@@ -602,6 +616,7 @@ Crafty.c('Robot', {
 			this._is_charging = false;
 			set_robot_speed(2);
 			this.moveLeft();
+			Crafty.log(this._power);
 			Crafty.trigger('StopCharging');
 		}
 	},
@@ -645,7 +660,7 @@ Crafty.c('Robot', {
 		// if robot on fire
 		} else {
 			gv.robot.fire += 1;
-			if (gv.robot.fire == 3) {this.offFire(true);}
+			if (gv.robot.fire == 3) {this.offFire();}
 		}
 	}, 
 	// destroys wheat if on fire
@@ -714,6 +729,7 @@ Crafty.c('Robot', {
 	},
 	// REQUESTS
 	alertNotification: function() {
+		Crafty.log('alert - notification');
 		if (this._is_charging == false && gv.robot.status == 2 && gv.robot.is_alerting == false && this._curr_state == 19) {
 			var request_num = -1;
 			var rand = Math.random();
@@ -732,6 +748,12 @@ Crafty.c('Robot', {
 				else {request_num = 7;}
 			} else {
 				request_num = 8;
+				// timeout if request not complete
+				var req_num = request_list.start_state;
+				setTimeout(function() {
+					Crafty.log('timeout');
+					request_timeout(req_num);
+				}, 70000);
 			}
 			// trigger
 			request_list.addRequest(request_num);
@@ -739,6 +761,7 @@ Crafty.c('Robot', {
 		}
 	},
 	alertPlants: function() {
+		Crafty.log('alert - plants');
 		if (this._is_charging == false && gv.robot.status == 2 && gv.robot.is_alerting == false && this._curr_state == 19) {
 			var request_num = -1;
 			// switch to planting
@@ -751,69 +774,116 @@ Crafty.c('Robot', {
 			// trigger
 			request_list.addRequest(request_num);
 			set_request(100);
+			// timeout if request not complete
+			var req_num = request_list.start_state;
+			setTimeout(function() {
+				Crafty.log('timeout');
+				request_timeout(req_num);
+			}, 70000);
 		}
 	},
 	alertLowPower: function() {
+		Crafty.log('alert - low power');
 		if (this._is_charging == false && gv.robot.status == 2 && gv.robot.is_alerting == false && this._curr_state == 19) {
 			this._power = 20;
 			request_list.addRequest(9);
 			set_request(100);
-			// request specific 
+			// transition to very low power state
 			this.delay(this.veryLowPower,  75000); // 1.25 minutes later
+			// timeout if request not complete
+			var req_num = request_list.start_state;
+			setTimeout(function() {
+				Crafty.log('timeout');
+				request_timeout(req_num);
+			}, 100000);
 		}
 	},
 	veryLowPower: function() {
-		Crafty.log(this._power, this._is_charging);
-		if (this._power < 70 && this._is_charging == false && this._curr_state != 17) {
+		Crafty.log('alert - very low power');
+		if (this._power < 90 && this._is_charging == false && this._curr_state != 17) {
 			this._power = 0;
 			request_list.addRequest(14);
 			set_request(100);
+			// after alert, not operational if ignored
 			setTimeout(function() {
-				if (this._is_charging == false) {not_operational(0);} // after alert if ignored
+				if (this._is_charging == false && gv.player.interacting == false) {not_operational(0);} 
 			}, 40000); 
+			// timeout if request accepted but not completed
+			var req_num = request_list.start_state;
+			setTimeout(function() {
+				Crafty.log('timeout');
+				request_timeout(req_num);
+			}, 100000);
 		}
 	},
 	alertCognitive: function() {
+		Crafty.log('alert - cognitive');
 		if (this._is_charging == false && gv.robot.status == 2 && gv.robot.is_alerting == false && this._curr_state == 19) {
 			var rand = Math.random();
+			var time = 0;
 			if (rand < 0.5) { // missing part request
 				request_list.addRequest(12);
 				set_request(100);
 				// location of missing part
 				gv.robot.part.loc_x = Math.floor(Math.random() * (16 - 2)) + 2;
 				gv.robot.part.loc_y = Math.floor(Math.random() * (15 - 2)) + 2;
+				time = 160000;
 			} else { // software update task
 				request_list.addRequest(13);
 				set_request(100);
+				time = 70000;
 			}
+			// timeout if request not complete
+			var req_num = request_list.start_state;
+			setTimeout(function() {
+				Crafty.log('timeout');
+				request_timeout(req_num);
+			}, time);
 		}
 	},
 	alertFire: function() {
+		Crafty.log('alert - fire');
 		if (this._is_charging == false && gv.robot.status == 2 && gv.robot.is_alerting == false && this._curr_state == 19) {
 			request_list.addRequest(15);
 			set_request(100);
 			// request specific 
-			this.delay(this.onFire, gv.robot.alert_len*1000);
+			this.delay(this.onFire, 40000);
 		}
 	},
 	onFire: function() {
 		gv.robot.fire = 0;
 		this.animate('AnimateFire', -1);
-		this.delay(this.noFire, 60000); // put out fire eventually
+		// put out fire eventually
+		if (gv.player.interacting == false) {this.delay(this.noFire, 40000);}
+		else {this.delay(this.noFire, 80000);}
 	},
 	// default
 	noFire: function() {
-		if (gv.robot.fire == 0) {
-			this.pauseAnimation();
-			this.sprite('spr_bot');
+		this.pauseAnimation();
+		this.sprite('spr_bot');
+		gv.robot.fire = -1;
+
+		// no response
+		if (gv.player.interacting == false) {
+			not_operational();
+		// timeout if request not complete
+		} else {
+			var req_num = request_list.start_state;
+			Crafty.log('timeout');
+			request_timeout(req_num);
 		}
 	},
 	// put out
 	offFire: function(put_out) { 
 		this.pauseAnimation();
 		this.sprite('spr_bot');
-		if (gv.robot.fire != 3) {not_operational();} // moves slowly if not put out
 		gv.robot.fire = -1;
+		// timeout if request not complete
+		var req_num = request_list.start_state;
+		setTimeout(function() {
+			Crafty.log('timeout');
+			request_timeout(req_num);
+		}, 30000);
 	}
 });
 
@@ -873,20 +943,20 @@ Crafty.c('RequestScreen', {
 		if (resp == 'up' || resp == 'down' || resp == 'left' || resp == 'right') {
 			if (request_list.getNumber() == 3) {
 				terminal_state();
-				sounds.play_correct();
+				// sounds.play_correct();
 			}
 			gv.robot.direction = resp;
 		}
 		else if (resp == 'X91R23Q7') { // password for high cognitive load request
 			if (request_list.getNumber() == 6) {
 				terminal_state();
-				sounds.play_correct();
+				// sounds.play_correct();
 			}
 		}
 		else if (resp == 'X5214') { // password to reset robot speed
 			if (request_list.getNumber() == 8) {
 				terminal_state();
-				sounds.play_correct();
+				// sounds.play_correct();
 			}
 			set_robot_speed(2);
 		}

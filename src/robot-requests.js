@@ -191,9 +191,9 @@ function RRequestList(indices) {
     this.requestOptions[12] = new RRequest(6,2,2,1,true,'One of my parts is missing! Push me around the field; I will beep faster the closer you are.');
     this.requestOptions[13] = new RRequest(6,2,2,1,true,'Enter the password [X91R23Q7] at the monitor to update my software!');
     // state 7: high urgency, short duration, high effort, requires response
-    this.requestOptions[14] = new RRequest(7,2,1,2,true,'My battery is less than 5%! Push me over to the charging station to recharge my battery.');
+    this.requestOptions[14] = new RRequest(7,3,1,2,true,'My battery is less than 5%! Push me over to the charging station to recharge my battery.');
     // state 8: high urgency, long duration, high effort, requires response
-    this.requestOptions[15] = new RRequest(8,2,2,2,true,"Something short circuited--I'm about to catch on fire! Put it out with 3 buckets of water. Then enter the code [X5214] at the monitor to debug the issue.");
+    this.requestOptions[15] = new RRequest(8,3,2,2,true,"Something short circuited--I'm about to catch on fire! Put it out with 3 buckets of water. Then enter the code [X5214] at the monitor to debug the issue.");
 
     this.requests = []
     for (var i = 0; i < indices.length; i++) {
@@ -259,16 +259,20 @@ var request_list = {
                 }
             }
             if (urgency == 3) { // high urgency
-                if (duration == 1 && effort == 1) { // short duration & low effort
+                if (duration == 1 && effort == 2) { // short duration & low effort
                     if (receptivity == 1) {this.curr_state = 13;} // low receptivity
                     else {this.curr_state = 14;} // high receptivity
                 }
-                else if (duration == 2 && effort == 1) { // long duration & low effort
+                else if (duration == 2 && effort == 2) { // long duration & low effort
                     if (receptivity == 1) {this.curr_state = 15;} // low receptivity
                     else {this.curr_state = 16;} // high receptivity
                 }
             }
-            this.states = [];
+            // if a starting state, update
+            this.start_state = this.curr_state; 
+            // start with new state progression if not 13 or 14
+            if (this.curr_state == 13 || this.curr_state == 14) {}
+            else {this.states = [];}
         // non-starting states 17-19
         } else {
             if (urgency == 17) {this.curr_state = 17;}
@@ -299,10 +303,7 @@ var request_list = {
     // indicates most recent request was checked / responded to
     receivedResponse: function() {this.curr_req.setResponded();},
     // called after request is responded to or alert is stopped
-    endRequest: function(h_responded, r_status) {
-        if (this.curr_state <= 16) { // if a starting state, update
-            this.start_state = this.curr_state; 
-        } 
+    endRequest: function(h_responded, r_status) { 
         if (r_status == 2) {
             if (h_responded == true) { // person is interacting
                 request_list.updateCurrState(0,17,0,0);
@@ -326,7 +327,7 @@ var request_list = {
         // indicate request is sent, updates receptivity
         receptivity_list.setRequest(this.curr_req.number);
         // grab current request information
-        var state_curr = this.curr_state;
+        var state_curr = this.curr_state-1; // -1 indexing
         var doAction = -1;
         // find the highest Q value action
         var maxAction = 0;
@@ -373,7 +374,6 @@ function saveHInfo(time, task, dist) {
     curr_int[6] = task;
     curr_int[7] = dist;
     var receptivity_raw = receptivity_list.r_sum;
-    Crafty.log(receptivity_raw);
     curr_int[8] = receptivity_raw;
 }; 
 // update Q-table based on state and action, saved at terminal state
@@ -405,8 +405,7 @@ function updateQ(time) {
     }
     neg_state = 0; // reset
     // Crafty.log(start_state, curr_state);
-    Crafty.log('reward = '+r);
-
+    
     // save data at terminal state
     if (curr_state == 19) {
         request_list.sent.slice(-1)[0].setReward(r); // store value in request
@@ -419,10 +418,24 @@ function updateQ(time) {
         curr_int[4] = states.toString();
         curr_int[5] = r;
 
-        for (var i = 0; i < 9; i++) {
-            MDP[n_int][i] = curr_int[i];
+        if (n_int > 0) {
+            // prevent double entries
+            if (curr_int[0] != MDP[n_int-1][0]) {
+                // add to MDP
+                Crafty.log('reward = '+r);
+                for (var i = 0; i < 9; i++) {
+                    MDP[n_int][i] = curr_int[i];
+                }
+                n_int += 1;
+            }
+        } else {
+            // add to MDP
+            Crafty.log('reward = '+r);
+            for (var i = 0; i < 9; i++) {
+                MDP[n_int][i] = curr_int[i];
+            }
+            n_int += 1;
         }
-        n_int += 1;
     }
 };
 
