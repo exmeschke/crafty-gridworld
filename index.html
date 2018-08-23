@@ -12,7 +12,8 @@
 		var states = 19; //total states
 		var starting_states = 16; // only 1-16 are starting states
 		var actions = 4; // 4 actions
-		var epsilon = 0.35; // exploration rate 
+		var n_trials = 0; // total number of interactions
+		var epsilon = 0.0; // exploration rate 
 
 		var Q_array = <?php echo json_encode($q_array); ?>;
 		var n_array = <?php echo json_encode($num_array); ?>;
@@ -27,8 +28,10 @@
 		 	{
 		 		Q_table[i][j] = parseFloat(Q_array[i][j]);
 		 		n_table[i][j] = parseInt(n_array[i][j]);
+		 		n_trials += n_table[i][j];
 		 	}
 		}
+		epsilon = 1/(0.075*n_trials);
 	// Q_line = JSON.stringify(Q_table);
 	// console.log(Q_line);
 	// n_line = JSON.stringify(n_table);
