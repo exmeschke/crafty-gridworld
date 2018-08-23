@@ -19,8 +19,10 @@ gv = {
 	robot: {
 		loc: [5, 10], // x and y coordinates
 		status: 2, // [0:not operational, 1:slow, 2:normal]
+		switch_task: 'no', // task
 		// REQUEST - general
 		alerts: {
+			stop: 30000,
 			len: [15, 30, 60], // number of beeps and/or blinks
 			freq: [2000, 1000, 500] // frequency of beeps and/or blinks
 		},

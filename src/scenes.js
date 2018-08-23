@@ -496,7 +496,7 @@ Crafty.scene('Game', function() {
 	Crafty.e('BerryLabel').at(st2+11,box_b+2).text(0);
 
 	// HUMAN TASKS
-	this.currTask = Crafty.e('Task').at(7,box_b+.4).text('').trigger('UpdateTask');
+	this.currTask = Crafty.e('Task').at(7,box_b+.2).text('').trigger('UpdateTask');
 
 	// End game - 40 min = 2400000, 30 min = 1800000, 20 min = 1200000
 	setTimeout(function() {eval("Crafty.scene('EndGame');");}, 1800000); 

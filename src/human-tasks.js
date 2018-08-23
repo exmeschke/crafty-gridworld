@@ -1,8 +1,8 @@
 // HUMAN TASKS
 
 // [0:none, 1:wheat, 2:berries, 3:eggs, 4:wool, 5:milk, 6:gophers, 7:butterflies, 8:snakes, 9:chest, 10:bread, 11:muffin, 12:thread]
-// var task_indices = [1,2,3,4,5,0,6,7,8,0,9,0,10,11,12,0,5,2,6,0,12,0];
-var task_indices = [1,2,3,4,5,0,6,7,7,0,8,8,0,6,6,12,11,5,2,10,3,6,12,8,4,1,7,7,2,10,8,12,0,0,0];
+var task_indices = [1,2,3,4,5,0,6,7,0,8,0,6,12,11,5,2,9,10,3,6,12,8,4,1,7,7,2,10,8,12,0,10,4,0,0];
+// var task_indices = [9,7,7,0,8,8,0,0,10];
 
 // human task definition
 //      num - task number [1:easy gather, 2:hard gather, 3:easy chase, 4:hard chase, 5:easy combo, 6:hard combo]
@@ -45,8 +45,8 @@ function HTaskList(indices) {
     this.taskOptions[7] = new HTask(3, 1, 'Collect butterflies for a one dollar reward per butterfly!', ['',0], 'butterfly_task();');
     this.taskOptions[8] = new HTask(4, 2, 'Hurry and hit the snakes with your hammer. Each snake steals an egg every four seconds!', ['',0], 'snake_task();');
     this.taskOptions[9] = new HTask(5, 1, 'Grab your shovel and open the treasure chest burried under a tuft of grass (ticking means it might explode!)', ['',0], 'chest_task();');
-    this.taskOptions[10] = new HTask(6, 2, 'Bake a loaf of bread (Hint: It burns in 20 seconds).', ['bread',1], '');
-    this.taskOptions[11] = new HTask(6, 2, 'Bake a muffin (Hint: It burns in 15 seconds).', ['muffin',1], '');
+    this.taskOptions[10] = new HTask(6, 2, 'Bake a loaf of bread (Hint: It burns in twenty seconds).', ['bread',1], '');
+    this.taskOptions[11] = new HTask(6, 2, 'Bake a muffin (Hint: It burns in fifteen seconds).', ['muffin',1], '');
     this.taskOptions[12] = new HTask(6, 2, 'Make a spool of thread.', ['thread',1], '');
 
     this.tasks = []

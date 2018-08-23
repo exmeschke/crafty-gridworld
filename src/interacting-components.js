@@ -14,7 +14,7 @@ function dist_robot_player () {
 };
 Crafty.c('Player', {
 	_movement: [], // tracks 5 most recent moves 
-	_back: 1.6, // keeps player from moving through solid objects
+	_back: 1.2, // 1.6 keeps player from moving through solid objects
 	init: function() {
 		this.requires('2D, Canvas, Grid, Fourway, Keyboard, Collision, Delay, spr_player, SpriteAnimation')
 			.attr({ w:gv.tile_sz, h:gv.tile_sz, z:5 })
@@ -31,7 +31,7 @@ Crafty.c('Player', {
 			.reel('PlayerMovingDown', 600, [[0,2], [1,2], [2,2]])
 			.reel('PlayerMovingLeft', 500, [[0,3], [1,3], [2,3]])
 			// movment
-			.fourway(80)
+			.fourway(60) // 80
 			.bind('NewDirection', function(data) {
 				var animation_speed = 20;
 				if (data.x > 0) {
@@ -187,13 +187,21 @@ Crafty.c('Player', {
 					Crafty.trigger('Water');
 					Crafty.trigger('EmptyBucket');
 					// if request is to give water to robot, trigger completed
-					if (request_list.getNumber() == 5) {terminal_state();}
+					if (request_list.getNumber() == 3) {terminal_state();}
+					if (request_list.getNumber() == 5 && gv.robot.switch_task == 'yes') {
+						terminal_state();
+						gv.robot.switch_task = 'no';
+					}
 				// if seed bag full, set robot task to plant
 				} else if (gv.tools.seed_bag == 1) {
 					Crafty.trigger('Plant');
 					Crafty.trigger('EmptySeedBag');
 					// if request is to give seeds to robot, trigger completed
-					if (request_list.getNumber() == 5) {terminal_state();}
+					if (request_list.getNumber() == 3) {terminal_state();}
+					if (request_list.getNumber() == 5 && gv.robot.switch_task == 'yes') {
+						terminal_state();
+						gv.robot.switch_task = 'no';
+					}
 			}
 				
 			// default
@@ -709,21 +717,21 @@ Crafty.c('Robot', {
 		gv.robot.is_alerting = true;
 		this.animate('AnimateLow', -1);
 		robot_alert_sound(0);
-		this.delay(this.stopAlert, 40000);
+		this.delay(this.stopAlert, gv.robot.alerts.stop);
 	},
 	// beeping
 	medAlert: function() {
 		gv.robot.is_alerting = true;
 		this.animate('AnimateMed', -1);
 		robot_alert_sound(1);
-		this.delay(this.stopAlert, 40000);
+		this.delay(this.stopAlert, gv.robot.alerts.stop);
 	},
 	// flashing light + beeping
 	highAlert: function() {
 		gv.robot.is_alerting = true;
 		this.animate('AnimateHigh', -1);
 		robot_alert_sound(2);
-		this.delay(this.stopAlert, 40000);
+		this.delay(this.stopAlert, gv.robot.alerts.stop);
 	},
 	stopAlert: function() {
 		gv.robot.is_alerting = false;
@@ -764,7 +772,9 @@ Crafty.c('Robot', {
 				else if (rand < 0.66) {request_num = 6;}
 				else {request_num = 7;}
 			} else {
-				request_num = 8;
+				// easy physical task
+				if (this._task == 1) {request_num = 8;} // switch to planting
+				else if (this._task == 0) {request_num = 9;} // switch to watering
 				// timeout if request not complete
 				var req_num = request_list.start_state;
 				setTimeout(function() {
@@ -777,36 +787,28 @@ Crafty.c('Robot', {
 			set_request(100);
 		}
 	},
-	alertPlants: function() {
-		Crafty.log('alert - plants');
+	alertLowPower: function() {
+		Crafty.log('alert - low power');
 		if (this._is_charging == false && gv.robot.status == 2 && gv.robot.is_alerting == false && this._curr_state == 19) {
-			var request_num = -1;
-			// switch to planting
-			if (this._task == 1) {
-				request_num = 10;
-			// switch to watering
-			} else if (this._task == 0) {
-				request_num = 11;
-			}
-			// trigger
-			request_list.addRequest(request_num);
+			this._power = 20;
+			request_list.addRequest(10);
 			set_request(100);
+			// transition to very low power state
+			this.delay(this.veryLowPower,  75000); // 1.25 minutes later
 			// timeout if request not complete
 			var req_num = request_list.start_state;
 			setTimeout(function() {
 				Crafty.log('timeout');
 				request_timeout(req_num);
-			}, 70000);
+			}, 100000);
 		}
 	},
-	alertLowPower: function() {
-		Crafty.log('alert - low power');
+	alertPlants: function() {
+		Crafty.log('alert - plants');
 		if (this._is_charging == false && gv.robot.status == 2 && gv.robot.is_alerting == false && this._curr_state == 19) {
-			this._power = 20;
-			request_list.addRequest(9);
+			// trigger
+			request_list.addRequest(11);
 			set_request(100);
-			// transition to very low power state
-			this.delay(this.veryLowPower,  75000); // 1.25 minutes later
 			// timeout if request not complete
 			var req_num = request_list.start_state;
 			setTimeout(function() {
@@ -824,7 +826,7 @@ Crafty.c('Robot', {
 			// after alert, not operational if ignored
 			setTimeout(function() {
 				if (this._is_charging == false && gv.player.interacting == false) {not_operational(0);} 
-			}, 40000); 
+			}, gv.robot.alerts.stop); 
 			// timeout if request accepted but not completed
 			var req_num = request_list.start_state;
 			setTimeout(function() {
@@ -866,14 +868,14 @@ Crafty.c('Robot', {
 			request_list.addRequest(15);
 			set_request(100);
 			// request specific 
-			this.delay(this.onFire, 40000);
+			this.delay(this.onFire, gv.robot.alerts.stop);
 		}
 	},
 	onFire: function() {
 		gv.robot.fire = 0;
 		this.animate('AnimateFire', -1);
 		// put out fire eventually
-		if (gv.player.interacting == false) {this.delay(this.noFire, 40000);}
+		if (gv.player.interacting == false) {this.delay(this.noFire, 30000);}
 		else {this.delay(this.noFire, 80000);}
 	},
 	// default
@@ -959,24 +961,17 @@ Crafty.c('RequestScreen', {
 	receiveResponse: function() {
 		// collects response
 		var resp = prompt('Enter response here: ');
-		if (resp == 'up' || resp == 'down' || resp == 'left' || resp == 'right') {
-			if (request_list.getNumber() == 3) {
-				terminal_state();
-				// sounds.play_correct();
+		if (resp == 'yes') {
+			if (request_list.getNumber() == 5) {
+				gv.robot.switch_task = 'yes';
+
 			}
-			gv.robot.direction = resp;
-		}
-		else if (resp == 'X91R23Q7') { // password for high cognitive load request
-			if (request_list.getNumber() == 6) {
-				terminal_state();
-				// sounds.play_correct();
-			}
-		}
-		else if (resp == 'X5214') { // password to reset robot speed
-			if (request_list.getNumber() == 8) {
-				terminal_state();
-				// sounds.play_correct();
-			}
+		} else if (resp == 'no') {
+			if (request_list.getNumber() == 5) {terminal_state();}
+		} else if (resp == 'X91R23Q7') { // password for high cognitive load request
+			if (request_list.getNumber() == 6) {terminal_state();}
+		} else if (resp == 'X5214') { // password to reset robot speed
+			if (request_list.getNumber() == 8) {terminal_state();}
 			set_robot_speed(2);
 		}
 	}
