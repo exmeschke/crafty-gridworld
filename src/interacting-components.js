@@ -609,10 +609,12 @@ Crafty.c('Robot', {
 		}
 	},
 	moveUp: function() {
-		this._is_charging = false;
-		this.tween({ x: this.x, y: this.y-gv.tile_sz }, this._speed[gv.robot.status])
-		this._movement.push('up');
-		if (this._movement.length > 5) {this._movement.shift();}
+		if (this._y > 30) {
+			this._is_charging = false;
+			this.tween({ x: this.x, y: this.y-gv.tile_sz }, this._speed[gv.robot.status])
+			this._movement.push('up');
+			if (this._movement.length > 5) {this._movement.shift();}
+		}
 	},
 	moveDown: function() {
 		this._is_charging = false;
@@ -621,10 +623,12 @@ Crafty.c('Robot', {
 		if (this._movement.length > 5) {this._movement.shift();}
 	},
 	moveLeft: function() {
-		this._is_charging = false;
-		this.tween({ x: this.x-gv.tile_sz, y: this.y }, this._speed[gv.robot.status])
-		this._movement.push('left');
-		if (this._movement.length > 5) {this._movement.shift();}
+		if (this._x > 30) {
+			this._is_charging = false;
+			this.tween({ x: this.x-gv.tile_sz, y: this.y }, this._speed[gv.robot.status])
+			this._movement.push('left');
+			if (this._movement.length > 5) {this._movement.shift();}
+		}
 	}, 
 	moveRight: function() {
 		this._is_charging = false;
