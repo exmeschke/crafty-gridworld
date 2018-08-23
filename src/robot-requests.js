@@ -333,7 +333,7 @@ var request_list = {
         // grab current request information
         var state_curr = this.curr_state-1; // -1 indexing
         var doAction = -1;
-        epsilon = Math.in(1, 1/(0.075*n_trials));
+        epsilon = Math.min(1, 1/(0.075*n_trials));
         // do a random action if no best option
         if (epsilon == 1 || (Q_table[state_curr][0]==Q_table[state_curr][1]) && (Q_table[state_curr][1]==Q_table[state_curr][2]) && (Q_table[state_curr][2]==Q_table[state_curr][3])) {
             var doAction = Math.floor(Math.random() * 4);
