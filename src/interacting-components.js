@@ -475,6 +475,7 @@ Crafty.c('Robot', {
 			.bind('ResetLoc', this.setLoc)
 			.bind('KeyDown', function(e) {
 				if (e.key == 51) {
+					Crafty.log('reset');
 					this.reset();
 				}
 			})
@@ -484,11 +485,16 @@ Crafty.c('Robot', {
 	reset: function() {
 		this.cancelDelay(this.randomMove);
 		this.cancelTween();
-		this.at(5,10);
+		Crafty.trigger('ResetLoc');
+		setTimeout(function(){Crafty.trigger('ResetLoc');}, 100); 
 		setTimeout(function(){Crafty.trigger('ResetLoc');}, 200); 
+		setTimeout(function(){Crafty.trigger('ResetLoc');}, 300); 
 		setTimeout(function(){Crafty.trigger('ResetLoc');}, 400);
+		setTimeout(function(){Crafty.trigger('ResetLoc');}, 500); 
 		setTimeout(function(){Crafty.trigger('ResetLoc');}, 600);
+		setTimeout(function(){Crafty.trigger('ResetLoc');}, 700); 
 		setTimeout(function(){Crafty.trigger('ResetLoc');}, 800);
+		setTimeout(function(){Crafty.trigger('ResetLoc');}, 900); 
 		set_robot_speed(2);
 	},
 	// continues to update robot state information
@@ -516,11 +522,19 @@ Crafty.c('Robot', {
 	lastMovement: function() {return this._movement.slice(-1);},
 	// checks last movement and does opposite 
 	turnAround: function() {
-		var movement = this.lastMovement();
-		if (movement == 'up') {this.moveDown();}
-		else if (movement == 'down') {this.moveUp();}
-		else if (movement == 'right') {this.moveLeft();}
-		else {this.moveRight();}
+		if (this._x <= 1) {
+			Crafty.log('right');
+			this.moveRight();
+		} else if (this._y <= 1) {
+			Crafty.log('down');
+			this.moveDown();
+		} else {
+			var movement = this.lastMovement();
+			if (movement == 'up') {this.moveDown();}
+			else if (movement == 'down') {this.moveUp();}
+			else if (movement == 'right') {this.moveLeft();}
+			else {this.moveRight();}
+		}
 	},
 	// does random movement
 	randomMove: function() {
@@ -636,8 +650,11 @@ Crafty.c('Robot', {
 		var x = Math.round(this.x/gv.tile_sz);
 		var y = Math.round(this.y/gv.tile_sz);
 
-		if (x > 1 && x < 15 && y > 1 && y < 16 && gv.field.seed[y-2][x-2] == '' && gv.field.wheat[y-2][x-2] == '') {
-			gv.field.seed[y-2][x-2] = Crafty.e('Wheat2').at(x, y);
+		if (x > 1 && x < 15 && y > 1 && y < 16) {
+			if (gv.field.seed[y-2][x-2] == '' && gv.field.wheat[y-2][x-2] == ''){
+				// insert seeds
+				gv.field.seed[y-2][x-2] = Crafty.e('Wheat2').at(x, y);
+			}
 		}
 	},
 	water: function() {
@@ -800,7 +817,7 @@ Crafty.c('Robot', {
 	},
 	veryLowPower: function() {
 		Crafty.log('alert - very low power');
-		if (this._power < 90 && this._is_charging == false && this._curr_state != 17) {
+		if (this._power < 90 && this._is_charging == false) {
 			this._power = 0;
 			request_list.addRequest(14);
 			set_request(100);
@@ -836,6 +853,8 @@ Crafty.c('Robot', {
 			// timeout if request not complete
 			var req_num = request_list.start_state;
 			setTimeout(function() {
+				gv.robot.part.loc_x = -1;
+				gv.robot.part.loc_y = -1;
 				Crafty.log('timeout');
 				request_timeout(req_num);
 			}, time);

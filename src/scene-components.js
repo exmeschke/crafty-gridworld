@@ -21,7 +21,7 @@ gv = {
 		status: 2, // [0:not operational, 1:slow, 2:normal]
 		// REQUEST - general
 		alerts: {
-			len: [20, 40, 80], // number of beeps and/or blinks
+			len: [15, 30, 60], // number of beeps and/or blinks
 			freq: [2000, 1000, 500] // frequency of beeps and/or blinks
 		},
 		is_alerting: false, // currently is alerting w/beep, blink, or both
@@ -46,7 +46,7 @@ gv = {
 		sheep: {hasWool: 0},
 		cow: {hasMilk: 0},
 		snake: {eat_egg: 4000},
-		gopher: {disappear: 20000}
+		gopher: {disappear: 12000}
 	},
 	tools:{
 		bucket: 0, // fill at well [0:empty, 1:full]

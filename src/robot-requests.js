@@ -29,7 +29,7 @@ function HReceptivity (availability, requestNum) {
     // HELPER FUNCS
     // updates value based on availability, request duration, and time
     this.updateValue = function(time_n) {
-        var time = (time_n - this.time_i)/60;
+        var time = (time_n - this.time_i);
         this.val = Math.exp(-time/5) * ((5-this.availability)/4);
     };
     // returns current value
@@ -179,7 +179,7 @@ function RRequestList(indices) {
     // state 2: low urgency, long duration, low effort, no response
     this.requestOptions[5] = new RRequest(2,1,2,1,false,'A locked treasure chest is burried somewhere under a tuft of grass. You have to be carrying your shovel to dig it up. And be careful, it will explode a minute after it is revealed! If you open it, you get $20, so you need to figure out how to open it quickly.');
     this.requestOptions[6] = new RRequest(2,1,2,1,false,'Different resources are worth different amounts of money. Try to make bread; you get $15 per loaf! The recipe is 6 eggs, 4 milk, and 2 wheat. You can also make muffins to earn $18, with 10 berries, 8 eggs, 4 milk, and 1 wheat. If you forget the recipes, open the book near the well.');
-    this.requestOptions[7] = new RRequest(2,1,2,1,false,'Animals will occasionally pop up in your environment. Gophers and snakes are pesky. Gophers will steal $1 if they disappear and snakes will steal an egg from you every 5 seconds. But you get a one dollar reward for each one you catch! The same goes for butterflies, but they do not steal any of your resources.')
+    this.requestOptions[7] = new RRequest(2,1,2,1,false,'Animals will occasionally pop up in your environment. Gophers and snakes are pesky. Gophers will steal $1 if they disappear and snakes will steal an egg from you every 4 seconds. But you get a one dollar reward for each one you catch! The same goes for butterflies, but they do not steal any of your resources.')
     // state 3: med urgency, short duration, low effort, requires response
     this.requestOptions[8] = new RRequest(3,2,1,1,true,"In which direction should I take 5 steps [up, down, left, right]? Type your response at the monitor.");
     // state 4: med urgency, short duration, high effort, requires response
@@ -188,8 +188,8 @@ function RRequestList(indices) {
     this.requestOptions[10] = new RRequest(5,2,2,1,true,'I want to start planting. Can you bring me seeds from the barrels?');
     this.requestOptions[11] = new RRequest(5,2,2,1,true,'I need to water the plants. Can you bring me water from the well?');
     // state 6: med urgency, long duration, high effort, requires response
-    this.requestOptions[12] = new RRequest(6,2,2,1,true,'One of my parts is missing! Push me around the field; I will beep faster the closer you are.');
-    this.requestOptions[13] = new RRequest(6,2,2,1,true,'Enter the password [X91R23Q7] at the monitor to update my software!');
+    this.requestOptions[12] = new RRequest(6,2,2,2,true,'One of my parts is missing! Push me around the field; I will beep faster the closer you are.');
+    this.requestOptions[13] = new RRequest(6,2,2,2,true,'Enter the password [X91R23Q7] at the monitor to update my software!');
     // state 7: high urgency, short duration, high effort, requires response
     this.requestOptions[14] = new RRequest(7,3,1,2,true,'My battery is less than 5%! Push me over to the charging station to recharge my battery.');
     // state 8: high urgency, long duration, high effort, requires response
@@ -329,29 +329,34 @@ var request_list = {
         // grab current request information
         var state_curr = this.curr_state-1; // -1 indexing
         var doAction = -1;
-        // find the highest Q value action
-        var maxAction = 0;
-        for (var j = 1; j < actions; j++) {
-            if (Q_table[state_curr][j]/n_table[state_curr][j] > Q_table[state_curr][maxAction]/n_table[state_curr][maxAction]) {
-                maxAction = j;
-            }
-        }
-        // determine whether to explore or optimize
-        var rand = Math.random();
-        // explore
-        if (rand < epsilon) { 
-            var non_maxAction = [];
-            for (j = 0; j < actions; j++) { // determine options
-                if (j != maxAction) {
-                    non_maxAction.push(j);
+        // do a random action if no best option
+        if ((Q_table[state_curr][0]==Q_table[state_curr][1]) && (Q_table[state_curr][1]==Q_table[state_curr][2]) && (Q_table[state_curr][2]==Q_table[state_curr][3])) {
+            var doAction = Math.floor(Math.random() * 4);
+        } else {
+            // find the highest Q value action
+            var maxAction = 0;
+            for (var j = 1; j < actions; j++) {
+                if (Q_table[state_curr][j]/n_table[state_curr][j] > Q_table[state_curr][maxAction]/n_table[state_curr][maxAction]) {
+                    maxAction = j;
                 }
             }
-            // choose random from non max actions
-            var exploreAction = Math.floor(Math.random() * 3);
-            doAction = exploreAction;
-        // go with best action
-        } else {
-            doAction = maxAction;
+            // determine whether to explore or optimize
+            var rand = Math.random();
+            // explore
+            if (rand < epsilon) { 
+                var non_maxAction = [];
+                for (j = 0; j < actions; j++) { // determine options
+                    if (j != maxAction) {
+                        non_maxAction.push(j);
+                    }
+                }
+                // choose random from non max actions
+                var exploreAction = Math.floor(Math.random() * 3);
+                doAction = exploreAction;
+            // go with best action
+            } else {
+                doAction = maxAction;
+            }      
         }
         // update request object action
         this.curr_req.setDoAction(doAction);

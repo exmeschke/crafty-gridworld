@@ -42,7 +42,7 @@ function gopher_task() {
 				spawn_gopher(perm[a]);
 			}, 10000*i);
 		}
-	}, 15000);
+	}, 8000);
 };
 // BUTTERLIES
 function spawn_butterfly(i) {
@@ -90,7 +90,7 @@ function snake_task() {
 				spawn_snake(perm[a]);
 			}, 8000*i);
 		}
-	}, 10000);
+	}, 8000);
 };
 // HIDDEN CHEST
 // function chest_task() {
