@@ -15,7 +15,7 @@ var all_requests = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15];
 
 // STATE OF HUMAN
 // definition for receptivity
-function HReceptivity (availability, requestNum) {
+function HReceptivity (availability, requestNum, action) {
     // VARIABLES
     // value of human receptivity
     this.val = (5-availability)/4;
@@ -25,12 +25,17 @@ function HReceptivity (availability, requestNum) {
     this.requestNum = requestNum;
     // time = 0
     this.time_i = new Date().getTime()/1000;
+    // action
+    this.a = action;
 
     // HELPER FUNCS
     // updates value based on availability, request duration, and time
     this.updateValue = function(time_n) {
-        var time = (time_n - this.time_i);
-        this.val = Math.exp(-time/5) * ((5-this.availability)/4);
+        if (this.a == 0) {this.val = 0;}
+        else {
+            var time = (time_n - this.time_i)/60;
+            this.val = Math.exp(-time/5) * ((5-this.availability)/4);
+        }
     };
     // returns current value
     this.getValue = function() {return this.val;};
@@ -56,11 +61,11 @@ var receptivity_list = {
 
     // STORES
     // another request set - store receptivity and update count + request number 
-    setRequest: function(request_num) {
+    setRequest: function(request_num, action) {
         // update temporary information
         this.request_num = request_num;
         // add receptivity to log
-        var r_curr = new HReceptivity(this.availability, this.request_num);
+        var r_curr = new HReceptivity(this.availability, this.request_num, action);
         this.list.push(r_curr);
         // update current receptivity
         this.calcReceptivity();
@@ -125,7 +130,7 @@ var receptivity_list = {
     },
     // returns receptivity as 'low' or 'high'
     getReceptivity: function() {
-        var recep_threshold = 0.8;
+        var recep_threshold = 1.75;
         if (this.r_sum >= recep_threshold) {return 1;} // low
         else {return 2;} // high
     },
@@ -324,8 +329,6 @@ var request_list = {
     getRequiresResponse: function() {return this.curr_req.requiresResponse;},
     // epsilon is the exploration rate [0.2], returns 0,1,2,3 for the action
     getAction: function() {
-        // indicate request is sent, updates receptivity
-        receptivity_list.setRequest(this.curr_req.number);
         // grab current request information
         var state_curr = this.curr_state-1; // -1 indexing
         var doAction = -1;
@@ -362,6 +365,8 @@ var request_list = {
         this.curr_req.setDoAction(doAction);
         // log in sent list
         this.sent.push(this.curr_req);
+        // indicate request is sent, updates receptivity
+        receptivity_list.setRequest(this.curr_req.number, doAction);
         // return action to perform
         return doAction;
     }
