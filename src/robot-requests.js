@@ -18,8 +18,7 @@ var all_requests = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15];
 function HReceptivity (availability, requestNum, action) {
     // VARIABLES
     // value of human receptivity
-    if (action == 0) {this.val = 0;}
-    else {this.val = (5-availability)/4;}
+    this.val = (5-availability)/4;
     // availability at time of alert
     this.availability = availability;
     // request number
@@ -192,7 +191,7 @@ function RRequestList(indices) {
     // state 4: med urgency, short duration, high effort, requires response
     this.requestOptions[10] = new RRequest(4,2,1,2,true,'My battery is less than 20%. Push me over to the charging station to recharge my battery.');
     // state 5: med urgency, long duration, low effort, requires response
-    this.requestOptions[11] = new RRequest(5,2,2,1,true,"Should I switch tasks? Enter your response [yes, no] at the monitor. If your answer is yes, bring me seeds to switch to planting and water from the well to switch to watering.");
+    this.requestOptions[11] = new RRequest(5,2,2,1,true,"Should I switch tasks? Enter your response [yes, no] at the monitor. If your answer is yes, bring me seeds from the barrels to switch to planting and water from the well to switch to watering.");
     // state 6: med urgency, long duration, high effort, requires response
     this.requestOptions[12] = new RRequest(6,2,2,2,true,'One of my parts is missing! Push me around the field; I will beep faster the closer you are.');
     this.requestOptions[13] = new RRequest(6,2,2,2,true,'Enter the password [X91R23Q7] at the monitor to update my software!');

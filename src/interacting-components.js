@@ -229,7 +229,9 @@ Crafty.c('Player', {
 	// pushes robot
 	pushRobot: function() {		
 		// check if over lost part 
-		if (gv.robot.part.loc_x != -1) {
+		var request_num = request_list.getNumber();
+		if (gv.robot.part.loc_x != -1 || request_num) {
+			set_robot_speed(0);
 			var xx = gv.robot.part.loc_x - (this.x/gv.tile_sz);
 			var yy = gv.robot.part.loc_y - (this.y/gv.tile_sz);
 			var dist = Math.sqrt(Math.pow(xx,2)+Math.pow(yy,2));
@@ -288,8 +290,22 @@ Crafty.c('Task', {
 			else if (resource == 'wheat') {_initial = gv.resources.wheat;}
 			else if (resource == 'wool') {_initial = gv.resources.wool;}
 			else if (resource == 'milk') {_initial = gv.resources.milk;}
-			else if (resource == 'bread') {_initial = gv.resources.bread;}
-			else if (resource == 'muffin') {_initial = gv.resources.muffin;}
+			else if (resource == 'bread') {
+				_initial = gv.resources.bread;
+				Crafty.trigger('StartOven');
+				setTimeout(function() {
+					eval("Crafty.trigger('StopOven');");
+					this.completedTask();
+				}, 80000);
+			}
+			else if (resource == 'muffin') {
+				_initial = gv.resources.muffin;
+				Crafty.trigger('StartOven');
+				setTimeout(function() {
+					eval("Crafty.trigger('StopOven');");
+					this.completedTask();
+				}, 80000);
+			}
 			else if (resource == 'thread') {_initial = gv.resources.thread;}
 			else if (resource == 'berries') {_initial = gv.resources.berries;}
 			// update task text

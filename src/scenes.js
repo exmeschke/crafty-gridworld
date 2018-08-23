@@ -218,9 +218,9 @@ Crafty.scene('Loading', function() {
 					spr_rocks: [1,0]
 				}
 			},
-			'assets/ovenn.png': {
+			'assets/oven-off.png': {
 				tile: 64, tileh: 41,
-				map: { spr_oven: [0,0] }
+				map: { spr_oven_off: [0,0], spr_oven: [0,1] }
 			},
 			'assets/spinning-wheels.png': {
 				tile: 86, tileh: 85,

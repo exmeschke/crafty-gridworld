@@ -730,12 +730,19 @@ function wait_bake_bread() {eval("Crafty.e('Bread').at(Game.w()-2.8,1.8).bake();
 function wait_bake_muffin() {eval("Crafty.e('Muffin').at(Game.w()-2.8,1.8).bake();");}
 Crafty.c('Oven', {
 	init: function() {
-		this.requires('2D, Canvas, Grid, SpriteAnimation, spr_oven')
+		this.requires('2D, Canvas, Grid, SpriteAnimation, spr_oven_off')
 			.attr({ w:50, h:40 })
-			.reel('OvenFire', 500, [[0,0], [1,0], [2,0], [3,0]])
-			.animate('OvenFire', -1)
+			.reel('OvenFire', 500, [[0,1], [1,1], [2,1], [3,1]])
 			.bind('BakeBread', this.bakeBread)
 			.bind('BakeMuffin', this.bakeMuffin)
+			.bind('StartOven', this.startOven)
+			.bind('StopOven', this.stopOven)
+	},
+	startOven: function() {
+		this.animate('OvenFire', -1);
+	},
+	stopOven: function() {
+		this.pauseAnimation();
 	},
 	bakeBread: function() {
 		gv.resources.wheat-=gv.recipes.bread.wheat;
