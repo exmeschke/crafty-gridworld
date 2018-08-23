@@ -743,6 +743,7 @@ Crafty.c('Oven', {
 	},
 	stopOven: function() {
 		this.pauseAnimation();
+		this.sprite('spr_oven_off');
 	},
 	bakeBread: function() {
 		gv.resources.wheat-=gv.recipes.bread.wheat;

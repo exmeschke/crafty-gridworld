@@ -295,16 +295,18 @@ Crafty.c('Task', {
 				Crafty.trigger('StartOven');
 				setTimeout(function() {
 					eval("Crafty.trigger('StopOven');");
-					this.completedTask();
-				}, 80000);
+					var met = task_list.getMet();
+					if (met[0] == 'bread') {eval("Crafty.trigger('CompletedTask');");}
+				}, 100000);
 			}
 			else if (resource == 'muffin') {
 				_initial = gv.resources.muffin;
 				Crafty.trigger('StartOven');
 				setTimeout(function() {
 					eval("Crafty.trigger('StopOven');");
-					this.completedTask();
-				}, 80000);
+					var met = task_list.getMet();
+					if (met[0] == 'muffin') {eval("Crafty.trigger('CompletedTask');");}
+				}, 100000);
 			}
 			else if (resource == 'thread') {_initial = gv.resources.thread;}
 			else if (resource == 'berries') {_initial = gv.resources.berries;}
