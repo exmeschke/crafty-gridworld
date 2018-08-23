@@ -18,7 +18,8 @@ var all_requests = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15];
 function HReceptivity (availability, requestNum, action) {
     // VARIABLES
     // value of human receptivity
-    this.val = (5-availability)/4;
+    if (action == 0) {this.val = 0;}
+    else {this.val = (5-availability)/4;}
     // availability at time of alert
     this.availability = availability;
     // request number
