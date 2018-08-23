@@ -1,7 +1,7 @@
 // HUMAN TASKS
 
 // [0:none, 1:wheat, 2:berries, 3:eggs, 4:wool, 5:milk, 6:gophers, 7:butterflies, 8:snakes, 9:chest, 10:bread, 11:muffin, 12:thread]
-var task_indices = [1,2,3,4,5,0,6,7,0,8,0,6,12,11,5,2,9,10,3,6,12,8,4,1,7,7,2,10,8,12,0,10,4,0,0];
+var task_indices = [1,2,3,4,5,0,6,7,0,8,0,12,11,5,2,9,10,3,6,12,8,4,1,7,7,2,10,8,12,0,10,4,0,0];
 // var task_indices = [1,10,7,7,0,8,8,0,0,10];
 
 // human task definition

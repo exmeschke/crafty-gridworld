@@ -227,11 +227,13 @@ Crafty.c('Player', {
 		}
 	}, 
 	// pushes robot
-	pushRobot: function() {		
+	pushRobot: function() {	
 		// check if over lost part 
 		var request_num = request_list.getNumber();
-		if (gv.robot.part.loc_x != -1 || request_num) {
-			set_robot_speed(0);
+		if ((gv.robot.part.loc_x != -1 || request_num == 4 || request_num == 7) && gv.player.interacting == true){
+			Crafty.trigger('StopMove');
+		}
+		if (gv.robot.part.loc_x != -1 && gv.player.interacting == true){
 			var xx = gv.robot.part.loc_x - (this.x/gv.tile_sz);
 			var yy = gv.robot.part.loc_y - (this.y/gv.tile_sz);
 			var dist = Math.sqrt(Math.pow(xx,2)+Math.pow(yy,2));
@@ -360,7 +362,7 @@ Crafty.c('Task', {
 		// receptivity_list.printState();
 		// check if task is complete if not gopher, snake, or butterfly task
 		if (resource != '') {
-			if (quantity <= curr_quant || this._filler >= 5000) {this.completedTask();}
+			if (quantity <= curr_quant || this._filler >= 3000) {this.completedTask();}
 		}
 	},
 	// task completed
@@ -475,7 +477,7 @@ Crafty.c('Robot', {
 			.delay(this.alertPlants, 420000, -1) // 7 minutes = 420000
 			.delay(this.alertNotification, 124000, -1) // 2 minutes, 4 sec = 124000
 			.delay(this.alertCognitive, 681000, -1) // 11 minutes, 21 sec = 681000
-			.delay(this.alertLowPower, 540000, -1) // 9 minutes = 540000
+			.delay(this.alertLowPower, 5000) // 9 minutes = 540000
 			// on hit events
 			.onHit('Solid', this.turnAround)
 			.onHit('ChargingStation', this.recharge)
@@ -497,6 +499,7 @@ Crafty.c('Robot', {
 			.bind('HighAlert', this.highAlert)
 			.bind('StopAlert', this.stopAlert)
 			.bind('SetSpeed', this.setSpeed)
+			.bind('StopMove', this.stopMove)
 			.bind('GetLocation', this.getLoc)
 			.bind('ResetLoc', this.setLoc)
 			.bind('KeyDown', function(e) {
@@ -562,6 +565,7 @@ Crafty.c('Robot', {
 			else {this.moveRight();}
 		}
 	},
+	stopMove: function() {this.cancelDelay(this.randomMove);},
 	// does random movement
 	randomMove: function() {
 		// check if on fire
