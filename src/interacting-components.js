@@ -266,7 +266,7 @@ Crafty.c('Player', {
 //TASKS
 Crafty.c('Task', {
 	_initial: 0, // initial quantity of task related resource
-	_filler: 0.0, // tracks how much time for filler task (no task)
+	_filler: 0, // tracks how much time for filler task (no task)
 	init: function() {
 		this.requires('2D, DOM, Grid, Text')
 			.attr( { w:230, h:200 })
@@ -320,7 +320,7 @@ Crafty.c('Task', {
 		else if (resource == 'berries') {curr_quant = gv.resources.berries-_initial;}
 		else if (resource == 'none') {
 			gv.player.moment = 'break';
-			this._filler += 0.005;
+			this._filler += 1;
 		}
 		// if started task, update player moment
 		if (curr_quant != this._initial) {gv.player.moment = 'middle';}
@@ -342,7 +342,7 @@ Crafty.c('Task', {
 		// receptivity_list.printState();
 		// check if task is complete if not gopher, snake, or butterfly task
 		if (resource != '') {
-			if (quantity <= curr_quant || this._filler >= 2) {this.completedTask();}
+			if (quantity <= curr_quant || this._filler >= 5000) {this.completedTask();}
 		}
 	},
 	// task completed
