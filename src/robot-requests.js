@@ -130,7 +130,7 @@ var receptivity_list = {
     },
     // returns receptivity as 'low' or 'high'
     getReceptivity: function() {
-        var recep_threshold = 1.75;
+        var recep_threshold = .8;
         if (this.r_sum >= recep_threshold) {return 1;} // low
         else {return 2;} // high
     },
