@@ -333,8 +333,9 @@ var request_list = {
         // grab current request information
         var state_curr = this.curr_state-1; // -1 indexing
         var doAction = -1;
+        epsilon = Math.in(1, 1/(0.075*n_trials));
         // do a random action if no best option
-        if ((Q_table[state_curr][0]==Q_table[state_curr][1]) && (Q_table[state_curr][1]==Q_table[state_curr][2]) && (Q_table[state_curr][2]==Q_table[state_curr][3])) {
+        if (epsilon == 1 || (Q_table[state_curr][0]==Q_table[state_curr][1]) && (Q_table[state_curr][1]==Q_table[state_curr][2]) && (Q_table[state_curr][2]==Q_table[state_curr][3])) {
             var doAction = Math.floor(Math.random() * 4);
         } else {
             // find the highest Q value action
@@ -369,6 +370,7 @@ var request_list = {
         // indicate request is sent, updates receptivity
         receptivity_list.setRequest(this.curr_req.number, doAction);
         // return action to perform
+        n_trials += 1;
         return doAction;
     }
 };
