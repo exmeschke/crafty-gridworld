@@ -54,7 +54,8 @@ gv = {
 		bucket: 0, // fill at well [0:empty, 1:full]
 		seed_bag: 0, // fill at barrels [0:empty, 1:full]
 		tools: 0, // switch at stump [0:hammer on stump, 1:shears on stump]
-		lgtools: 0 // switch on ground [0:shovel on ground, 1:scythe on ground]
+		lgtools: 0, // switch on ground [0:shovel on ground, 1:scythe on ground]
+		oven_on: false
 	},
 	// has berries [0:no, 1:yes]
 	bush: 0,
@@ -726,6 +727,7 @@ Crafty.c('BerryBush', {
 	}
 });
 // Baking in oven
+var bake;
 function wait_bake_bread() {eval("Crafty.e('Bread').at(Game.w()-2.8,1.8).bake();");}
 function wait_bake_muffin() {eval("Crafty.e('Muffin').at(Game.w()-2.8,1.8).bake();");}
 Crafty.c('Oven', {
@@ -740,10 +742,13 @@ Crafty.c('Oven', {
 	},
 	startOven: function() {
 		this.animate('OvenFire', -1);
+		gv.tools.oven_on = true;
 	},
 	stopOven: function() {
 		this.pauseAnimation();
 		this.sprite('spr_oven_off');
+		gv.tools.oven_on = false;
+		if (bake != undefined) {clearTimeout(bake);}
 	},
 	bakeBread: function() {
 		gv.resources.wheat-=gv.recipes.bread.wheat;
@@ -751,7 +756,7 @@ Crafty.c('Oven', {
 		gv.resources.eggs-=gv.recipes.bread.eggs;
 		gv.score-=(gv.recipes.bread.wheat*1 + gv.recipes.bread.milk*2 + gv.recipes.bread.milk*.25);
 		sounds.play_ding25();
-		setTimeout(wait_bake_bread, gv.recipes.bread.time);
+		bake = setTimeout(wait_bake_bread, gv.recipes.bread.time);
 	}, 
 	bakeMuffin: function() {
 		gv.resources.wheat-=gv.recipes.muffin.wheat;
@@ -760,7 +765,7 @@ Crafty.c('Oven', {
 		gv.resources.berries-=gv.recipes.muffin.berries;
 		gv.score-=(gv.recipes.muffin.wheat*1 + gv.recipes.muffin.milk*2 + gv.recipes.muffin.eggs*.25 + gv.recipes.muffin.berries*.1);
 		sounds.play_ding();
-		setTimeout(wait_bake_muffin, gv.recipes.muffin.time);
+		bake = setTimeout(wait_bake_muffin, gv.recipes.muffin.time);
 	}
 });
 // Spinning thread

@@ -420,7 +420,7 @@ function updateQ(time) {
     
     // save data at terminal state
     if (curr_state == 19) {
-        request_list.sent.slice(-1)[0].setReward(r); // store value in request
+        // request_list.sent.slice(-1)[0].setReward(r); // store value in request
         Q_table[start_state-1][action] += r; // -1 to account for indices starting at 0
         n_table[start_state-1][action] += 1;
 

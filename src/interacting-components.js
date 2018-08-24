@@ -158,18 +158,21 @@ Crafty.c('Player', {
 				}
 			} else {sounds.play_low();}
 		} else if ((hitDatas = this.hit('Oven'))) {
-			// ask what to bake
-			var bake = prompt('What would you like to bake (bread or muffin)?');
-			if (bake == 'bread') {
-				// check if have enough resources to make bread
-				if (gv.resources.eggs >= gv.recipes.bread.eggs && gv.resources.milk >= gv.recipes.bread.milk && gv.resources.wheat >= gv.recipes.bread.wheat){
-					Crafty.trigger('BakeBread');
+			// if oven on
+			if (gv.tools.oven_on == true) {
+				// ask what to bake
+				var bake = prompt('What would you like to bake (bread or muffin)?');
+				if (bake == 'bread') {
+					// check if have enough resources to make bread
+					if (gv.resources.eggs >= gv.recipes.bread.eggs && gv.resources.milk >= gv.recipes.bread.milk && gv.resources.wheat >= gv.recipes.bread.wheat){
+						Crafty.trigger('BakeBread');
+					} else {sounds.play_low();}
+				} else if (bake == 'muffin') {
+					// check if have enough resources to make muffin
+					if (gv.resources.eggs >= gv.recipes.muffin.eggs && gv.resources.milk >= gv.recipes.muffin.milk && gv.resources.wheat >= gv.recipes.muffin.wheat){
+						Crafty.trigger('BakeMuffin');
+					} else {sounds.play_low();}	
 				} else {sounds.play_low();}
-			} else if (bake == 'muffin') {
-				// check if have enough resources to make muffin
-				if (gv.resources.eggs >= gv.recipes.muffin.eggs && gv.resources.milk >= gv.recipes.muffin.milk && gv.resources.wheat >= gv.recipes.muffin.wheat){
-					Crafty.trigger('BakeMuffin');
-				} else {sounds.play_low();}	
 			} else {sounds.play_low();}
 		} else if ((hitDatas = this.hit('SpinningWheel'))) { 
 			// check if have enough resources to make thread
@@ -231,7 +234,9 @@ Crafty.c('Player', {
 		// check if over lost part 
 		var request_num = request_list.getNumber();
 		if ((gv.robot.part.loc_x != -1 || request_num == 4 || request_num == 7) && gv.player.interacting == true){
-			Crafty.trigger('StopMove');
+			Crafty.trigger('RobotRight');
+			setTimeout(function() {"Crafty.trigger('RobotDown');"}, 1000);
+			setTimeout(function() {"Crafty.trigger('StopMove');"}, 2000);
 		}
 		if (gv.robot.part.loc_x != -1 && gv.player.interacting == true){
 			var xx = gv.robot.part.loc_x - (this.x/gv.tile_sz);
@@ -298,7 +303,7 @@ Crafty.c('Task', {
 					eval("Crafty.trigger('StopOven');");
 					var met = task_list.getMet();
 					if (met[0] == 'bread') {eval("Crafty.trigger('CompletedTask');");}
-				}, 100000);
+				}, 130000);
 			}
 			else if (resource == 'muffin') {
 				_initial = gv.resources.muffin;
@@ -307,7 +312,7 @@ Crafty.c('Task', {
 					eval("Crafty.trigger('StopOven');");
 					var met = task_list.getMet();
 					if (met[0] == 'muffin') {eval("Crafty.trigger('CompletedTask');");}
-				}, 100000);
+				}, 130000);
 			}
 			else if (resource == 'thread') {_initial = gv.resources.thread;}
 			else if (resource == 'berries') {_initial = gv.resources.berries;}
@@ -399,15 +404,11 @@ function set_request(time) {
 		var text = request_list.getText();
 		update_robot_text(text);
 		// initialize action (alert)
-		var action = request_list.getAction();
+		// var action = request_list.getAction();
+		var action = 0;
 		// do chosen action
 		if (action == 0) {
-			setTimeout(function() {
-				var time = gv.time[0]+':'+gv.time[1];
-				request_list.endRequest(gv.player.interacting, gv.robot.status);
-				updateQ(time);
-				gv.robot.is_alerting = false;
-			}, gv.robot.alert_len*1000);
+			Crafty.trigger('StopAlert');
 		}
 		else if (action == 1) {Crafty.trigger('LowAlert');}
 		else if (action == 2) {Crafty.trigger('MedAlert');}
@@ -472,7 +473,7 @@ Crafty.c('Robot', {
 			.delay(this.randomMove, this._do_move, -1)
 			.delay(this.losePower, this._battery_life, -1)
 			// request specific
-			.delay(this.alertFire, 900000, -1) // 15 minutes = 900000
+			.delay(this.alertFire, 5000) // 15 minutes = 900000
 			.delay(this.alertPlants, 420000, -1) // 7 minutes = 420000
 			.delay(this.alertNotification, 124000, -1) // 2 minutes, 4 sec = 124000
 			.delay(this.alertCognitive, 681000, -1) // 11 minutes, 21 sec = 681000
