@@ -54,8 +54,12 @@ Crafty.c('Player', {
 			// actions
 			.bind('KeyDown', function(e) {
 				if (e.key == Crafty.keys.X) {this.action();} 
-				if (e.key == 51) {this.reset();}
+				// if (e.key == Crafty.keys.V) {this.pullRobot();}
+				if (e.key == 49) {this.reset();}
 				// if (e.key == Crafty.keys.SPACE) {Crafty.trigger('HideRequest');}
+			})
+			.bind('UpdateFrame', function() {
+				if (Crafty.s('Keyboard').isKeyDown('V')) {this.pullRobot();}
 			})
 			// triggered events
 			.bind('SetSpeed', this.setSpeed)
@@ -229,6 +233,26 @@ Crafty.c('Player', {
 			this.attr({ x:this.x+this._back, y:this.y });
 		}
 	}, 
+	// pulls robot
+	pullRobot: function() {
+		// slow down player and trigger robot movement
+		var dist = dist_robot_player(); // distance between robot and human
+		if (dist <= 2) {
+			if (this._movement.slice(-1) == 'up') {
+				this.attr({ x:this.x, y:this.y+this._back-.4 });
+				Crafty.trigger('RobotUp');
+			} else if (this._movement.slice(-1) == 'down') {
+				this.attr({ x:this.x, y:this.y-this._back+.4 });
+				Crafty.trigger('RobotDown');
+			} else if (this._movement.slice(-1) == 'right') {
+				this.attr({ x:this.x-this._back+.4, y:this.y });
+				Crafty.trigger('RobotRight');
+			} else {
+				this.attr({ x:this.x+this._back-.4, y:this.y });
+				Crafty.trigger('RobotLeft');
+			}
+		}
+	},
 	// pushes robot
 	pushRobot: function() {	
 		// check if over lost part 
@@ -407,9 +431,7 @@ function set_request(time) {
 		var action = request_list.getAction();
 		// var action = 0;
 		// do chosen action
-		if (action == 0) {
-			Crafty.trigger('StopAlert');
-		}
+		if (action == 0) {Crafty.trigger('StopAlert');}
 		else if (action == 1) {Crafty.trigger('LowAlert');}
 		else if (action == 2) {Crafty.trigger('MedAlert');}
 		else if (action == 3) {Crafty.trigger('HighAlert');}
@@ -473,7 +495,7 @@ Crafty.c('Robot', {
 			.delay(this.randomMove, this._do_move, -1)
 			.delay(this.losePower, this._battery_life, -1)
 			// request specific
-			.delay(this.alertFire, 5000) // 15 minutes = 900000
+			.delay(this.alertFire, 900000, -1) // 15 minutes = 900000
 			.delay(this.alertPlants, 420000, -1) // 7 minutes = 420000
 			.delay(this.alertNotification, 124000, -1) // 2 minutes, 4 sec = 124000
 			.delay(this.alertCognitive, 681000, -1) // 11 minutes, 21 sec = 681000
@@ -503,7 +525,7 @@ Crafty.c('Robot', {
 			.bind('GetLocation', this.getLoc)
 			.bind('ResetLoc', this.setLoc)
 			.bind('KeyDown', function(e) {
-				if (e.key == 51) {
+				if (e.key == 49) {
 					Crafty.log('reset');
 					this.reset();
 				}

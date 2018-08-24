@@ -796,11 +796,11 @@ Crafty.c('ChargingStation', {
 	init: function() {
 		this.requires('2D, Canvas, Grid, SpriteAnimation, spr_charging_station')
 			.attr({ w:43, h:50, z:0 })
-			.bind('StartCharging', this.lightOn)
-			.bind('StopCharging', this.lightOff)
+			.bind('LightOn', this.lightOn)
+			.bind('LightOff', this.lightOff)
 	},
-	lightOn: function() {this.sprite('spr_charging_station');}, 
-	lightOff: function() {this.sprite('spr_charging_station_lit');}
+	lightOn: function() {this.sprite('spr_charging_station_lit');}, 
+	lightOff: function() {this.sprite('spr_charging_station');}
 });
 // Hidden chest
 var exp;
