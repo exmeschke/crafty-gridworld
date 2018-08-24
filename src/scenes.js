@@ -517,12 +517,14 @@ Crafty.scene('EndGame', function() {
 	// Write information to files
 	// PARTICIPANT DATA
 	mdp_line = JSON.stringify(MDP);
+	h_line = JSON.stringify(HAvailability);
 	console.log(mdp_line);
 	$.ajax({
 		url: 'savedata.php',
 		method: 'POST',
 		data: {
-			mdp_data: mdp_line
+			mdp_data: mdp_line,
+			h_data: h_line
 		},
 		success: function (response) {
 			console.log('Done participant');

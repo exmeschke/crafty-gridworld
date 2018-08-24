@@ -3,8 +3,10 @@
 // save data
 var MDP = []; // starting_state [1:16], action [1:4], h_responded [true, false], reward 
 for (var i = 0; i < 50; i++) {
-    MDP[i] = new Array(8);
+    MDP[i] = new Array(10);
 }
+MDP[0][0] = threshold;
+var HAvailability = []; // human availability every 10 seconds
 var all_states = [19]; // state progression
 
 // requests
@@ -130,7 +132,6 @@ var receptivity_list = {
     },
     // returns receptivity as 'low' or 'high'
     getReceptivity: function() {
-        var recep_threshold = .8;
         if (this.r_sum >= recep_threshold) {return 1;} // low
         else {return 2;} // high
     },
@@ -189,14 +190,14 @@ function RRequestList(indices) {
     this.requestOptions[8] = new RRequest(3,2,1,1,true,'I want to start planting. Can you bring me seeds from the barrels?');
     this.requestOptions[9] = new RRequest(3,2,1,1,true,'I need to water the plants. Can you bring me water from the well?');
     // state 4: med urgency, short duration, high effort, requires response
-    this.requestOptions[10] = new RRequest(4,2,1,2,true,'My battery is less than 20%. Push me over to the charging station to recharge my battery.');
+    this.requestOptions[10] = new RRequest(4,2,1,2,true,'My battery is less than 20%. Push or pull me over to the charging station to recharge my battery.');
     // state 5: med urgency, long duration, low effort, requires response
     this.requestOptions[11] = new RRequest(5,2,2,1,true,"Should I switch tasks? Enter your response [yes, no] at the monitor. If your answer is yes, bring me seeds from the barrels to switch to planting and water from the well to switch to watering.");
     // state 6: med urgency, long duration, high effort, requires response
-    this.requestOptions[12] = new RRequest(6,2,2,2,true,'One of my parts is missing! Push me around the field; I will beep faster the closer you are.');
+    this.requestOptions[12] = new RRequest(6,2,2,2,true,'One of my parts is missing! Push or pull me around the field; I will beep faster the closer you are.');
     this.requestOptions[13] = new RRequest(6,2,2,2,true,'Enter the password [X91R23Q7] at the monitor to update my software!');
     // state 7: high urgency, short duration, high effort, requires response
-    this.requestOptions[14] = new RRequest(7,3,1,2,true,'My battery is less than 5%! Push me over to the charging station to recharge my battery.');
+    this.requestOptions[14] = new RRequest(7,3,1,2,true,'My battery is less than 5%! Push or pull me over to the charging station to recharge my battery.');
     // state 8: high urgency, long duration, high effort, requires response
     this.requestOptions[15] = new RRequest(8,3,2,2,true,"Something short circuited--I'm about to catch on fire! Put it out with 3 buckets of water. Then enter the code [X5214] at the monitor to debug the issue.");
 
@@ -376,18 +377,21 @@ var request_list = {
 };
 
 // SAVE INFORMATION
-var n_int = 0;
-//[start_time, end_time, s0, a, progression, reward, task_num, distance, receptivity_raw]
+var n_int = 1;
+var n_col = 10; // number of columns
+//[start_time, end_time, s0, a, progression, reward, task_num, distance, receptivity_raw, availability]
 var curr_int; 
 // general information, saved at time of initiating request
 function saveHInfo(time, task, dist) {
-    curr_int = new Array(9);
+    curr_int = new Array(n_col);
 
     curr_int[0] = time;
     curr_int[6] = task;
     curr_int[7] = dist;
     var receptivity_raw = receptivity_list.r_sum;
     curr_int[8] = receptivity_raw;
+    var availability = receptivity_list.availability;
+    curr_int[9] = availability;
 }; 
 // update Q-table based on state and action, saved at terminal state
 function updateQ(time) {
@@ -436,7 +440,7 @@ function updateQ(time) {
             if (curr_int[0] != MDP[n_int-1][0]) {
                 // add to MDP
                 Crafty.log('reward = '+r);
-                for (var i = 0; i < 9; i++) {
+                for (var i = 0; i < n_col; i++) {
                     MDP[n_int][i] = curr_int[i];
                 }
                 n_int += 1;
@@ -444,14 +448,18 @@ function updateQ(time) {
         } else {
             // add to MDP
             Crafty.log('reward = '+r);
-            for (var i = 0; i < 9; i++) {
+            for (var i = 0; i < n_col; i++) {
                 MDP[n_int][i] = curr_int[i];
             }
             n_int += 1;
         }
     }
 };
-
+// // save human availability
+// function save_availability (time) {
+//     receptivity_list
+//     HAvailability.push()
+// }
 
 
 

@@ -14,6 +14,7 @@
 		var actions = 4; // 4 actions
 		var n_trials = 0; // total number of interactions
 		var epsilon = 0.0; // exploration rate 
+		var threshold = 1.12; // receptivity threshold
 
 		var Q_array = <?php echo json_encode($q_array); ?>;
 		var n_array = <?php echo json_encode($num_array); ?>;
