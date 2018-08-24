@@ -235,6 +235,27 @@ Crafty.c('Player', {
 	}, 
 	// pulls robot
 	pullRobot: function() {
+		// stop movement
+		var request_num = request_list.getNumber();
+		if ((gv.robot.part.loc_x != -1 || request_num == 4 || request_num == 7) && gv.player.interacting == true){
+			Crafty.trigger('StopMove');
+		}
+		// check if lost part
+		if (gv.robot.part.loc_x != -1 && gv.player.interacting == true){
+			var xx = gv.robot.part.loc_x - (this.x/gv.tile_sz);
+			var yy = gv.robot.part.loc_y - (this.y/gv.tile_sz);
+			var dist = Math.sqrt(Math.pow(xx,2)+Math.pow(yy,2));
+
+			if (dist <= 1) {
+				alert('Found it!');
+				terminal_state();
+				gv.robot.part.loc_x = -1;
+				gv.robot.part.loc_y = -1;
+			}
+			if (dist < 2) {sounds.play_radar_high();}
+			else if (dist < 4) {sounds.play_radar_med();}
+			else if (dist < 8) {sounds.play_radar_low();}
+		}
 		// slow down player and trigger robot movement
 		var dist = dist_robot_player(); // distance between robot and human
 		if (dist <= 2) {
@@ -255,13 +276,12 @@ Crafty.c('Player', {
 	},
 	// pushes robot
 	pushRobot: function() {	
-		// check if over lost part 
+		// stop movement
 		var request_num = request_list.getNumber();
 		if ((gv.robot.part.loc_x != -1 || request_num == 4 || request_num == 7) && gv.player.interacting == true){
-			Crafty.trigger('RobotRight');
-			setTimeout(function() {"Crafty.trigger('RobotDown');"}, 1000);
-			setTimeout(function() {"Crafty.trigger('StopMove');"}, 2000);
+			Crafty.trigger('StopMove');
 		}
+		// check if over lost part 
 		if (gv.robot.part.loc_x != -1 && gv.player.interacting == true){
 			var xx = gv.robot.part.loc_x - (this.x/gv.tile_sz);
 			var yy = gv.robot.part.loc_y - (this.y/gv.tile_sz);
@@ -594,6 +614,7 @@ Crafty.c('Robot', {
 		if (gv.robot.fire != -1) {gv.score -= 0.15;}
 		// if not broken
 		if (gv.robot.status != 0) {
+			Crafty.trigger('LightOff');
 			// complete task
 			if (this.x/gv.tile_sz < 15 && this.y/gv.tile_sz < 15 && this.x/gv.tile_sz > 1 && this.y/gv.tile_sz > 1) {
 				this.tendPlants();
@@ -677,17 +698,16 @@ Crafty.c('Robot', {
 	},
 	// adds to robot power
 	recharge: function() {
+		Crafty.trigger('LightOn');
 		if (this._power < 100) {
 			this._power += .1;
 			this._is_charging = true;
-			Crafty.trigger('StartCharging');
 		} else {
 			this._power = 100;
 			this._is_charging = false;
 			set_robot_speed(2);
 			this.moveLeft();
-			Crafty.log(this._power);
-			Crafty.trigger('StopCharging');
+			Crafty.trigger('LightOff');
 		}
 	},
 	// ROBOT TASKS
@@ -865,24 +885,6 @@ Crafty.c('Robot', {
 			}, 100000);
 		}
 	},
-	veryLowPower: function() {
-		Crafty.log('alert - very low power');
-		if (this._power < 90 && this._is_charging == false) {
-			this._power = 0;
-			request_list.addRequest(14);
-			set_request(100);
-			// after alert, not operational if ignored
-			setTimeout(function() {
-				if (this._is_charging == false && gv.player.interacting == false) {not_operational(0);} 
-			}, gv.robot.alerts.stop); 
-			// timeout if request accepted but not completed
-			var req_num = request_list.start_state;
-			setTimeout(function() {
-				Crafty.log('timeout');
-				request_timeout(req_num);
-			}, 100000);
-		}
-	},
 	alertCognitive: function() {
 		Crafty.log('alert - cognitive');
 		if (this._is_charging == false && gv.robot.status == 2 && gv.robot.is_alerting == false && this._curr_state == 19) {
@@ -908,6 +910,25 @@ Crafty.c('Robot', {
 				Crafty.log('timeout');
 				request_timeout(req_num);
 			}, time);
+		}
+	},
+	veryLowPower: function() {
+		Crafty.log('alert - very low power');
+		if (this._power < 90 && this._is_charging == false) {
+			this._power = 0;
+			request_list.addRequest(14);
+			set_request(100);
+			// after alert, not operational if ignored
+			setTimeout(function() {
+				Crafty.log(this._is_charging, gv.player.interacting);
+				if (this._is_charging == false && gv.player.interacting == false) {not_operational(0);} 
+			}, gv.robot.alerts.stop);
+			// timeout if request accepted but not completed
+			var req_num = request_list.start_state;
+			setTimeout(function() {
+				Crafty.log('timeout');
+				request_timeout(req_num);
+			}, 100000);
 		}
 	},
 	alertFire: function() {

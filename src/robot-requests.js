@@ -276,8 +276,9 @@ var request_list = {
             // if a starting state, update
             this.start_state = this.curr_state; 
             // start with new state progression if not 13 or 14
-            if (this.curr_state == 13 || this.curr_state == 14) {}
-            else {this.states = [];}
+            // if (this.curr_state == 13 || this.curr_state == 14) {}
+            // else {this.states = [];}
+            this.states = [];
         // non-starting states 17-19
         } else {
             if (urgency == 17) {this.curr_state = 17;}
