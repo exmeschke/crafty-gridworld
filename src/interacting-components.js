@@ -404,8 +404,8 @@ function set_request(time) {
 		var text = request_list.getText();
 		update_robot_text(text);
 		// initialize action (alert)
-		// var action = request_list.getAction();
-		var action = 0;
+		var action = request_list.getAction();
+		// var action = 0;
 		// do chosen action
 		if (action == 0) {
 			Crafty.trigger('StopAlert');
