@@ -5,7 +5,7 @@ var MDP = []; // starting_state [1:16], action [1:4], h_responded [true, false],
 for (var i = 0; i < 50; i++) {
     MDP[i] = new Array(10);
 }
-MDP[0][0] = threshold;
+MDP[0][0] = recep_threshold;
 var HAvailability = []; // human availability every 10 seconds
 var all_states = [19]; // state progression
 
