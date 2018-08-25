@@ -499,7 +499,7 @@ Crafty.scene('Game', function() {
 	this.currTask = Crafty.e('Task').at(7,box_b+.2).text('').trigger('UpdateTask');
 
 	// End game - 40 min = 2400000, 30 min = 1800000, 20 min = 1200000
-	setTimeout(function() {eval("Crafty.scene('EndGame');");}, 1800000); 
+	setTimeout(function() {eval("Crafty.scene('EndGame');");}, 2000000); 
 });
 
 // 3. End game screen

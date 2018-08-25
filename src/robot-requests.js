@@ -380,7 +380,7 @@ var request_list = {
 var n_int = 1;
 var n_col = 10; // number of columns
 //[start_time, end_time, s0, a, progression, reward, task_num, distance, receptivity_raw, availability]
-var curr_int; 
+var curr_int = new Array(n_col);
 // general information, saved at time of initiating request
 function saveHInfo(time, task, dist) {
     curr_int = new Array(n_col);
@@ -435,7 +435,7 @@ function updateQ(time) {
         curr_int[4] = states.toString();
         curr_int[5] = r;
 
-        if (n_int > 0) {
+        if (n_int > 1) {
             // prevent double entries
             if (curr_int[0] != MDP[n_int-1][0]) {
                 // add to MDP
