@@ -427,7 +427,7 @@ Crafty.scene('Game', function() {
 					this.chest = Crafty.e('Chest').at(x,y);
 					this.explosion = Crafty.e('ChestExplosion').at(x,y);
 					// sets password and location
-					task_funcs.chestInitialize(x,y);
+					task_chest.chestInitialize(x,y);
 				}
 			// eggs
 			} else if (y < Game.h()-6 && Math.random() < 0.01 && !this.occupied[x][y]) {

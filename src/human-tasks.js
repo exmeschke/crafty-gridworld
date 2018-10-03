@@ -1,203 +1,148 @@
-// HUMAN TASKS
+/**
+ * The game dynamics for human tasks. 
+ * 
+ * Includes functions to define the Human Tasks and set the order the tasks will appear. 
+ * Enumerated tasks:    
+ *      0 = none
+ *      1 = gather wheat, 2 = gather berries, 3 = gather eggs, 4 = gather wool, 5 = gather milk
+ *      6 = gather gophers, 7 = chase butterflies, 8 = chase snakes
+ *      9 = make bread, 10 = make muffin, 11 = make thread
+ *      12 = find chest
+ * 
+ * HTask            Constructor function to define a human task.
+ * all_tasks        Array that stores all possible human tasks. 
+ * task_list        Object that tracks human task history.
+ * task_animals     Object that stores information about animal-related tasks.
+ * task_chest       Object that stores information about chest task. 
+ */
 
-// [0:none, 1:wheat, 2:berries, 3:eggs, 4:wool, 5:milk, 6:gophers, 7:butterflies, 8:snakes, 9:chest, 10:bread, 11:muffin, 12:thread]
-var task_indices = [1,2,3,4,5,0,6,7,0,8,0,12,11,5,2,9,10,3,6,12,8,4,1,7,7,2,10,8,12,0,10,4,0,0];
-// var task_indices = [1,10,7,7,0,8,8,0,0,10];
 
-// human task definition
-//      num - task number [1:easy gather, 2:hard gather, 3:easy chase, 4:hard chase, 5:easy combo, 6:hard combo]
-//      diff - task difficulty [0:none, 1:low, 2:high]
-//      txt - the prompt shown to player
-//      met - the conditions that need to be met to complete task
-//      cmd - the command to start the event
+/**
+ * HTask - Constructor function to define a human task.
+ * 
+ * @param {int}     num         Enumerates tasks (difficulty, type):
+ *                                  1 = (easy, gather), 2 = (hard, gather) 
+ *                                  3 = (easy, chase),  4 = (hard, chase) 
+ *                                  5 = (easy, combo),  6 = (hard, combo)
+ * @param {int}     diff        Task difficulty: 0 = no task, 1 = easy task, 2 = hard task
+ * @param {str}     txt         The prompt shown to the player.
+ * @param {arr}     met         The condition(s) the player must meet to fulfill the task [resource, number]
+ * @param {str}     cmd         A function to call from event-components.js to start the event sequence. 
+ **/
 function HTask(num, diff, txt, met, cmd) {
     this.num = num;
     this.diff = diff;
     this.txt = txt;
     this.met = met;
     this.command = cmd;
-    // time it takes to complete task
-    this.time = { begin:0, end:0, duration:0 };
-    // whether completed
-    this.completed = 0;
+    // timers
+    this.startTimes = [];
+    this.endTimes = [];
+    this.durations = [];
 
-    // setters
-    this.setStart = function() {this.time.begin = new Date().getTime()/1000;};
-    this.setEnd = function() {
-    	this.time.end = new Date().getTime()/1000;
-    	this.time.duration = this.time.end - this.time.begin;
-        this.completed = 1;
+    // SETTERS
+    this.addStart = function() {this.startTimes.push(new Date().getTime()/1000);}; 
+    this.addEnd = function() {
+    	this.endTimes.push(new Date().getTime()/1000);
+    	this.durations.push(this.endTimes.slice(-1)[0] - this.startTimes.slice(-1)[0]);
     };
-    // runs command to start event
-    this.runCode = function() {eval(this.command);}
+    this.callCommand = function() {eval(this.command);} // runs command to start event
 };
-// stores possible human tasks and generates list of task objects given list of indices
-//      indices - populates list of tasks based on task_indices defined in ln 6
-function HTaskList(indices) {
-    this.taskOptions = [];
-    this.taskOptions[0] = new HTask(0, 0, '', ['none',1], '');
-    this.taskOptions[1] = new HTask(1, 1, 'Harvest 5 wheat with your scythe.', ['wheat',5], '');
-    this.taskOptions[2] = new HTask(1, 1, 'Gather 40 berries (fill up your bucket at the well and water the bush to grow berries)', ['berries',40], '');
-    this.taskOptions[3] = new HTask(1, 1, 'Collect 16 more eggs.', ['eggs',16], '');
-    this.taskOptions[4] = new HTask(1, 1, 'Collect 2 wool from the sheep with your shears.', ['wool',2], '');
-    this.taskOptions[5] = new HTask(1, 1, 'Collect 2 milk (make sure your bucket is empty).', ['milk',2], '');
-    this.taskOptions[6] = new HTask(2, 2, 'Hit the gophers with your hammer before they disappear and steal one dollar!', ['',0], 'gopher_task();');
-    this.taskOptions[7] = new HTask(3, 1, 'Collect butterflies for a one dollar reward per butterfly!', ['',0], 'butterfly_task();');
-    this.taskOptions[8] = new HTask(4, 2, 'Hurry and hit the snakes with your hammer. Each snake steals an egg every four seconds!', ['',0], 'snake_task();');
-    this.taskOptions[9] = new HTask(5, 1, 'Grab your shovel and open the treasure chest burried under a tuft of grass (Hint: Try hitting rocks with your hammer).', ['',0], 'chest_task();');
-    this.taskOptions[10] = new HTask(6, 2, 'Bake a loaf of bread. The oven will be on for less than two minutes. Make sure you collect the bread before it burns!', ['bread',1], '');
-    this.taskOptions[11] = new HTask(6, 2, 'Bake a muffin. The oven will be on for less than two minutes. Make sure you collect the muffin before it burns!', ['muffin',1], '');
-    this.taskOptions[12] = new HTask(6, 2, 'Make a spool of thread.', ['thread',1], '');
 
-    this.tasks = []
-    for (var i = 0; i < indices.length; i++) {
-        var task_num = indices[i];
-        this.tasks.push(this.taskOptions[task_num]);
-    }
-    return this.tasks;
-};
-// stores task list and task retrieval functions
+// Stores all possible human tasks.
+var all_tasks = [
+    new HTask(0, 0, '', ['none',1], ''),
+    new HTask(1, 1, 'Harvest 5 wheat with your scythe.', ['wheat',5], ''),
+    new HTask(1, 1, 'Gather 40 berries (fill up your bucket at the well and water the bush to grow berries)', ['berries',40], ''),
+    new HTask(1, 1, 'Collect 16 more eggs.', ['eggs',16], ''),
+    new HTask(1, 1, 'Collect 2 wool from the sheep with your shears.', ['wool',2], ''),
+    new HTask(1, 1, 'Collect 2 milk (make sure your bucket is empty).', ['milk',2], ''),
+    new HTask(2, 2, 'Hit the gophers with your hammer before they disappear and steal one dollar!', ['',0], 'gopher_task();'),
+    new HTask(3, 1, 'Collect butterflies for a one dollar reward per butterfly!', ['',0], 'butterfly_task();'),
+    new HTask(4, 2, 'Hurry and hit the snakes with your hammer. Each snake steals an egg every four seconds!', ['',0], 'snake_task();'),
+    new HTask(6, 2, 'Bake a loaf of bread. The oven will be on for less than two minutes. Make sure you collect the bread before it burns!', ['bread',1], ''),
+    new HTask(6, 2, 'Bake a muffin. The oven will be on for less than two minutes. Make sure you collect the muffin before it burns!', ['muffin',1], ''),
+    new HTask(6, 2, 'Make a spool of thread.', ['thread',1], ''),
+    new HTask(5, 1, 'Grab your shovel and open the treasure chest burried under a tuft of grass (Hint: Try hitting rocks with your hammer).', ['',0], 'chest_task();'),
+];
+
+// Tracks history of human tasks. 
 var task_list = {
-    // current task index
-    curr: 0,
-    // holds tasks
-	list: new HTaskList(task_indices),
-    // adds task to end of list
-	addTask: function(task) {this.list.push(task);},
-    // adds task to certain index in list
-	addTask: function(task, index) {this.list.splice(index,0,task);},
-    // rewrites this.list with new list
-	addTasks: function(list) {this.list = list;},
+    curr: 0,  // current task index
+	list: [1,2,3,4,5,0], // contains ordered list of enumerated human tasks for game
 
-    // indicates next task
-    nextTask: function() {this.curr = this.curr+1;},
+    // adds task to this.list
+	addTask: function(index) {this.list.push(index);},
+    addRandTask: function() {
+        if (this.curr == 12) {this.list.push(12)} // complete chesk task once
+        else {this.list.push(getRandomInt(0,11))}; // random for other tasks
+    },
     // runs current task command
-    runCommand: function() {this.list[this.curr].runCode();},
+    runCommand: function() {all_tasks[this.list[this.curr]].callCommand();}, 
+    // indicates next task
+    nextTask: function() {this.curr = this.curr+1;}, 
 
     // getters 
-    getCurr: function() {return this.list[this.curr];},
-    getNum: function() {return this.list[this.curr].num;},
-    getDiff: function() {return this.list[this.curr].diff;},
-	getText: function() {return this.list[this.curr].txt;},
-	getMet: function() {return this.list[this.curr].met;},
+    getCurr: function() {return all_tasks[this.list[this.curr]];},
+    getNum: function() {return all_tasks[this.list[this.curr]].num;},
+    getDiff: function() {return all_tasks[this.list[this.curr]].diff;},
+	getText: function() {return all_tasks[this.list[this.curr]].txt;},
+	getMet: function() {return all_tasks[this.list[this.curr]].met;},
     // setters
-	setStart: function() {this.list[this.curr].setStart();},
-	setEnd: function() {this.list[this.curr].setEnd();}
+	setStart: function() {all_tasks[this.list[this.curr]].addStart();},
+	setEnd: function() {all_tasks[this.list[this.curr]].addEnd();}
 };
-// stores information for task specific functions
-var task_funcs = {
-    // gopher task
-    gopher: {
-        // number of gophers that pop up
-        num: 7,
-        // location coordinates
-        loc_x: [44, 32, 46, 39, 36, 24, 48],
-        loc_y: [10, 20, 18, 2, 21, 16, 11],
-        // number hit
-        hit: 0,
-        // number disappear
-        gone: 0
-    },
-    // returns gopher coordinates
-    gopherCoord: function(i) {return [this.gopher.loc_x[i], this.gopher.loc_y[i]];},
-    // records gopher hit
-    gopherHit: function() {this.gopher.hit+=1;},
-    // records gopher disappears
-    gopherGone: function() {this.gopher.gone+=1;},
-    // checks whether gopher task is complete, resets if so
-    gopherComplete: function() {
-        if (this.gopher.hit + this.gopher.gone >= this.gopher.num) {
-            this.gopher.hit = 0;
-            this.gopher.gone = 0;
+
+// Stores information for task specific functions
+var task_animals = {
+    // stores information for each animal: 0 = gophers, 1 = butterflies, 2 = snakes
+    num: [7, 8, 6],
+    loc_x: [[44, 32, 46, 39, 36, 24, 48], [52, 39, 30, 44, 46, 52, 47, 52], [48, 29, 52, 42, 52, 44, 52]],
+    loc_y: [[10, 20, 18,  2, 21, 16, 11], [20,  1, 23, 23,  1,  3,  1, 12], [ 1, 23, 11,  1, 18, 23,  7]],
+    direction: [[], ['l','d','u','u','d','l','d','l'], ['d','u','l','d','u','d']],
+    hit: [0, 0, 0],
+    gone: [0, 0, 0],
+
+    // getters
+    getCoord: function(animal, i) {return [this.loc_x[animal][i], this.loc_y[animal][i]];},
+    getDir: function(animal, i) {return this.direction[animal][i];},
+    // setters
+    countHit: function(animal) {return this.hit[animal] += 1;},
+    countGone: function(animal) {return this.gone[animal] += 1;},
+    // check status
+    checkComplete: function(animal) {
+        if (this.hit[animal] + this.gone[animal] >= this.num[animal]) {
+            this.hit[animal] = 0;
+            this.gone[animal] = 0;
             return true;
-        }
+        } 
         else {return false;}
-    },
-    // butterfly task
-    butterfly: {
-        // number of butterflies that will appear
-        num: 8,
-        // direction of flight
-        direction: ['left', 'down', 'up', 'up', 'down', 'left', 'down', 'left'],
-        // location coordinates
-        loc_x: [52, 39, 30, 44, 46, 52, 47, 52],
-        loc_y: [20, 1, 23, 23,  1,  3,  1, 12],
-        // number hit
-        hit: 0,
-        // number disappear
-        gone: 0,
-    },
-    butterflyDir: function(i) {return this.butterfly.direction[i];},
-    butterflyCoord: function(i)  {return [this.butterfly.loc_x[i], this.butterfly.loc_y[i]];},
-    butterflyHit: function() {this.butterfly.hit+=1;},
-    butterflyGone: function() {this.butterfly.gone+=1;},
-    butterflyComplete: function() {
-        if (this.butterfly.hit + this.butterfly.gone >= this.butterfly.num) {
-            this.butterfly.hit = 0;
-            this.butterfly.gone = 0;
-            return true;
-        }
-        else {return false;}
-    },
-    // snake task
-    snake: {
-        // number of snakes that will appear
-        num: 6,
-        // direction of movement
-        direction: ['down', 'up', 'left', 'down', 'up', 'down'],
-        // location coordinates
-        loc_x: [48, 29, 52, 42, 52, 44, 52],
-        loc_y: [1,  23, 11,  1, 18, 23, 7],
-        // number hit
-        hit: 0,
-        // number disappear
-        gone: 0,
-    },
-    snakeDir: function(i) {return this.snake.direction[i];},
-    snakeCoord: function(i)  {return [this.snake.loc_x[i], this.snake.loc_y[i]];},
-    snakeHit: function() {this.snake.hit+=1;},
-    snakeGone: function() {this.snake.gone+=1;},
-    snakeComplete: function() {
-        if (this.snake.hit + this.snake.gone >= this.snake.num) {
-            this.snake.hit = 0;
-            this.snake.gone = 0;
-            return true;
-        }
-        else {return false;}
-    },
-    // chest task
-    chest: {
-        location: [],
-        // [0:hidden, 1:revealed]
-        revealed: 0,
-        // [0:closed, 1:opened]
-        opened: 0,
-        // [0:intact, 1:destroyed]
-        destroyed: 0,
-        // password
-        password: 0
-    },
-    // initializes location and generates password
-    chestInitialize: function(x, y) {
-        this.chest.location.push(x);
-        this.chest.location.push(y);
+    }
+};
+
+// Stores information about status of chest task. 
+var task_chest = {
+    // randomly generated
+    location: [],
+    password: 0,
+    // track status
+    revealed: 0, // 0 = hidden, 1 = revealed
+    opened: 0, // 0 = closed, 1 = opened
+    destroyed: 0, // 0 = intact, 1 = destroyed
+
+    // sets location and generates password
+    chestInitialize: function(x, y) { 
+        this.location.push(x);
+        this.location.push(y);
 
         var num = '';
         for (var i = 0; i < 7; i++) {
-            var temp = Math.floor(Math.random()*10);
-            num = '' + num + temp;
+            num = '' + num + getRandomInt(0,9);
         }
-        this.chest.password = num;
-        Crafty.log(this.chest.password);
+        this.password = num;
     },
     // setters
-    chestIsRevealed: function() {this.chest.revealed = 1;},
-    chestIsOpen: function() {this.chest.opened = 1;},
-    chestIsDestroyed: function() {this.chest.destroyed = 1;},
-    // getters
-    chestGetLocation: function() {return this.chest.location;},
-    chestGetPassword: function() {return this.chest.password;},
-    chestGetRevealed: function() {return this.chest.revealed;},
-    chestGetOpened: function() {return this.chest.opened;},
-    chestGetDestroyed: function() {return this.chest.destroyed;}
-};
+    setRevealed: function() {this.revealed = 1;},
+    setOpen: function() {this.opened = 1;},
+    setDestroyed: function() {this.destroyed = 1;}
+}
