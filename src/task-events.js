@@ -9,8 +9,8 @@ function spawn_animal(animal, i) {
 	var coord = task_animals.getCoord(animal, i);
 	if (task_animals.checkComplete(animal) == false) {
 		if (animal == 0) {Crafty.e('Gopher').at(coord[0],coord[1]);}
-		else if (animal == 1) {Crafty.e('Butterfly').at(coord[0],coord[1]);}
-		else if (animal == 2) Crafty.e('Snake').at(coord[0],coord[1]);
+		else if (animal == 1) {Crafty.e('Butterfly').at(coord[0],coord[1]).setDir(task_animals.getDir(1, i));}
+		else if (animal == 2) Crafty.e('Snake').at(coord[0],coord[1]).setDir(task_animals.getDir(2, i));
 	}
 }
 // Sets up timing of animal spawning
@@ -20,11 +20,11 @@ function animal_task(animal) {
 	// wait 15 seconds to start task
 	setTimeout(function() {
 		var a = 0; 
-		spawn_animal(animal, perm[a]);
+		spawn_animal(animal, rand_order[a]);
 		for (var i = 1; i < num_animals; i++) {
 			setTimeout(function() {
 				a++;
-				spawn_gopher(animal, perm[a]);
+				spawn_animal(animal, rand_order[a]);
 			}, spawn_freq[animal]*i);
 		}
 	}, spawn_freq[animal]);

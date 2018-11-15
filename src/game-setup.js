@@ -1,7 +1,7 @@
 window.onload = function() {
 	// Initialize game
 	Game = {
-		map_grid: {w: 54, h: 30, tile: { w:24, h:24 }},
+		map_grid: {w: 58, h: 30, tile: { w:24, h:24 }},
 		w: function() {return this.map_grid.w;},
 		h: function() {return this.map_grid.h;},
 		width: function() {return this.map_grid.w * this.map_grid.tile.w;},
@@ -17,7 +17,7 @@ window.onload = function() {
 	game.start();
 }
 // Text
-$text_css = { 'font-size': '24px', 'font-family': 'Arial', 'color': 'black', 'text-align': 'center' }
+$text_css = { 'font-size': '24px', 'font-family': 'Courier', 'color': 'black', 'text-align': 'center' }
 // Sounds
 sounds = {
 	play_low: function() {Crafty.audio.play('alert_low');},

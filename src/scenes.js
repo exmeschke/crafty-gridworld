@@ -1,7 +1,20 @@
-// 1. Loads the audio and sprite sheets
+/**
+ * Constructs the scenes -- Loading, Game, EndGame
+ *
+ * Loading		Loads the audio and sprite sheets
+ * Game 		Adds Crafty components to the scene
+ * EndGame		End game screen
+ **/
+
+
+// Loads the audio and sprite sheets
 Crafty.scene('Loading', function() {
 	// Background
 	Crafty.background('white');
+	// Crafty.background('url(assets/screen1.png) no-repeat center center');
+	// setTimeout(function() {eval("Crafty.background('url(assets/screen2.png) no-repeat center center');");}, 2000);
+	// setTimeout(function() {eval("Crafty.background('url(assets/screen3.png) no-repeat center center');");}, 2000);
+
 	Crafty.e('2D, DOM, Color, Text')
 		.text("Try to make as much money as possible! Use the arrow keys to move and 'X' to trigger actions.")
 		.attr({ x:0, y:Game.height()/2-24, w:Game.width() })
@@ -16,8 +29,8 @@ Crafty.scene('Loading', function() {
 		beep_med: ['assets/sounds/beep-med.wav'],
 		beep_high: ['assets/sounds/beep-high.wav'],
 		sheep: ['assets/sounds/sheep.wav'],
-		cow: ['assets/sounds/cow.mp3'],
-		chicken: ['assets/sounds/chickenn.wav'],
+		cow: ['assets/sounds/cow-moo.mp3'],
+		chicken: ['assets/sounds/chicken-clucking.wav'],
 		crow: ['assets/sounds/crow.wav'],
 		stone: ['assets/sounds/stone-crush2.mp3'],
 		whack: ['assets/sounds/whack.wav'],
@@ -84,6 +97,10 @@ Crafty.scene('Loading', function() {
 				tile: 32, tileh: 32,
 				map: { spr_grass: [0,0] }
 			},
+			'assets/farm/grass3.png': {
+				tile: 32, tileh: 32,
+				map: { spr_grass2: [0,0] }
+			},
 			'assets/farm/egg.png': {
 				tile: 32, tileh: 32,
 				map: { spr_egg: [0,0] }
@@ -144,6 +161,26 @@ Crafty.scene('Loading', function() {
 					// spr_wheat4: [1,4]
 				}
 			},
+			'assets/farm/tilesets/tomatos.png': {
+				tile: 128, tileh: 96,
+				map: {
+					spr_tomato1: [0,0],
+					spr_tomato2: [0,1],
+					spr_tomato3: [0,2],
+					spr_tomato4: [0,3],
+					spr_tomato5: [0,4]
+				}
+			},
+			'assets/farm/tilesets/potatos.png': {
+				tile: 116, tileh: 96,
+				map: {
+					spr_potato1: [0,0],
+					spr_potato2: [0,1],
+					spr_potato3: [0,2],
+					spr_potato4: [0,3],
+					spr_potato5: [0,4]
+				}
+			},
 			'assets/farm/tilesets/wheat-bag.png': {
 				tile: 32, tileh: 32,
 				map: { spr_wheat: [0,0] }
@@ -163,9 +200,13 @@ Crafty.scene('Loading', function() {
 					spr_scythe: [1,1]
 				}
 			},
-			'assets/farm/ui/box-long.png': {
-				tile: 1225, tileh: 314,
+			'assets/farm/ui/box-longer.png': {
+				tile: 1308, tileh: 302,
 				map: { spr_box: [0,0] }
+			},
+			'assets/farm/ui/box-longer-up.png': {
+				tile: 302, tileh: 1308,
+				map: { spr_box_up: [0,0] }
 			},
 			'assets/farm/ui/scroll.png': {
 				tile: 1000, tileh: 274,
@@ -174,6 +215,14 @@ Crafty.scene('Loading', function() {
 			'assets/farm/ui/block.png': {
 				tile: 96, tileh: 96,
 				map: { spr_block: [0,0] }
+			},
+			'assets/farm/ui/orders.png': {
+				tile: 100, tileh: 360,
+				map: { spr_orders: [0,0] }
+			},
+			'assets/farm/ui/order.png': {
+				tile: 95, tileh: 35,
+				map: { spr_order: [0,0] }
 			},
 			'assets/farm/tools.png': {
 				tile: 32, tileh: 32,
@@ -221,6 +270,10 @@ Crafty.scene('Loading', function() {
 			'assets/oven-off.png': {
 				tile: 64, tileh: 41,
 				map: { spr_oven_off: [0,0], spr_oven: [0,1] }
+			},
+			'assets/farm/logs.png': {
+				tile: 32, tileh: 32,
+				map: { spr_logs: [0,0] }
 			},
 			'assets/spinning-wheels.png': {
 				tile: 86, tileh: 85,
@@ -287,10 +340,11 @@ Crafty.scene('Loading', function() {
 	Crafty.load(assetsObj);
 
 	// Start game
-	setTimeout(function() {eval("Crafty.scene('Game');");}, 2000);
+	// setTimeout(function() {eval("Crafty.scene('Game');");}, 2000);
+	Crafty.scene('Game');
 });
 
-// 2. Adds components to the game 
+// Adds components to the game 
 Crafty.scene('Game', function() {
 	// set pause [8] and quit [9] buttons
 	Crafty.bind('KeyDown', function(e) {
@@ -302,6 +356,7 @@ Crafty.scene('Game', function() {
 	})
 
 	// background
+
 	Crafty.background('rgb(47, 130, 52)');
 
 	// A 2D array of occupied tiles
@@ -316,184 +371,214 @@ Crafty.scene('Game', function() {
 	this.robot = Crafty.e('Robot').at(gv.robot.loc[0],gv.robot.loc[0]);
 	this.request = Crafty.e('RobotRequest').at(1,2);
 	// this.robot.attach(this.request);
-	this.screen = Crafty.e('RequestScreen').at(16,5.3);
+	this.screen = Crafty.e('RequestScreen').at(21.5,5.3);
 
 	// Add animals
-	this.sheep = Crafty.e('Sheep').at(21,3);
-	this.cow = Crafty.e('Cow').at(32,4);
-	this.chicken1 = Crafty.e('Chicken').at(46,6);
-	this.chicken1.delay(this.chicken1.layEgg, 30000, -1);
-	this.chicken2 = Crafty.e('Chicken').at(38,20);
-	this.chicken2.delay(this.chicken2.layEgg, 35000, -1);
+	this.sheep = Crafty.e('Sheep').at(28,3);
+	this.cow = Crafty.e('Cow').at(37,4);
+	this.chicken1 = Crafty.e('Chicken').at(51,6);
+	this.chicken1.delay(this.chicken1.layEgg, 28000, -1);
+	this.chicken2 = Crafty.e('Chicken').at(43,20);
+	this.chicken2.delay(this.chicken2.layEgg, 36000, -1);
+
 
 	var cc = 0;
 	var rr = 0;
+	var xmin = 5;
+	var field_w = 15+xmin;
+	var field_h = 17;
 	// Add scenery
 	for (var x = 0; x < Game.w(); x++){
 		for (var y = 0; y < Game.h(); y++){
-			var at_edge = ((x == 0 && y < Game.h()-6) || (x == Game.w() - 1 && y < Game.h()-6) || y == 0 || y == Game.h() - 6);
-			var field_s = (Game.w()/3)-2;
+			var at_edge = ((x == xmin && y < Game.h()-6) || (x == Game.w() - 1 && y < Game.h()-6) || y == 0 || y == Game.h() - 6);
+			var field_s = 22;
 
-			// trees at edge
-			if (at_edge) {
-				Crafty.e('Tree').at(x,y);
-				this.occupied[x][y] = true;
+			if (x < 5) { 
+				Crafty.e('Blank').at(x,y);
+			} else {
+				// trees at edge
+				if (at_edge) {
+					Crafty.e('Tree').at(x,y);
+					this.occupied[x][y] = true;
 
-			// growing field
-			} else if (x < field_s && y <= field_s) {
-				if (x == 1) {
-					if (y == 1){
-						Crafty.e('Soil1').at(x,y);
+				// growing field
+				} else if (x < field_w+1 && y <= field_h) {
+					if (x == xmin+1) {
+						if (y == 1){
+							Crafty.e('Soil1').at(x,y);
+							this.occupied[x][y] = true;
+						} else if (y == field_h){
+							Crafty.e('Soil7').at(x,y);
+							this.occupied[x][y] = true;
+						} else {
+							Crafty.e('Soil4').at(x,y);
+							this.occupied[x][y] = true;
+						}
+					} else if (x == field_w) {
+						if (y == 1){
+							Crafty.e('Soil3').at(x,y);
+							this.occupied[x][y] = true;
+						} else if (y == field_h) {
+							Crafty.e('Soil9').at(x,y);
+							this.occupied[x][y] = true;
+						} else {
+							Crafty.e('Soil6').at(x,y);
+							this.occupied[x][y] = true;
+						}
+					} else if (y == 1) { 
+						Crafty.e('Soil2').at(x,y);
 						this.occupied[x][y] = true;
-					} else if (y == field_s){
-						Crafty.e('Soil7').at(x,y);
+					} else if (y == field_h) {
+						Crafty.e('Soil8').at(x,y);
 						this.occupied[x][y] = true;
 					} else {
-						Crafty.e('Soil4').at(x,y);
+						Crafty.e('Soil5').at(x,y);
 						this.occupied[x][y] = true;
+						if (y == 2 && (x > 3 && x < 12)) {
+							gv.field.wheat[y-2][x-2] = Crafty.e('Wheat4').at(x,y);
+						}
 					}
-				} else if (x == field_s-1) {
-					if (y == 1){
-						Crafty.e('Soil3').at(x,y);
-						this.occupied[x][y] = true;
-					} else if (y == field_s) {
-						Crafty.e('Soil9').at(x,y);
-						this.occupied[x][y] = true;
-					} else {
-						Crafty.e('Soil6').at(x,y);
-						this.occupied[x][y] = true;
-					}
-				} else if (y == 1) { 
-					Crafty.e('Soil2').at(x,y);
-					this.occupied[x][y] = true;
-				} else if (y == field_s) {
-					Crafty.e('Soil8').at(x,y);
-					this.occupied[x][y] = true;
-				} else {
-					Crafty.e('Soil5').at(x,y);
-					this.occupied[x][y] = true;
-					if (y == 2 && (x > 3 && x < 12)) {
-						gv.field.wheat[y-2][x-2] = Crafty.e('Wheat4').at(x,y);
-					}
-				}
 
-			// animal pens
-			var a = 3;
-			var b = 10;
-			var c = 21;
-			} else if (y == 1) {
-				if (x == field_s) {
-					// Crafty.e('Fence8').at(x,y);
-				} else if (x == field_s+c) {
-					Crafty.e('Fence9').at(x,y);
-					this.occupied[x][y] = true;
-				} else if (x == field_s+a) {
-					Crafty.e('Fence7').at(x,y);
-					this.occupied[x][y] = true;
-				} else if (x > field_s+a && x < field_s+c) {
-					Crafty.e('Fence2').at(x,y);
-					this.occupied[x][y] = true;
-				}
-			} else if (y == (Game.h()/5)+5) {
-				if (x == field_s+b) {
-					Crafty.e('Fence11').at(x,y);
-					this.occupied[x][y] = true;
-				} else if (x == field_s+c) {
-					Crafty.e('Fence12').at(x,y);
-					this.occupied[x][y] = true;
-				} else if (x == field_s+a) {
-					Crafty.e('Fence10').at(x,y);
-					this.occupied[x][y] = true;
-				} else if (x > field_s+a && x < field_s+c) {
-					if (x < field_s+6 || x == field_s+12 || x == field_s+13) {
-					} else{
+				// animal pens
+				var a = 3;
+				var b = 10;
+				var c = 21;
+				} else if (y == 1) {
+					if (x == field_s) {
+						// Crafty.e('Fence8').at(x,y);
+					} else if (x == field_s+c) {
+						Crafty.e('Fence9').at(x,y);
+						this.occupied[x][y] = true;
+					} else if (x == field_s+a) {
+						Crafty.e('Fence7').at(x,y);
+						this.occupied[x][y] = true;
+					} else if (x > field_s+a && x < field_s+c) {
 						Crafty.e('Fence2').at(x,y);
 						this.occupied[x][y] = true;
 					}
-					
-				}
-			} else if (x == field_s+a || x == field_s+b || x == field_s+c) {
-				if (y > 1 && y < (Game.h()/5)+5) {
-					Crafty.e('Fence4').at(x,y);
-					this.occupied[x][y] = true;
-				}
+				} else if (y == (Game.h()/5)+5) {
+					if (x == field_s+b) {
+						Crafty.e('Fence11').at(x,y);
+						this.occupied[x][y] = true;
+					} else if (x == field_s+c) {
+						Crafty.e('Fence12').at(x,y);
+						this.occupied[x][y] = true;
+					} else if (x == field_s+a) {
+						Crafty.e('Fence10').at(x,y);
+						this.occupied[x][y] = true;
+					} else if (x > field_s+a && x < field_s+c) {
+						if (x < field_s+6 || x == field_s+12 || x == field_s+13) {
+						} else{
+							Crafty.e('Fence2').at(x,y);
+							this.occupied[x][y] = true;
+						}
+						
+					}
+				} else if (x == field_s+a || x == field_s+b || x == field_s+c) {
+					if (y > 1 && y < (Game.h()/5)+5) {
+						Crafty.e('Fence4').at(x,y);
+						this.occupied[x][y] = true;
+					}
 
-			// tufts of grass
-			} else if (y < Game.h()-6 && Math.random() < 0.05 && !this.occupied[x][y]) {
-				Crafty.e('Grass').at(x,y);
-				cc+=1;
-				// place treasure chest here
-				if (cc == 30) {
-					this.chest = Crafty.e('Chest').at(x,y);
-					this.explosion = Crafty.e('ChestExplosion').at(x,y);
-					// sets password and location
-					task_chest.chestInitialize(x,y);
-				}
-			// eggs
-			} else if (y < Game.h()-6 && Math.random() < 0.01 && !this.occupied[x][y]) {
-				Crafty.e('Egg').at(x,y);
-			// rocks
-			} else if (y < Game.h()-7 && Math.random() < 0.008 && !this.occupied[x][y] && rr < 4) {
-				this.rock = Crafty.e('Rock').at(x,y);
-				rr += 1;
-				if (rr == 2) {this.rock.hasPin();}
-			} 
+				// tufts of grass
+				} else if (y < Game.h()-6 && Math.random() < 0.05 && !this.occupied[x][y]) {
+					if (Math.random() < 0.7) {Crafty.e('Grass').at(x,y);}
+					else {
+						Crafty.e('Grass2').at(x,y);
+						cc+=1;
+						// place treasure chest here
+						if (cc == 6) {
+							this.chest = Crafty.e('Chest').at(x,y);
+							this.explosion = Crafty.e('ChestExplosion').at(x,y);
+							// sets password and location
+							task_chest.chestInitialize(x,y);
+						}
+					}
+				// eggs
+				} else if (y < Game.h()-6 && Math.random() < 0.01 && !this.occupied[x][y]) {
+					Crafty.e('Egg').at(x,y);
+				// rocks
+				} else if (y < Game.h()-7 && Math.random() < 0.008 && !this.occupied[x][y] && rr < 4) {
+					this.rock = Crafty.e('Rock').at(x,y);
+					rr += 1;
+					if (rr == 2) {this.rock.hasPin();}
+				} 
+			}
 
 			// blank space at bottom
+			// if (x == 44 || x == 24 || y == 12) {Crafty.e('Blank').at(x,y)}
 			if (y > Game.h()-6) {Crafty.e('Blank').at(x,y);}
 		}
 	}
 
 	// Add machinery
 	var scene_b = Game.h()-7.8;
-	this.well = Crafty.e('Well').at(1,scene_b);
-	this.bag = Crafty.e('Barrel').at(3,scene_b+.1);
-	this.stump = Crafty.e('Stump').at(5,scene_b+.3);
-	this.grtools = Crafty.e('GroundTools').at(6.5,scene_b+.2);
-	this.book = Crafty.e('Book').at(7.8,scene_b+.7);
+	this.well = Crafty.e('Well').at(1+xmin,scene_b);
+	this.bag = Crafty.e('Barrel').at(3+xmin,scene_b+.1);
+	this.stump = Crafty.e('Stump').at(5+xmin,scene_b+.3);
+	this.grtools = Crafty.e('GroundTools').at(6.5+xmin,scene_b+.2);
+	this.book = Crafty.e('Book').at(7.8+xmin,scene_b+.7);
 	this.oven = Crafty.e('Oven').at(Game.w()-3.5,1);
-	this.spinning_wheel = Crafty.e('SpinningWheel').at(Game.w()-5.5,1);
-	this.charging_station = Crafty.e('ChargingStation').at(16,3);
-	this.bbush = Crafty.e('BerryBush').at(Game.w()-3,22);
+	this.wood = Crafty.e('Wood').at(Game.w()-5,1);
+	this.spinning_wheel = Crafty.e('SpinningWheel').at(Game.w()-7.5,1);
+	this.charging_station = Crafty.e('ChargingStation').at(21.5,3);
+	this.bbush = Crafty.e('BerryBush').at(38,16.4);
+	this.bbush2 = Crafty.e('BerryBush').at(39,16.7);
+	this.bbush3 = Crafty.e('BerryBush').at(37.7,16.8);
 
 	// Add score information
+	// Crafty.e('Orders').at(0,0);
+	// Crafty.e('2D, Canvas, Text').attr({x:30,y:70}).text('Orders').textFont({ size: '20px' });
+	Crafty.e('BoxUp').at(0,0);
+	Crafty.e('2D, Canvas, Text').attr({x:30,y:50}).text('Orders').textFont({ size: '22px' });
+
 	var box_b = Game.h()-3.8;
 	this.scroll = Crafty.e('Scroll').at(0,Game.h()-5);
-	this.score = Crafty.e('Score').at(3,box_b+.4).text('$ 0.00');
-	this.time = Crafty.e('Time').at(3.1,box_b+1.6).text('00:00');
+	this.score = Crafty.e('Score').at(3,box_b+.2).text('$ 0.00');
+	this.time = Crafty.e('Time').at(3.1,box_b+1.4).text('00:00');
+	Crafty.e('Energy').at(3.1,box_b+2.6);
 	// this.power = Crafty.e('RobotPower').at(8,box_b+1.2);
 
 	// Add lower panels
 	for (var x = 0; x < 4; x++) {
-		Crafty.e('SqrBlock').at(19+(x*5),Game.h()-5);
+		Crafty.e('SqrBlock').at(20+(x*5),Game.h()-5);
 	}
-	this.box = Crafty.e('Box').at(39,Game.h()-5).attr({ w:360 });
+	this.box = Crafty.e('Box').at(40,Game.h()-5).attr({ w:435 });
 
 	// Add tools 
-	var st = 20.2;
+	var st = 20.2+1;
 	this.bucket = Crafty.e('Bucket').at(st,box_b);
 	this.seed_bag = Crafty.e('SeedBag').at(st+5,box_b);
 	this.tools = Crafty.e('Tools').at(st+10,box_b);
 	this.lg_tools = Crafty.e('LgTools').at(st+15,box_b);
 
 	// Add resources and counts
-	var st2 = 40.2;
-	this.egg = Crafty.e('Egg').at(st2,box_b-.5).attr({ w:30, h:30 });
-	Crafty.e('EggLabel').at(st2+1.5,box_b).text(0);
-	this.berry = Crafty.e('Wheat').at(st2,box_b+1.7).attr({ w:30, h:30 });
-	Crafty.e('WheatLabel').at(st2+1.5,box_b+2).text(0);
-	this.wool = Crafty.e('Wool').at(st2+3,box_b-.3).attr({ w:30, h:25 });
+	// tomatos + potatos
+	Crafty.e('Tomato5').at(40.5,box_b-.7).attr({ w:60, h:50 });
+	Crafty.e('TomatoLabel').at(41+1.5,box_b).text(0);
+	Crafty.e('Potato5').at(40.5,box_b+1.1).attr({ w:60, h:50 });
+	Crafty.e('PotatoLabel').at(41+1.5,box_b+2).text(0);
+	var st2 = 40+4;
+	// wheat + egg 
+	Crafty.e('Wheat').at(st2,box_b-.4).attr({ w:30, h:30 });
+	Crafty.e('WheatLabel').at(st2+1.5,box_b).text(0);
+	Crafty.e('Egg').at(st2,box_b+1.5).attr({ w:30, h:30 });
+	Crafty.e('EggLabel').at(st2+1.5,box_b+2).text(0);
+	// wool + milk
+	Crafty.e('Wool').at(st2+3,box_b-.3).attr({ w:30, h:25 });
 	Crafty.e('WoolLabel').at(st2+4.5,box_b).text(0);
-	this.milk = Crafty.e('Milk').at(st2+3.2,box_b+1.5).attr({ w:20, h:40 });
+	Crafty.e('Milk').at(st2+3.2,box_b+1.5).attr({ w:20, h:40 });
 	Crafty.e('MilkLabel').at(st2+4.5,box_b+2).text(0);
-	this.bread = Crafty.e('Bread').at(st2+6,box_b-.4).attr({ w:40, h:30 });
+	// bread + muffin
+	Crafty.e('Bread').at(st2+6,box_b-.4).attr({ w:40, h:30 });
 	Crafty.e('BreadLabel').at(st2+8,box_b).text(0);
-	this.muffin = Crafty.e('Muffin').at(st2+6.1,box_b+1.5).attr({ w:30, h:30 });
+	Crafty.e('Muffin').at(st2+6.1,box_b+1.5).attr({ w:30, h:30 });
 	Crafty.e('MuffinLabel').at(st2+8,box_b+2).text(0);
-	this.thread = Crafty.e('Thread').at(st2+9.2,box_b-.5).attr({ w:40, h:40 });
-	Crafty.e('ThreadLabel').at(st2+11,box_b).text(0);
-	this.berry = Crafty.e('Berries').at(st2+9.3,box_b+1.8).attr({ w:30, h:20 });
-	Crafty.e('BerryLabel').at(st2+11,box_b+2).text(0);
+	// thread + berry
+	Crafty.e('Thread').at(st2+9.4,box_b-.5).attr({ w:40, h:40 });
+	Crafty.e('ThreadLabel').at(st2+11.2,box_b).text(0);
+	Crafty.e('Berries').at(st2+9.4,box_b+1.8).attr({ w:30, h:20 });
+	Crafty.e('BerryLabel').at(st2+11.2,box_b+2).text(0);
 
 	// HUMAN TASKS
 	this.currTask = Crafty.e('Task').at(7,box_b+.2).text('').trigger('UpdateTask');
@@ -502,7 +587,7 @@ Crafty.scene('Game', function() {
 	setTimeout(function() {eval("Crafty.scene('EndGame');");}, 2000000); 
 });
 
-// 3. End game screen
+// End game screen
 Crafty.scene('EndGame', function() {
 	// Get final score
 	var score = gv.score;
@@ -563,8 +648,6 @@ Crafty.scene('EndGame', function() {
 			console.log( errorThrown );
 		}
 	});
-
-	
 });
 
 

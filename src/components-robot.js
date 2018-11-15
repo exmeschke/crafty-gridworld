@@ -95,7 +95,7 @@ Crafty.c('Robot', {
 	lastMovement: function() {return this._movement.slice(-1);},
 	// checks last movement and does opposite 
 	turnAround: function() {
-		if (this._x <= 1) {
+		if (this._x <= gv.xmin+1) {
 			Crafty.log('right');
 			this.moveRight();
 		} else if (this._y <= 1) {
@@ -118,13 +118,13 @@ Crafty.c('Robot', {
 		if (gv.robot.status != 0) {
 			Crafty.trigger('LightOff');
 			// complete task
-			if (this.x/gv.tile_sz < 15 && this.y/gv.tile_sz < 15 && this.x/gv.tile_sz > 1 && this.y/gv.tile_sz > 1) {
+			if (this.x/gv.tile_sz < 15 && this.y/gv.tile_sz < 15 && this.x/gv.tile_sz > 5 && this.y/gv.tile_sz > 1) {
 				this.tendPlants();
 			}
 		
 			// random move
 			if (gv.robot.direction == '') {
-				if (this.x/gv.tile_sz < 2) {this.moveRight();}
+				if (this.x/gv.tile_sz < 6) {this.moveRight();}
 				else if (this.y/gv.tile_sz < 2) {this.moveDown();}
 				else if (this.y/gv.tile_sz > 15) {this.moveUp();}
 				else if (this.x/gv.tile_sz > 16) {this.moveLeft();}
@@ -169,7 +169,7 @@ Crafty.c('Robot', {
 		if (this._movement.length > 5) {this._movement.shift();}
 	},
 	moveLeft: function() {
-		if (this._x > 30) {
+		if (this._x > 150) {
 			this._is_charging = false;
 			this.tween({ x: this.x-gv.tile_sz, y: this.y }, this._speed[gv.robot.status])
 			this._movement.push('left');
@@ -228,7 +228,7 @@ Crafty.c('Robot', {
 		var x = Math.round(this.x/gv.tile_sz);
 		var y = Math.round(this.y/gv.tile_sz);
 
-		if (x > 1 && x < 15 && y > 1 && y < 16) {
+		if (x > gv.xmin && x < gv.xmin+16 && y > 1 && y < gv.ymax) {
 			if (gv.field.seed[y-2][x-2] == '' && gv.field.wheat[y-2][x-2] == ''){
 				// insert seeds
 				gv.field.seed[y-2][x-2] = Crafty.e('Wheat2').at(x, y);
@@ -243,7 +243,7 @@ Crafty.c('Robot', {
 			var x = Math.round(this.x/gv.tile_sz);
 			var y = Math.round(this.y/gv.tile_sz);
 
-			if (x > 1 && x < 15 && y > 1 && y < 16) {
+			if (x > gv.xmin && x < gv.xmin+16 && y > 1 && y < gv.ymax) {
 				if (gv.field.seed[y-2][x-2] != '') { // if seeds in location
 					// destroy seeds
 					gv.field.seed[y-2][x-2].destroy(); 
@@ -263,7 +263,7 @@ Crafty.c('Robot', {
 		var x = Math.round(this.x/gv.tile_sz);
 		var y = Math.round(this.y/gv.tile_sz);
 
-		if (x > 1 && x < 15 && y > 1 && y < 16) {
+		if (x > gv.xmin && x < gv.xmin+16 && y > 1 && y < gv.ymax) {
 			if (gv.field.seed[y-2][x-2] != '') {
 				var seeds = gv.field.seed[y-2][x-2];
 				if (seeds != undefined) {

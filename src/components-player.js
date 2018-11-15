@@ -2,10 +2,11 @@
 
 Crafty.c('Player', {
 	_movement: [], // tracks 5 most recent moves 
-	_back: 1.2, // 1.6 keeps player from moving through solid objects
+	_back: 1.25, // 1.6 keeps player from moving through solid objects
 	init: function() {
 		this.requires('2D, Canvas, Grid, Fourway, Keyboard, Collision, Delay, spr_player, SpriteAnimation')
 			.attr({ w:gv.tile_sz, h:gv.tile_sz, z:5 })
+
 			// on hit events
 			.onHit('Obstacle', this.stopMovement)
 			.onHit('Resource', function() {
@@ -13,42 +14,55 @@ Crafty.c('Player', {
 				if ((hitDatas = this.hit('Resource'))) {hitDatas[0].obj.collect();}
 			})
 			.onHit('Robot', this.pushRobot)
+
 			// animations
 			.reel('PlayerMovingUp', 600, [[0,0], [1,0], [2,0]])
 			.reel('PlayerMovingRight', 500, [[0,1], [1,1], [2,1]])
 			.reel('PlayerMovingDown', 600, [[0,2], [1,2], [2,2]])
 			.reel('PlayerMovingLeft', 500, [[0,3], [1,3], [2,3]])
+
 			// movment
-			.fourway(60) // 80
-			.bind('NewDirection', function(data) {
-				var animation_speed = 20;
-				if (data.x > 0) {
-					this.animate('PlayerMovingRight', animation_speed, -1);
-					this._movement.push('right');
-				} else if (data.x < 0) {
-					this.animate('PlayerMovingLeft', animation_speed, -1);
-					this._movement.push('left');
-				} else if (data.y > 0) {
-					this.animate('PlayerMovingDown', animation_speed, -1);
-					this._movement.push('down');
-				} else if (data.y < 0) {
-					this.animate('PlayerMovingUp', animation_speed, -1);
-					this._movement.push('up');
+			.bind('UpdateFrame', function(e){
+				// pull robot
+				if (Crafty.s('Keyboard').isKeyDown('V')) {this.pullRobot();}
+
+				// regular movement
+				if ((Crafty.s('Keyboard').isKeyDown(Crafty.keys.LEFT_ARROW))) {
+					this.attr({ x:this.x-1.2, y:this.y });
+					this.newDirection('left');
+					if (gv.player.energy > 0) gv.player.energy -= 0.01;
+				} else if ((Crafty.s('Keyboard').isKeyDown(Crafty.keys.RIGHT_ARROW))) {
+					this.attr({ x:this.x+1.2, y:this.y });
+					this.newDirection('right');
+					if (gv.player.energy > 0) gv.player.energy -= 0.01;
+				} else if ((Crafty.s('Keyboard').isKeyDown(Crafty.keys.UP_ARROW))) {
+					this.attr({ x:this.x, y:this.y-1.2 });
+					this.newDirection('up');
+					if (gv.player.energy > 0) gv.player.energy -= 0.01;
+				} else if ((Crafty.s('Keyboard').isKeyDown(Crafty.keys.DOWN_ARROW))) {
+					this.attr({ x:this.x, y:this.y+1.2 });
+					this.newDirection('down');
+					if (gv.player.energy > 0) gv.player.energy -= 0.01;
+				} else if ((Crafty.s('Keyboard').isKeyDown(Crafty.keys.X))) {
+					this.action();
 				} else {
-					this.pauseAnimation();
+					this.newDirection('');
+					if (gv.player.energy < 100) gv.player.energy += .1;
 				}
-				if (this._movement.length > 5) {this._movement.shift();}
+
+				// energy checkpoints
+				if (gv.player.energy <= 50) {this.lowEnergy(50);}
+				else if (gv.player.energy <= 25) {this.lowEnergy(25);}
+				else if (gv.player.energy < 10) {this.lowEnergy(0);}
 			})
+
 			// actions
 			.bind('KeyDown', function(e) {
 				if (e.key == Crafty.keys.X) {this.action();} 
-				// if (e.key == Crafty.keys.V) {this.pullRobot();}
 				if (e.key == 49) {this.reset();}
-				// if (e.key == Crafty.keys.SPACE) {Crafty.trigger('HideRequest');}
+				// if (e.key == Crafty.keys.SPACE) {Crafty.trigger('HideRequest');}				
 			})
-			.bind('UpdateFrame', function() {
-				if (Crafty.s('Keyboard').isKeyDown('V')) {this.pullRobot();}
-			})
+
 			// triggered events
 			.bind('SetSpeed', this.setSpeed)
 			.bind('GetLocation', this.getLoc)
@@ -57,6 +71,44 @@ Crafty.c('Player', {
 	reset: function() {
 		gv.score -= 5;
 		this.at(30,16);
+	},
+	// slow down player 
+	lowEnergy: function(level) {
+		var slow = 0;
+		if (level == 50) {slow = .8;}
+		else if (level == 25) {slow = 1.2;}
+		else {slow = 1.6;}
+
+		if ((Crafty.s('Keyboard').isKeyDown(Crafty.keys.UP_ARROW)) && this._movement.slice(-1) == 'up') 
+			{this.attr({ x:this.x, y:this.y+slow }) }
+		else if ((Crafty.s('Keyboard').isKeyDown(Crafty.keys.DOWN_ARROW)) && this._movement.slice(-1) == 'down') 
+			{this.attr({ x:this.x, y:this.y-slow })}
+		else if ((Crafty.s('Keyboard').isKeyDown(Crafty.keys.RIGHT_ARROW)) && this._movement.slice(-1) == 'right') 
+			{this.attr({ x:this.x-slow, y:this.y })}
+		else if ((Crafty.s('Keyboard').isKeyDown(Crafty.keys.LEFT_ARROW)) && this._movement.slice(-1) == 'left') 
+			{this.attr({ x:this.x+slow, y:this.y })}
+	},
+	// new direction for animation
+	newDirection: function(dir) {
+		var animation_speed = 20;
+		if (this._movement.slice(-1)[0] != dir) {
+			if (dir == 'right') {
+				this.animate('PlayerMovingRight', animation_speed, -1);
+				this._movement.push('right');
+			} else if (dir == 'left') {
+				this.animate('PlayerMovingLeft', animation_speed, -1);
+				this._movement.push('left');
+			} else if (dir == 'down') {
+				this.animate('PlayerMovingDown', animation_speed, -1);
+				this._movement.push('down');
+			} else if (dir == 'up') {
+				this.animate('PlayerMovingUp', animation_speed, -1);
+				this._movement.push('up');
+			} else {
+				this.pauseAnimation();
+			}
+		} 
+		if (this._movement.length > 5) {this._movement.shift();}
 	},
 	// changes speed of player pushing robot depending on robot speed
 	setSpeed: function() {
@@ -101,37 +153,47 @@ Crafty.c('Player', {
 			}
 			
 		} else {
+			// check if near robot
+			var dist = dist_robot_player();
+			if (dist <= 2 && gv.tools.seed_bag == 1) {
+				Crafty.trigger('Plant');
+				Crafty.trigger('EmptySeedBag');
+			}
+
 			// check for everything else
 			var hitDatas, hitData;
 			if ((hitDatas = this.hit('Well'))) {
 				Crafty.trigger('FillBucket');
 				// update player moment if in need full water bucket in task
-				if (task_list.getText().includes('well')){
-					gv.player.moment = 'middle';
-				}
+				// if (task_list.getText().includes('well')){
+				// 	gv.player.moment = 'middle';
+				// }
 			} else if ((hitDatas = this.hit('Barrel'))) {
-				Crafty.trigger('FillSeedBag');
+				var seeds = prompt('What would you like to plant (wheat, tomatoes, or potatoes)?');
+				if (seeds == 'wheat' || seeds == 'tomatoes' || seeds == 'potatoes') {
+					Crafty.trigger('FillSeedBag');
+				} else {sounds.play_low();}
 			} else if ((hitDatas = this.hit('Stump'))) {
 				Crafty.trigger('SwitchTools');
 				// update player moment if in need shears or hammer in task
-				var task_text = task_list.getText();
-				if (task_text.includes('shears') || task_text.includes('hammer')){
-					gv.player.moment = 'middle';
-				}
+				// var task_text = task_list.getText();
+				// if (task_text.includes('shears') || task_text.includes('hammer')){
+				// 	gv.player.moment = 'middle';
+				// }
 			} else if ((hitDatas = this.hit('GroundTools'))) {
 				Crafty.trigger('SwitchLgTools');
 				// update player moment if in need scythe or shovel in task
-				var task_text = task_list.getText();
-				if (task_text.includes('scythe') || task_text.includes('shovel')){
-					gv.player.moment = 'middle';
-				}
+				// var task_text = task_list.getText();
+				// if (task_text.includes('scythe') || task_text.includes('shovel')){
+				// 	gv.player.moment = 'middle';
+				// }
 			} else if ((hitDatas = this.hit('Book'))) { 
 				Crafty.trigger('OpenBook');
 			} else if ((hitDatas = this.hit('RequestScreen'))) {
 				Crafty.trigger('ReceiveResponse');	
 			} else if ((hitDatas = this.hit('BerryBush'))) {
 				// if the bush has berries, collect berries
-				if (gv.bush == 1) {
+				if (gv.bush != 1) {
 					Crafty.trigger('CollectBerries');
 				// if the bush is empty and the bucket is full, water the bush
 				} else if (gv.bush == 0 && gv.tools.bucket == 1) {
@@ -157,10 +219,10 @@ Crafty.c('Player', {
 				else {sounds.play_low();}
 			} else if ((hitDatas = this.hit('Chest'))) {
 				// if chest is hidden and holding shovel, reveal the chest
-				if (chest.revealed == 0 && gv.tools.lgtools == 1) {
+				if (task_chest.revealed == 0 && gv.tools.lgtools == 1) {
 					Crafty.trigger('DigChest');
 				// if chest is revealed, try to open chest
-				} else if (chest.revealed == 1) {
+				} else if (task_chest.revealed == 1) {
 					Crafty.trigger('OpenChest');
 				} else {sounds.play_low();}
 			} else if ((hitDatas = this.hit('Rock'))) {
@@ -180,6 +242,12 @@ Crafty.c('Player', {
 						gv.field.wheat[y-2][x-2] = '';
 					}
 				} else {sounds.play_low();}
+			// } else if ((hitDatas == this.hit('Wood'))) {
+			// 	Crafty.trigger('StartOven');
+			// 	// oven on for 130 seconds
+			// 	setTimeout(function() {
+			// 		eval("Crafty.trigger('StopOven');");
+			// 	}, 130000);
 			} else if ((hitDatas = this.hit('Oven'))) {
 				// if oven on
 				if (gv.tools.oven_on == true) {
@@ -268,7 +336,7 @@ Crafty.c('Player', {
 	},
 	// pushes robot
 	pushRobot: function() {	
-		// stop movement
+		// stop robot movement
 		var request_num = request_list.getNumber();
 		if ((gv.robot.part.loc_x != -1 || request_num == 4 || request_num == 7) && gv.player.interacting == true){
 			Crafty.trigger('StopMove');
@@ -303,5 +371,17 @@ Crafty.c('Player', {
 			this.attr({ x:this.x+this._back-.4, y:this.y });
 			Crafty.trigger('RobotLeft');
 		}
+	}
+});
+
+Crafty.c('Energy', {
+	init: function() {
+		this.requires('2D, Canvas, Color, Grid')
+			.attr({w:50, h:10})
+      		.color("black")
+      		.bind('UpdateFrame', function() {
+      			var percent = gv.player.energy/100;
+      			this.attr({w:percent*50});
+      		})
 	}
 });
